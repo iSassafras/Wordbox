@@ -642,6 +642,33 @@
     border-radius: 8px;
   }
 
+  .day-badge {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 9px 14px;
+    border-radius: 999px;
+    margin-bottom: 14px;
+    text-align: center;
+    line-height: 1.35;
+  }
+  .day-badge.done {
+    color: #FFD98A;
+    background: rgba(201, 162, 39, 0.18);
+    border: 1px solid rgba(227, 197, 90, 0.45);
+  }
+  .day-badge.at-risk {
+    color: var(--cream-dim);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    font-weight: 500;
+  }
+  .day-flame { font-size: 10px; }
+
   /* ---- Home screen ---- */
   .home {
     display: flex;
@@ -1190,6 +1217,7 @@
     lessonAnswered: 0,
     lessonDone: false,
     lessonWordIds: [],
+    answeredThisLesson: {},
     lessonReviewOpen: false,
     revealed: false,
     formOpen: false,
@@ -1212,7 +1240,10 @@
     batchSkipped: 0,
     batchRaw: '',
     streak: 0,
-    bestStreak: 0
+    bestStreak: 0,
+    dayStreak: 0,
+    bestDayStreak: 0,
+    lastLessonDay: null
   };
 
   var CORRECT_MSGS = [
@@ -1285,17 +1316,41 @@
     if (!entry) { render(); return; }
     var word = state.words.find(function(x){ return x.id === entry.id; });
 
+    // Two guards keep the boxes meaningful. Spaced repetition only tests
+    // anything if the interval has actually elapsed, so:
+    //
+    //   1. A box only moves on the FIRST answer for that word in a lesson.
+    //      Otherwise missing a word, seeing it again on the retry and getting
+    //      it right would promote it — a miss would cost nothing.
+    //   2. Promotion also requires the word to have been genuinely due.
+    //      "Practice anyway" pulls words early; drilling one five times in an
+    //      afternoon shouldn't walk it up to box 5.
+    //
+    // Demotion is deliberately not conditional on either. Getting a word
+    // wrong is real evidence you don't know it, whenever it happens.
+    var firstAnswerThisLesson = !state.answeredThisLesson[entry.id];
+    state.answeredThisLesson[entry.id] = true;
+    var wasDue = word.due <= todayStr();
+
     state.lessonAnswered++;
     word.last = todayStr();
+
     if (correct){
       state.lessonCorrect++;
       word.nRight++;
-      word.box = Math.min(word.box + 1, 5);
-      word.due = addDays(todayStr(), INTERVALS[word.box] || 14);
+      if (firstAnswerThisLesson && wasDue){
+        word.box = Math.min(word.box + 1, 5);
+        word.due = addDays(todayStr(), INTERVALS[word.box] || 14);
+      }
     } else {
       word.nWrong++;
-      word.box = 1;
-      word.due = todayStr();
+      if (firstAnswerThisLesson){
+        word.box = 1;
+        // Tomorrow, not today: the card still comes back later in THIS lesson
+        // for practice (the queue ignores due dates), but it can't be scored
+        // again until the interval has actually passed.
+        word.due = addDays(todayStr(), 1);
+      }
       state.sessionQueue.push({ id: word.id, dir: pickMode() });
     }
 
@@ -1312,6 +1367,12 @@
 
   function endLesson(completed){
     clearTimeout(advanceTimer);
+    // Only a lesson carried through to the end extends the day streak.
+    // Bailing out with the X doesn't count.
+    if (completed && state.lessonAnswered > 0){
+      registerLessonDay();
+      persist();
+    }
     state.sessionActive = false;
     state.lessonDone = completed && state.lessonAnswered > 0;
     state.sessionQueue = [];
@@ -1322,7 +1383,8 @@
   }
 
   function startLesson(practice){
-    state.streak = 0;
+    // The streak deliberately carries over. It counts consecutive correct
+    // answers, and ending a lesson isn't a wrong answer.
     state.lessonDone = false;
     state.lessonReviewOpen = false;
     resetCardState();
@@ -1332,6 +1394,32 @@
     state.sessionActive = true;
     state.view = 'home';
     render();
+  }
+
+  // A day streak counts consecutive CALENDAR DAYS with a finished lesson —
+  // separate from the answer streak, which counts consecutive correct cards.
+  function yesterdayStr(){ return addDays(todayStr(), -1); }
+
+  // The stored number is only meaningful next to the day it was last touched.
+  // If that day is neither today nor yesterday the run is over, so report 0
+  // rather than a stale figure that would claim a streak you've already lost.
+  function liveDayStreak(){
+    if (!state.lastLessonDay) return 0;
+    if (state.lastLessonDay === todayStr() || state.lastLessonDay === yesterdayStr()){
+      return state.dayStreak;
+    }
+    return 0;
+  }
+
+  function doneToday(){ return state.lastLessonDay === todayStr(); }
+
+  function registerLessonDay(){
+    var today = todayStr();
+    if (state.lastLessonDay === today) return;      // already counted today
+    if (state.lastLessonDay === yesterdayStr()) state.dayStreak += 1;
+    else state.dayStreak = 1;                        // first day, or run broken
+    state.lastLessonDay = today;
+    if (state.dayStreak > state.bestDayStreak) state.bestDayStreak = state.dayStreak;
   }
 
   // Streak is bumped before the reaction is chosen so milestone
@@ -1743,6 +1831,23 @@
         state.words = [];
       }
     }
+    // Streaks are progress, not settings — they belong with the words and
+    // survive reloads. Before this they lived only in memory, so "best" reset
+    // to zero on every launch and simply echoed the latest run.
+    try {
+      var st = JSON.parse((await storageGet('streaks')) || '{}');
+      if (typeof st.current === 'number' && st.current >= 0) state.streak = st.current;
+      if (typeof st.best === 'number' && st.best >= 0) state.bestStreak = st.best;
+      // Repairs any record saved while best was still resetting each launch.
+      if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+      if (typeof st.day === 'number' && st.day >= 0) state.dayStreak = st.day;
+      if (typeof st.bestDay === 'number' && st.bestDay >= 0) state.bestDayStreak = st.bestDay;
+      if (typeof st.lastDay === 'string') state.lastLessonDay = st.lastDay;
+      if (state.dayStreak > state.bestDayStreak) state.bestDayStreak = state.dayStreak;
+    } catch (e) {
+      // nothing saved yet
+    }
+
     // Settings live alongside the words, so a stale or unknown value from an
     // older version falls back to the default rather than breaking the list.
     try {
@@ -1762,7 +1867,38 @@
   }
 
   async function persist(){
-    await storageSet('words', JSON.stringify(state.words));
+    // Words and streaks go in a single write. They both change on every
+    // answer, and two storageSet calls would mean two Firestore round trips
+    // per card.
+    await storageSetMany({
+      words: JSON.stringify(state.words),
+      streaks: JSON.stringify({
+        current: state.streak,
+        best: state.bestStreak,
+        day: state.dayStreak,
+        bestDay: state.bestDayStreak,
+        lastDay: state.lastLessonDay
+      })
+    });
+  }
+
+  async function storageSetMany(fields){
+    if (useFirebase){
+      try {
+        markPending();
+        await fbSetDoc(fbDoc(fbDb, 'wordbox', currentUser.uid), fields, { merge: true });
+        if (fbWaitForPendingWrites){
+          fbWaitForPendingWrites(fbDb).then(markSynced).catch(function(){});
+        }
+      } catch (e) {
+        console.error('Save failed', e);
+      }
+      return;
+    }
+    var keys = Object.keys(fields);
+    for (var i = 0; i < keys.length; i++){
+      await storageSet(keys[i], fields[keys[i]]);
+    }
   }
 
   // A lesson is a bounded slice of what's due — capped so a large backlog
@@ -1786,6 +1922,7 @@
     state.sessionQueue = pool.slice(0, LESSON_SIZE)
       .map(function(w){ return { id: w.id, dir: pickMode() }; });
     state.lessonWordIds = state.sessionQueue.map(function(e){ return e.id; });
+    state.answeredThisLesson = {};
     state.lessonTotal = state.sessionQueue.length;
     state.lessonCorrect = 0;
     state.lessonAnswered = 0;
@@ -1803,6 +1940,7 @@
   var ICONS = {
     home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5"></path><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5"></path><path d="M9.5 21v-6h5v6"></path></svg>',
     cards: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="14" height="14" rx="2"></rect><path d="M7 7V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2"></path></svg>',
+    profile: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4.5 21a7.5 7.5 0 0 1 15 0"></path></svg>',
     stats: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>',
     trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>',
     arrowUp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="6 11 12 5 18 11"></polyline></svg>',
@@ -1838,10 +1976,18 @@
     }
 
     var due = dueCount();
-    var mastered = state.words.filter(function(w){ return w.box === 5; }).length;
     var lessonSize = Math.min(due, LESSON_SIZE);
 
     var html = '<div class="home">';
+
+    var dstreak = liveDayStreak();
+    if (dstreak > 0){
+      html += '<div class="day-badge' + (doneToday() ? ' done' : ' at-risk') + '">' +
+        '<span class="day-flame">\u25B2</span> ' +
+        dstreak + '-day streak' +
+        (doneToday() ? '' : ' \u00B7 finish a lesson to keep it') +
+        '</div>';
+    }
 
     html += '<div class="due-hero' + (due === 0 ? ' is-clear' : '') + '">';
     html += '<div class="due-num">' + due + '</div>';
@@ -1861,10 +2007,11 @@
       html += '<button class="secondary start-btn" data-action="practice-anyway">Practice anyway</button>';
     }
 
+    var days = liveDayStreak();
     html += '<div class="home-stats">';
+    html += '<div class="home-stat"><span class="n">' + days + '</span><span class="l">day streak</span></div>';
     html += '<div class="home-stat"><span class="n">' + state.words.length + '</span><span class="l">words</span></div>';
-    html += '<div class="home-stat"><span class="n">' + mastered + '</span><span class="l">mastered</span></div>';
-    html += '<div class="home-stat"><span class="n">' + state.bestStreak + '</span><span class="l">best streak</span></div>';
+    html += '<div class="home-stat"><span class="n">' + state.streak + '</span><span class="l">streak</span></div>';
     html += '</div>';
 
     html += '</div>';
@@ -1913,7 +2060,7 @@
     html += '<div class="summary-grid">';
     html += '<div><span class="n">' + correct + '/' + total + '</span><span class="l">correct</span></div>';
     html += '<div><span class="n">' + pct + '%</span><span class="l">accuracy</span></div>';
-    html += '<div><span class="n">' + state.bestStreak + '</span><span class="l">best streak</span></div>';
+    html += '<div><span class="n">' + state.streak + '</span><span class="l">streak</span></div>';
     html += '</div></div>';
 
     if (dueCount() > 0){
@@ -2353,8 +2500,10 @@
     var html = '<div class="stat-grid">';
     html += '<div class="stat-box"><div class="num">' + total + '</div><div class="label">Words total</div></div>';
     html += '<div class="stat-box"><div class="num">' + dueCount + '</div><div class="label">Due today</div></div>';
-    html += '<div class="stat-box"><div class="num">' + state.bestStreak + '</div><div class="label">Best streak today</div></div>';
-    html += '<div class="stat-box"><div class="num">' + counts[4] + '</div><div class="label">Mastered</div></div>';
+    html += '<div class="stat-box"><div class="num">' + liveDayStreak() + '</div><div class="label">Day streak</div></div>';
+    html += '<div class="stat-box"><div class="num">' + state.bestDayStreak + '</div><div class="label">Longest day streak</div></div>';
+    html += '<div class="stat-box"><div class="num">' + state.streak + '</div><div class="label">Current streak</div></div>';
+    html += '<div class="stat-box"><div class="num">' + state.bestStreak + '</div><div class="label">Best streak</div></div>';
     html += '</div>';
 
     html += '<div class="box-chart"><h3>Words per box</h3>';
@@ -2390,8 +2539,8 @@
     } else {
       var titleMap = {
         home: ['Wordbox', greetingLine()],
-        cards: ['Your words', 'Add, edit, or remove entries'],
-        stats: ['Stats', 'How your box is filling up']
+        cards: ['Library', 'Add, edit, or remove entries'],
+        stats: ['Profile', 'Your progress so far']
       };
       var t = titleMap[state.view] || titleMap.home;
 
@@ -2404,8 +2553,8 @@
       html += '<main>' + body + '</main>';
       html += '<nav class="tabs">' +
         tabBtn('home', ICONS.home, 'Home') +
-        tabBtn('cards', ICONS.cards, 'Words') +
-        tabBtn('stats', ICONS.stats, 'Stats') +
+        tabBtn('cards', ICONS.cards, 'Library') +
+        tabBtn('stats', ICONS.profile, 'Profile') +
         '</nav>';
     }
 
