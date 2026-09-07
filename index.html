@@ -928,13 +928,13 @@
     max-width: 300px;
   }
 
-  /* ---- Day-streak flame ---- */
-  .flame {
-    font-size: 15px;
+  /* ---- Home stat icons ---- */
+  .stat-icon {
+    font-size: 14px;
     margin-right: 4px;
-    vertical-align: -1px;
+    vertical-align: 1px;
   }
-  .flame.cold { filter: grayscale(1); opacity: 0.45; }
+  .stat-icon.cold { filter: grayscale(1); opacity: 0.4; }
 
   /* ---- Preference row / toggle ---- */
   .pref-row {
@@ -1337,6 +1337,7 @@
     lessonWordIds: [],
     answeredThisLesson: {},
     lessonMisses: {},
+    wordsSnapshot: null,
     parkedThisLesson: false,
     lessonReviewOpen: false,
     revealed: false,
@@ -1361,6 +1362,8 @@
     batchRaw: '',
     streak: 0,
     bestStreak: 0,
+    committedStreak: 0,
+    committedBest: 0,
     dayStreak: 0,
     bestDayStreak: 0,
     lastLessonDay: null
@@ -1405,10 +1408,42 @@
   // silent until you've actually tapped something (iOS won't start an audio
   // context before a user gesture anyway).
   var audioCtx = null;
+  var audioUnlocked = false;
+
+  // iOS silences Web Audio when the ringer switch is on mute — but not HTML5
+  // <audio> elements. Two fixes, applied together:
+  //   1. navigator.audioSession (Safari 16.4+) declares this as playback
+  //      audio, which the mute switch then leaves alone.
+  //   2. On older iOS, playing a scrap of silent <audio> alongside moves Web
+  //      Audio onto the media channel. Ugly, but it's the standard remedy.
+  var SILENT_WAV = 'data:audio/wav;base64,UklGRrQBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YZABAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA';
+
+  function unlockAudio(){
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    try {
+      if (navigator.audioSession) navigator.audioSession.type = 'playback';
+    } catch (e) {}
+    try {
+      var el = document.createElement('audio');
+      el.setAttribute('x-webkit-airplay', 'deny');   // keep it out of AirPlay
+      el.preload = 'auto';
+      el.loop = true;
+      el.volume = 0.02;
+      el.src = SILENT_WAV;
+      var p = el.play();
+      if (p && p.catch) p.catch(function(){});
+    } catch (e) {}
+  }
+
+  // Must run inside a real gesture, so hang it off the first tap anywhere.
+  document.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
+  document.addEventListener('click', unlockAudio, { once: true });
 
   function playSeq(steps){
     if (!state.soundOn) return;
     try {
+      unlockAudio();
       var Ctx = window.AudioContext || window.webkitAudioContext;
       if (!Ctx) return;
       if (!audioCtx) audioCtx = new Ctx();
@@ -1547,7 +1582,10 @@
 
     resetCardState();
     state.feedback = null;
-    persist();
+    // Deliberately no persist() here. Progress is banked once, at the end of
+    // the lesson — so quitting halfway, or the app being killed mid-lesson,
+    // leaves your words exactly as they were. It also turns a ten-card lesson
+    // into one write instead of ten.
 
     if (state.sessionQueue.length === 0){
       endLesson(true);
@@ -1561,8 +1599,24 @@
     // Only a lesson carried through to the end extends the day streak.
     // Bailing out with the X doesn't count.
     if (completed && state.lessonAnswered > 0){
+      // Banked only now: word boxes, due dates, per-word counts, the answer
+      // streak and the day streak all commit together in a single write.
+      state.committedStreak = state.streak;
+      state.committedBest = state.bestStreak;
       registerLessonDay();
+      state.wordsSnapshot = null;
       persist();
+    } else {
+      // Abandoned. Restore the words to how they were when the lesson began
+      // and put the streak back to the last banked figure. Nothing was
+      // written during the lesson, so storage already holds the right data
+      // and there's nothing to save.
+      if (state.wordsSnapshot){
+        state.words = state.wordsSnapshot.map(normalizeWord);
+        state.wordsSnapshot = null;
+      }
+      state.streak = state.committedStreak;
+      state.bestStreak = state.committedBest;
     }
     state.sessionActive = false;
     state.lessonDone = completed && state.lessonAnswered > 0;
@@ -1582,6 +1636,10 @@
     state.feedback = null;
     buildQueue(practice);
     if (state.sessionQueue.length === 0){ render(); return; }
+    // Everything a lesson changes — boxes, due dates, counts — is applied to
+    // the live copy but not written anywhere until the lesson is finished.
+    // This snapshot is what an abandoned lesson rolls back to.
+    state.wordsSnapshot = JSON.parse(JSON.stringify(state.words));
     state.sessionActive = true;
     state.view = 'home';
     render();
@@ -2031,6 +2089,8 @@
       if (typeof st.best === 'number' && st.best >= 0) state.bestStreak = st.best;
       // Repairs any record saved while best was still resetting each launch.
       if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+      state.committedStreak = state.streak;
+      state.committedBest = state.bestStreak;
       if (typeof st.day === 'number' && st.day >= 0) state.dayStreak = st.day;
       if (typeof st.bestDay === 'number' && st.bestDay >= 0) state.bestDayStreak = st.bestDay;
       if (typeof st.lastDay === 'string') state.lastLessonDay = st.lastDay;
@@ -2065,8 +2125,8 @@
     await storageSetMany({
       words: JSON.stringify(state.words),
       streaks: JSON.stringify({
-        current: state.streak,
-        best: state.bestStreak,
+        current: state.committedStreak,
+        best: state.committedBest,
         day: state.dayStreak,
         bestDay: state.bestDayStreak,
         lastDay: state.lastLessonDay
@@ -2194,10 +2254,17 @@
 
     html += '<div class="home-stats">';
     html += '<div class="home-stat"><span class="n">' +
-      '<span class="flame' + (doneToday() ? '' : ' cold') + '">\uD83D\uDD25</span>' +
+      '<span class="stat-icon' + (doneToday() ? '' : ' cold') + '">\uD83D\uDD25</span>' +
       liveDayStreak() + '</span><span class="l">day streak</span></div>';
-    html += '<div class="home-stat"><span class="n">' + state.words.length + '</span><span class="l">words</span></div>';
-    html += '<div class="home-stat"><span class="n">' + state.streak + '</span><span class="l">correct in a row</span></div>';
+    var mastered = state.words.filter(function(w){ return w.box === 5; }).length;
+    html += '<div class="home-stat"><span class="n">' +
+      '<span class="stat-icon' + (mastered > 0 ? '' : ' cold') + '">\uD83C\uDFC6</span>' +
+      mastered + '</span><span class="l">mastered</span></div>';
+    // Greyed at zero, like the flame — the icon reflects whether the thing
+    // it stands for is actually alive.
+    html += '<div class="home-stat"><span class="n">' +
+      '<span class="stat-icon' + (state.streak > 0 ? '' : ' cold') + '">\uD83C\uDFAF</span>' +
+      state.streak + '</span><span class="l">correct in a row</span></div>';
     html += '</div>';
 
     html += '</div>';
