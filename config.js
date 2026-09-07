@@ -8,10 +8,10 @@
 // then re-upload just this file.
 
 window.WORDBOX_CONFIG = {
-  apiKey: "",
-  authDomain: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: ""
+  apiKey: "AIzaSyDQ4aZhqc7_aAJ1P8wzO6vSfoGtGKKyzpw",
+  authDomain: "wordbox-4d948.firebaseapp.com",
+  projectId: "wordbox-4d948",
+  storageBucket: "wordbox-4d948.firebasestorage.app",
+  messagingSenderId: "806590816683",
+  appId: "1:806590816683:web:f19ba8ae0c66df1ca672ee"
 };
