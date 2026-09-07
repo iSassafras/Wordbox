@@ -838,6 +838,31 @@
   .stat-acc { font-weight: 600; color: var(--cream); }
   .stat-acc.good { color: #8FBF95; }
   .stat-acc.poor { color: #E09274; }
+  /* ---- Sync status ---- */
+  .sync-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--cream-dim);
+    padding: 10px 12px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-top: 10px;
+    line-height: 1.4;
+  }
+  .sync-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--cream-dim);
+  }
+  .sync-dot.ok    { background: var(--success); }
+  .sync-dot.wait  { background: var(--accent); }
+  .sync-dot.local { background: var(--cream-dim); }
+
   /* ---- Sort control ---- */
   .sort-bar {
     display: flex;
@@ -1411,7 +1436,82 @@
 
   var useFirebase = !!FIREBASE_CONFIG.apiKey;
   var fbAuth = null, fbDb = null, fbDoc = null, fbGetDoc = null, fbSetDoc = null, fbSignIn = null, fbSignOut = null;
+  var fbWaitForPendingWrites = null;
   var currentUser = null;
+
+  // ---------- SYNC STATUS ----------
+  // The honest bit: with offline persistence on, setDoc() resolves as soon as
+  // the write hits the LOCAL cache — not when the server has it. Treating that
+  // as "synced" would show a reassuring green tick while your words sat on the
+  // device. waitForPendingWrites() is what actually resolves once the backend
+  // has acknowledged every outstanding write, so that's what marks a sync.
+  var SYNC_KEY = 'wordbox-last-sync';
+  var syncState = 'idle';   // idle | pending | synced | offline
+
+  function loadLastSync(){
+    // Deliberately localStorage, never storageSet: writing this through the
+    // normal path would be another Firestore write, which would mark another
+    // pending write, which would write again. Straight to the device.
+    try { return localStorage.getItem(SYNC_KEY); } catch (e) { return null; }
+  }
+
+  function markSynced(){
+    syncState = 'synced';
+    try { localStorage.setItem(SYNC_KEY, new Date().toISOString()); } catch (e) {}
+    refreshSyncLine();
+  }
+
+  function markPending(){
+    syncState = navigator.onLine ? 'pending' : 'offline';
+    refreshSyncLine();
+  }
+
+  // Updates just the status line rather than re-rendering the view, so it can
+  // never steal focus from the search box or a half-typed form.
+  function refreshSyncLine(){
+    var el = document.getElementById('sync-line');
+    if (el) el.outerHTML = syncLineHtml();
+  }
+
+  function agoLabel(iso){
+    if (!iso) return null;
+    var secs = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+    if (secs < 0) return 'just now';
+    if (secs < 60) return 'just now';
+    var mins = Math.floor(secs / 60);
+    if (mins < 60) return mins + (mins === 1 ? ' minute ago' : ' minutes ago');
+    var hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + (hrs === 1 ? ' hour ago' : ' hours ago');
+    var days = Math.floor(hrs / 24);
+    if (days < 30) return days + (days === 1 ? ' day ago' : ' days ago');
+    return new Date(iso).toISOString().slice(0, 10);
+  }
+
+  function syncLineHtml(){
+    var cls = 'sync-line', dot = 'ok', text;
+
+    if (!useFirebase){
+      dot = 'local';
+      text = 'Saved on this device · sync not set up';
+    } else if (!navigator.onLine){
+      dot = 'wait';
+      var offAgo = agoLabel(loadLastSync());
+      text = 'Offline — changes will sync when you reconnect' +
+        (offAgo ? ' · last synced ' + offAgo : '');
+    } else if (syncState === 'pending'){
+      dot = 'wait';
+      text = 'Syncing…';
+    } else {
+      var ago = agoLabel(loadLastSync());
+      text = ago ? 'Synced ' + ago : 'Not synced yet';
+      if (!ago) dot = 'wait';
+    }
+    return '<div id="sync-line" class="' + cls + '"><span class="sync-dot ' + dot + '"></span>' +
+      escapeHtml(text) + '</div>';
+  }
+
+  window.addEventListener('online',  refreshSyncLine);
+  window.addEventListener('offline', refreshSyncLine);
 
   async function initFirebase(){
     var appMod = await import("https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js");
@@ -1426,6 +1526,7 @@
     fbSetDoc = fsMod.setDoc;
     fbSignIn = authMod.signInWithEmailAndPassword;
     fbSignOut = authMod.signOut;
+    fbWaitForPendingWrites = fsMod.waitForPendingWrites;
 
     try { await authMod.setPersistence(fbAuth, authMod.browserLocalPersistence); } catch (e) { /* ignore */ }
     try { await fsMod.enableIndexedDbPersistence(fbDb); } catch (e) { /* e.g. multiple tabs open \u2014 offline cache still works in the active tab */ }
@@ -1469,6 +1570,9 @@
     if (useFirebase){
       try {
         var snap = await fbGetDoc(fbDoc(fbDb, 'wordbox', currentUser.uid));
+        // fromCache === false means this came from the server, which is itself
+        // proof the device is in sync right now.
+        if (snap.metadata && snap.metadata.fromCache === false) markSynced();
         if (!snap.exists()) return null;
         var data = snap.data();
         return data[key] !== undefined ? data[key] : null;
@@ -1496,7 +1600,16 @@
       try {
         var fields = {};
         fields[key] = value;
+        markPending();
+        // Resolves once it's in the local cache — the word is safe on the
+        // device at this point, offline or not.
         await fbSetDoc(fbDoc(fbDb, 'wordbox', currentUser.uid), fields, { merge: true });
+        // Resolves only once the backend has acknowledged every pending
+        // write. Offline, this simply never resolves, and the line keeps
+        // saying so rather than claiming success.
+        if (fbWaitForPendingWrites){
+          fbWaitForPendingWrites(fbDb).then(markSynced).catch(function(){});
+        }
       } catch (e) {
         console.error('Save failed', e);
       }
@@ -2125,7 +2238,7 @@
 
   function renderCards(){
     if (state.batchOpen) return renderBatch();
-    var html = '';
+    var html = syncLineHtml();
 
     if (!state.formOpen){
       html += '<div class="add-row">';
@@ -2598,6 +2711,12 @@
     };
     reader.readAsText(file);
   }
+
+  // Only the status line is rewritten, so this can't disturb a form,
+  // the search box, or a lesson in progress.
+  setInterval(function(){
+    if (state.view === 'cards' && !state.sessionActive) refreshSyncLine();
+  }, 30000);
 
   if (useFirebase){
     // If the SDK can't be fetched (offline before it's been cached, or a
