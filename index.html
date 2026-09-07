@@ -1390,6 +1390,17 @@
   var hasClaudeStorage = (typeof window.storage !== 'undefined' && window.storage && typeof window.storage.get === 'function');
   var LOCAL_PREFIX = 'wordbox-';
 
+  // ---------- SERVICE WORKER ----------
+  // Only over http(s): registering from a file:// URL throws, and the
+  // standalone copy of this file should keep working when opened directly.
+  if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0){
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('./sw.js').catch(function(){
+        // No offline support, but the app runs fine online.
+      });
+    });
+  }
+
   // ---------- FIREBASE (optional cloud sync) ----------
   // Configuration lives in config.js, loaded just before this script, so the
   // only file you ever need to edit is that short one.
@@ -2589,7 +2600,19 @@
   }
 
   if (useFirebase){
-    initFirebase();
+    // If the SDK can't be fetched (offline before it's been cached, or a
+    // blocked network) the import rejects and the app would otherwise render
+    // nothing at all. Show what happened instead of a blank screen — and
+    // don't silently fall back to local storage, which would present an
+    // empty word list and risk edits that never reach the synced copy.
+    initFirebase().catch(function(){
+      document.getElementById('app').innerHTML =
+        '<div class="login-screen">' +
+        '<h1>Wordbox</h1>' +
+        '<p>Couldn\u2019t reach the sync service. Check your connection and try again.</p>' +
+        '<button class="primary" onclick="location.reload()">Retry</button>' +
+        '</div>';
+    });
   } else {
     loadWords();
   }
