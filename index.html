@@ -1321,6 +1321,39 @@
     padding: 7px 12px;
   }
 
+  .import-summary {
+    display: flex;
+    gap: 8px;
+    margin: 4px 0 14px;
+  }
+  .import-summary > div {
+    flex: 1;
+    background: var(--bg);
+    border-radius: 9px;
+    padding: 10px 4px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .import-summary .n {
+    font-family: 'Lora', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--accent-soft);
+  }
+  .import-summary .l {
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--cream-dim);
+  }
+  .form-actions-stack {
+    flex-direction: column;
+  }
+  .form-actions-stack button { width: 100%; }
+  .form-actions-stack button:disabled { opacity: 0.45; cursor: default; }
+
   .backup-row {
     display: flex;
     gap: 10px;
@@ -1521,6 +1554,7 @@
     boxFilter: null,
     soundOn: true,
     speechOn: true,
+    importPreview: null,
     batchOpen: false,
     batchStep: 1,
     batchItems: [],
@@ -3016,7 +3050,39 @@
     return html;
   }
 
+  // How long until a word is next due. Counterpart to sinceLabel, which
+  // looks backwards.
+  function untilLabel(dateStr){
+    if (!dateStr) return 'due now';
+    var d = Math.round((new Date(dateStr + 'T00:00:00') - new Date(todayStr() + 'T00:00:00')) / 86400000);
+    if (d <= 0) return 'due now';
+    if (d === 1) return 'due tomorrow';
+    if (d < 30) return 'due in ' + d + ' days';
+    return 'due ' + dateStr;
+  }
+
+  function rowMeta(w){
+    var acc = accuracyOf(w);
+    switch (state.sortBy){
+      case 'accuracy':
+        if (acc === null) return 'not practised yet';
+        return '<span class="stat-acc' + (acc >= 80 ? ' good' : acc < 50 ? ' poor' : '') + '">' +
+          acc + '%</span> \u00B7 ' + w.nRight + ' right, ' + w.nWrong + ' wrong';
+      case 'practised':
+        return w.last ? 'practised ' + sinceLabel(w.last) : 'not practised yet';
+      case 'box':
+        return 'box ' + w.box + ' \u00B7 ' + untilLabel(w.due);
+      case 'added':
+        return w.created ? 'added ' + sinceLabel(w.created) : 'added before this was tracked';
+      default:
+        // Sorting by word or meaning is browsing, not reviewing — both are
+        // already on the row, so there's nothing useful to add.
+        return '';
+    }
+  }
+
   function renderCards(){
+    if (state.importPreview) return renderImportPreview();
     if (state.batchOpen) return renderBatch();
     var html = '';
 
@@ -3098,18 +3164,11 @@
         html += '<div class="word-row">';
         html += '<div class="box-dots-inline">' + boxDots(w.box, 'filled', '', null) + '</div>';
         html += '<div class="word-text"><div class="front">' + escapeHtml(w.front) + '</div><div class="back">' + escapeHtml(w.back) + '</div>';
-        // Always rendered — a word with no history says so, rather than the
-        // line silently disappearing and looking like stats aren't tracked.
-        var acc = accuracyOf(w);
-        html += '<div class="word-stats">';
-        if (acc === null){
-          html += 'not practised yet';
-        } else {
-          html += '<span class="stat-acc' + (acc >= 80 ? ' good' : acc < 50 ? ' poor' : '') + '">' + acc + '%</span>' +
-            ' \u00B7 ' + w.nRight + ' right, ' + w.nWrong + ' wrong' +
-            ' \u00B7 ' + sinceLabel(w.last);
-        }
-        html += '</div>';
+        // The line under each word reports whatever you're sorting by, so
+        // the list answers the question you're currently asking of it rather
+        // than showing every statistic at once.
+        var meta = rowMeta(w);
+        if (meta) html += '<div class="word-stats">' + meta + '</div>';
         html += '</div>';
         html += '<div class="row-actions">';
         html += '<button class="icon-btn' + (isEditing ? ' active' : '') + '" data-action="edit-word" data-id="' + w.id + '">' + ICONS.edit + '</button>';
@@ -3536,6 +3595,22 @@
       persist();
       render();
     }
+    else if (action === 'import-merge'){
+      state.words = state.words.concat(state.importPreview.fresh);
+      state.importPreview = null;
+      persist();
+      render();
+    }
+    else if (action === 'import-replace'){
+      state.words = state.importPreview.all;
+      state.importPreview = null;
+      persist();
+      render();
+    }
+    else if (action === 'import-cancel'){
+      state.importPreview = null;
+      render();
+    }
     else if (action === 'export-words'){
       exportWords();
     }
@@ -3561,6 +3636,14 @@
     URL.revokeObjectURL(url);
   }
 
+  // A word is "the same word" if both sides match after normalising — so
+  // case, spacing, stress marks and apostrophe style don't create phantom
+  // duplicates. Front alone isn't enough: a word can legitimately appear
+  // twice with different meanings.
+  function pairKey(w){
+    return normalize(w.front) + '\u0000' + normalize(w.back);
+  }
+
   function importWordsFromFile(file){
     var reader = new FileReader();
     reader.onload = function(){
@@ -3575,16 +3658,78 @@
         alert('Expected a JSON array of words.');
         return;
       }
-      if (state.words.length > 0){
-        var ok = confirm('Importing will replace your current ' + state.words.length + ' word' + (state.words.length === 1 ? '' : 's') + '. Continue?');
-        if (!ok) return;
+
+      var all = parsed.map(normalizeWord).filter(function(w){ return w.front && w.back; });
+      if (!all.length){
+        alert('No usable words in that file.');
+        return;
       }
-      state.words = parsed.map(normalizeWord)
-        .filter(function(w){ return w.front && w.back; });
-      persist();
+
+      // Duplicates inside the file itself count too — a backup merged from
+      // two sources can easily contain the same pair twice.
+      var seenInFile = {}, deduped = [];
+      all.forEach(function(w){
+        var k = pairKey(w);
+        if (seenInFile[k]) return;
+        seenInFile[k] = true;
+        deduped.push(w);
+      });
+
+      var have = {};
+      state.words.forEach(function(w){ have[pairKey(w)] = true; });
+      var fresh = deduped.filter(function(w){ return !have[pairKey(w)]; });
+
+      state.importPreview = {
+        all: deduped,
+        fresh: fresh,
+        alreadyHave: deduped.length - fresh.length,
+        inFileDupes: all.length - deduped.length,
+        skipped: parsed.length - all.length
+      };
       render();
     };
     reader.readAsText(file);
+  }
+
+  function renderImportPreview(){
+    var p = state.importPreview;
+    var html = '<div class="batch-panel">';
+    html += '<div class="batch-step">Import backup</div>';
+
+    html += '<div class="import-summary">';
+    html += '<div><span class="n">' + p.all.length + '</span><span class="l">in file</span></div>';
+    html += '<div><span class="n">' + p.fresh.length + '</span><span class="l">new</span></div>';
+    html += '<div><span class="n">' + p.alreadyHave + '</span><span class="l">already have</span></div>';
+    html += '</div>';
+
+    var notes = [];
+    if (p.inFileDupes) notes.push(p.inFileDupes + ' repeated inside the file');
+    if (p.skipped) notes.push(p.skipped + ' entry' + (p.skipped === 1 ? '' : 'ies') + ' missing a word or meaning');
+    if (notes.length) html += '<div class="batch-note">Ignored: ' + notes.join('; ') + '.</div>';
+
+    if (state.words.length === 0){
+      html += '<p class="batch-hint">Your library is empty, so everything in the file will be added.</p>';
+      html += '<div class="form-actions">';
+      html += '<button class="primary" data-action="import-replace">Import ' + p.all.length + ' words</button>';
+      html += '<button class="secondary" data-action="import-cancel">Cancel</button>';
+      html += '</div></div>';
+      return html;
+    }
+
+    html += '<p class="batch-hint"><strong>Add new only</strong> keeps your ' + state.words.length +
+      ' existing words untouched, along with their boxes and statistics, and brings in just the ' +
+      p.fresh.length + ' the file has that you don\u2019t.<br><br>' +
+      '<strong>Replace everything</strong> discards your current library and restores the file exactly \u2014 ' +
+      'use this when recovering a backup.</p>';
+
+    html += '<div class="form-actions form-actions-stack">';
+    html += '<button class="primary" data-action="import-merge"' + (p.fresh.length ? '' : ' disabled') + '>' +
+      (p.fresh.length ? 'Add ' + p.fresh.length + ' new word' + (p.fresh.length === 1 ? '' : 's') : 'Nothing new to add') +
+      '</button>';
+    html += '<button class="secondary" data-action="import-replace">Replace everything (' + p.all.length + ')</button>';
+    html += '<button class="secondary" data-action="import-cancel">Cancel</button>';
+    html += '</div></div>';
+    return html;
   }
 
   // Only the status line is rewritten, so this can't disturb a form,
