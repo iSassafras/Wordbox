@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Wordbox" />
-<meta name="theme-color" content="#24343B" />
+<meta name="theme-color" content="#0A0E15" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
 <link rel="icon" href="icon-192.png" />
 <link rel="manifest" href="manifest.json" />
@@ -16,21 +16,62 @@
   @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
 
   :root {
-    --bg: #24343B;
-    --bg-elevated: #2E4149;
+    /* Ukraine palette. Obsidian with a blue cast for the page, navy for
+       raised surfaces, gold as the single accent. The flag's two colours
+       do the two jobs the app already needed: chrome and emphasis. */
+    --bg: #0A0E15;
+    --bg-elevated: #16223A;
+    --border: #22314D;
+    --cream: #DDE4F0;
+    --cream-dim: #8DA0C0;
+
+    /* The flashcard stays warm cream — the one light surface in the app,
+       and what makes the typing input and diff highlighting readable. */
     --paper: #F6F1E7;
     --paper-edge: #E7DFCC;
-    --ink: #202B2F;
-    --ink-soft: #5C6B70;
-    --cream: #EDE6D6;
-    --cream-dim: #A9B7BA;
-    --accent: #C9A227;
-    --accent-soft: #E3C55A;
-    --success: #6B8F6F;
-    --success-bg: #33413A;
-    --error: #B5533C;
-    --error-bg: #43332E;
-    --border: #3C4F57;
+    --ink: #1B2430;
+    --ink-soft: #5A6470;
+
+    /* Gold, pulled slightly back from flag yellow (#FFD700), which vibrates
+       against dark backgrounds at this much coverage. */
+    --accent: #F2C233;
+    --accent-soft: #FFD84D;
+    --accent-bright: #FFE9A0;
+    --accent-rgb: 242, 194, 51;
+    --accent-soft-rgb: 255, 216, 77;
+    --on-accent: #231A02;
+
+    /* Azure. Reserved for focus and selection, so "where I am" reads
+       differently from "this is the action". */
+    --azure: #2E6FD9;
+    --azure-soft: #4A8AE8;
+    --azure-rgb: 46, 111, 217;
+
+    /* Hero panel gradient stops. */
+    --hero-blue: #1D3A6B;
+    --hero-green: #17403A;
+
+    /* Emerald rather than olive — warm greens go grey next to navy. */
+    --success: #4EA772;
+    --success-bg: #133024;
+    --success-text: #A8E3BE;
+    --success-bright: #5FC98A;
+    --success-ink: #2E7A4B;
+    --success-rgb: 78, 167, 114;
+
+    /* Coral-leaning red. A true crimson beside blue and gold starts to
+       look like a different flag entirely. */
+    --error: #DB5B48;
+    --error-bg: #3A1D1E;
+    --error-text: #F7C3B8;
+    --error-bright: #F08A72;
+    --error-ink: #A63C2A;
+    --error-rgb: 219, 91, 72;
+    --on-error: #FFF1ED;
+
+    --field-bg: #fff;
+    --card-shadow: rgba(0, 0, 0, 0.38);
+
     --radius-card: 18px;
   }
 
@@ -142,7 +183,7 @@
   /* ---- Buttons ---- */
   button.primary {
     background: var(--accent);
-    color: #241C05;
+    color: var(--on-accent);
     border: none;
     font-family: inherit;
     font-weight: 600;
@@ -211,12 +252,12 @@
   .option-btn.is-correct {
     background: var(--success-bg);
     border-color: var(--success);
-    color: #C9E0CE;
+    color: var(--success-text);
   }
   .option-btn.is-wrong {
     background: var(--error-bg);
     border-color: var(--error);
-    color: #F0C4B6;
+    color: var(--error-text);
   }
   .option-btn.is-dimmed { opacity: 0.4; }
 
@@ -262,8 +303,8 @@
     margin-bottom: 12px;
     animation: bannerIn 0.22s ease-out;
   }
-  .feedback-banner.correct { background: var(--success-bg); color: #C9E0CE; }
-  .feedback-banner.wrong { background: var(--error-bg); color: #F0C4B6; }
+  .feedback-banner.correct { background: var(--success-bg); color: var(--success-text); }
+  .feedback-banner.wrong { background: var(--error-bg); color: var(--error-text); }
 
   @keyframes streakIn {
     0% { opacity: 0; transform: scale(0.85); }
@@ -274,17 +315,17 @@
     font-size: 12px;
     font-weight: 600;
     color: var(--accent-soft);
-    background: rgba(201, 162, 39, 0.13);
-    border: 1px solid rgba(201, 162, 39, 0.3);
+    background: rgba(var(--accent-rgb), 0.13);
+    border: 1px solid rgba(var(--accent-rgb), 0.3);
     padding: 5px 12px;
     border-radius: 999px;
     margin-bottom: 10px;
     animation: streakIn 0.3s ease-out;
   }
   .streak-badge.hot {
-    color: #FFD98A;
-    background: rgba(201, 162, 39, 0.22);
-    border-color: rgba(227, 197, 90, 0.55);
+    color: var(--accent-bright);
+    background: rgba(var(--accent-rgb), 0.22);
+    border-color: rgba(var(--accent-soft-rgb), 0.55);
   }
   .streak-target { font-size: 12px; vertical-align: -1px; }
 
@@ -318,16 +359,16 @@
     word-break: break-word;
   }
   .compare-value em { color: var(--ink-soft); font-size: 15px; }
-  .compare-value.is-wrong { color: #9C4630; }
-  .compare-value.is-right { color: #3F6B48; font-weight: 600; }
+  .compare-value.is-wrong { color: var(--error-ink); }
+  .compare-value.is-right { color: var(--success-ink); font-weight: 600; }
   .compare-value mark {
-    background: rgba(181, 83, 60, 0.2);
+    background: rgba(var(--error-rgb), 0.2);
     color: inherit;
     padding: 0 2px;
     border-radius: 3px;
   }
   .compare-value.is-right mark {
-    background: rgba(107, 143, 111, 0.28);
+    background: rgba(var(--success-rgb), 0.28);
   }
 
   /* confetti */
@@ -370,7 +411,7 @@
     background: var(--paper);
     color: var(--ink);
     border-radius: var(--radius-card);
-    box-shadow: 0 6px 0 var(--paper-edge), 0 14px 24px rgba(0,0,0,0.28);
+    box-shadow: 0 6px 0 var(--paper-edge), 0 14px 24px var(--card-shadow);
     padding: 30px 24px;
     display: flex;
     flex-direction: column;
@@ -439,7 +480,7 @@
   .type-input {
     width: 100%;
     margin-top: 20px;
-    background: #fff;
+    background: var(--field-bg);
     border: 1px solid var(--paper-edge);
     color: var(--ink);
     font-family: 'IBM Plex Sans', sans-serif;
@@ -449,7 +490,7 @@
     border-radius: 10px;
   }
   .type-input:focus {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--azure);
     outline-offset: 1px;
   }
 
@@ -569,10 +610,10 @@
   }
   .search-bar input:focus {
     outline: none;
-    border-color: var(--accent);
+    border-color: var(--azure);
   }
   .search-bar input:focus + .search-clear,
-  .search-bar input:focus ~ .search-icon { color: var(--accent-soft); }
+  .search-bar input:focus ~ .search-icon { color: var(--azure-soft); }
   .search-clear {
     position: absolute;
     right: 6px;
@@ -621,8 +662,8 @@
   }
   .batch-hint em { color: var(--cream); font-style: normal; }
   .batch-note {
-    background: rgba(201, 162, 39, 0.12);
-    border: 1px solid rgba(201, 162, 39, 0.28);
+    background: rgba(var(--accent-rgb), 0.12);
+    border: 1px solid rgba(var(--accent-rgb), 0.28);
     color: var(--accent-soft);
     font-size: 12px;
     padding: 8px 12px;
@@ -684,9 +725,9 @@
     line-height: 1.35;
   }
   .day-badge.done {
-    color: #FFD98A;
-    background: rgba(201, 162, 39, 0.18);
-    border: 1px solid rgba(227, 197, 90, 0.45);
+    color: var(--accent-bright);
+    background: rgba(var(--accent-rgb), 0.18);
+    border: 1px solid rgba(var(--accent-soft-rgb), 0.45);
   }
   .day-badge.at-risk {
     color: var(--cream-dim);
@@ -705,8 +746,11 @@
   }
   .due-hero {
     width: 100%;
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
+    /* Blue base with gold glowing down from the top edge (the ::after
+       below). Gold sits high on purpose: the number needs the light behind
+       it, and the panel needs to settle into the chrome at its base. */
+    background: linear-gradient(160deg, var(--hero-blue) 0%, var(--bg-elevated) 55%);
+    border: 1px solid #2A3C5C;
     border-radius: 20px;
     padding: 30px 20px 26px;
     text-align: center;
@@ -718,11 +762,17 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle at 50% 0%, rgba(201,162,39,0.16), transparent 62%);
+    background: radial-gradient(circle at 50% 8%, rgba(var(--accent-rgb), 0.30) 0%, rgba(var(--accent-rgb), 0.06) 42%, transparent 68%);
     pointer-events: none;
   }
+  /* Nothing due: the whole panel shifts green rather than leaving a green
+     number sitting on a gold glow. */
+  .due-hero.is-clear {
+    background: linear-gradient(160deg, var(--hero-green) 0%, var(--bg-elevated) 55%);
+    border-color: #23404A;
+  }
   .due-hero.is-clear::after {
-    background: radial-gradient(circle at 50% 0%, rgba(107,143,111,0.16), transparent 62%);
+    background: radial-gradient(circle at 50% 8%, rgba(var(--success-rgb), 0.28) 0%, rgba(var(--success-rgb), 0.05) 42%, transparent 68%);
   }
   .due-num {
     font-family: 'Lora', serif;
@@ -890,8 +940,8 @@
     line-height: 1.45;
   }
   .stat-acc { font-weight: 600; color: var(--cream); }
-  .stat-acc.good { color: #8FBF95; }
-  .stat-acc.poor { color: #E09274; }
+  .stat-acc.good { color: var(--success-bright); }
+  .stat-acc.poor { color: var(--error-bright); }
   /* ---- Sync status ---- */
   .sync-line {
     display: inline-flex;
@@ -945,8 +995,8 @@
   /* Held for as long as the voice is actually speaking, driven by the
      utterance's own start/end events rather than a guessed duration. */
   @keyframes speakPulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(201, 162, 39, 0.45); }
-    50%      { box-shadow: 0 0 0 5px rgba(201, 162, 39, 0); }
+    0%, 100% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.45); }
+    50%      { box-shadow: 0 0 0 5px rgba(var(--accent-rgb), 0); }
   }
   .speak-btn.speaking {
     border-color: var(--accent);
@@ -956,7 +1006,7 @@
   .speak-btn.on-dark.speaking {
     border-color: var(--accent);
     color: var(--accent-soft);
-    background: rgba(201, 162, 39, 0.14);
+    background: rgba(var(--accent-rgb), 0.14);
   }
   @media (prefers-reduced-motion: reduce) {
     .speak-btn.speaking { animation: none; }
@@ -1073,7 +1123,7 @@
     background: var(--cream-dim);
     transition: transform 0.18s ease, background 0.18s ease;
   }
-  .toggle.on { background: rgba(201,162,39,0.3); border-color: var(--accent); }
+  .toggle.on { background: rgba(var(--accent-rgb), 0.3); border-color: var(--accent); }
   .toggle.on .knob { transform: translateX(19px); background: var(--accent-soft); }
 
   /* ---- Filter chip ---- */
@@ -1085,8 +1135,8 @@
     font-size: 12px;
     font-weight: 600;
     color: var(--accent-soft);
-    background: rgba(201,162,39,0.14);
-    border: 1px solid rgba(201,162,39,0.35);
+    background: rgba(var(--accent-rgb), 0.14);
+    border: 1px solid rgba(var(--accent-rgb), 0.35);
     padding: 6px 8px 6px 12px;
     border-radius: 999px;
   }
@@ -1104,7 +1154,7 @@
   .word-entry { border-bottom: 1px solid var(--border); }
   .word-entry .word-row { border-bottom: none; }
   .word-entry.is-editing {
-    background: rgba(201, 162, 39, 0.05);
+    background: rgba(var(--accent-rgb), 0.05);
     border-left: 2px solid var(--accent);
     border-radius: 0 10px 10px 0;
     padding-left: 10px;
@@ -1166,12 +1216,12 @@
   /* ---- Delete confirmation ---- */
   .delete-confirm {
     background: var(--error-bg);
-    border: 1px solid rgba(181, 83, 60, 0.5);
+    border: 1px solid rgba(var(--error-rgb), 0.5);
     border-radius: 10px;
     padding: 12px 14px;
     margin: 4px 0 10px;
     font-size: 13px;
-    color: #F0C4B6;
+    color: var(--error-text);
     line-height: 1.45;
   }
   .delete-confirm strong { font-family: 'Lora', serif; }
@@ -1192,7 +1242,7 @@
   .danger-btn {
     background: var(--error);
     border: none;
-    color: #FFF3EF;
+    color: var(--on-error);
   }
 
   .stat-box .num .stat-icon { font-size: 15px; margin-right: 5px; }
@@ -1318,8 +1368,8 @@
   }
   .hint-text {
     margin-top: 12px;
-    background: rgba(201, 162, 39, 0.16);
-    border: 1px solid rgba(201, 162, 39, 0.35);
+    background: rgba(var(--azure-rgb), 0.14);
+    border: 1px solid rgba(var(--azure-rgb), 0.35);
     color: var(--ink);
     font-size: 14px;
     font-style: italic;
@@ -1399,7 +1449,7 @@
     margin-top: 8px;
     font-size: 12px;
     color: var(--accent-soft);
-    background: rgba(201, 162, 39, 0.12);
+    background: rgba(var(--accent-rgb), 0.12);
     border-radius: 8px;
     padding: 7px 12px;
   }
@@ -1487,7 +1537,7 @@
   }
   .login-error {
     background: var(--error-bg);
-    color: #F0C4B6;
+    color: var(--error-text);
     font-size: 13px;
     padding: 10px 12px;
     border-radius: 8px;
@@ -2035,7 +2085,9 @@
 
   // Lightweight confetti — spawns short-lived particles, no libraries.
   function burstConfetti(){
-    var colors = ['#C9A227', '#E3C55A', '#6B8F6F', '#F6F1E7', '#8FB3C7'];
+    // Gold, blue and cream — the palette's own colours. Kept in sync by
+    // hand because these are set from JS, not CSS.
+    var colors = ['#F2C233', '#FFD84D', '#2E6FD9', '#4A8AE8', '#F6F1E7'];
     var layer = document.createElement('div');
     layer.className = 'confetti-layer';
     for (var i = 0; i < 26; i++){

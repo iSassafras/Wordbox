@@ -4,8 +4,8 @@
   "description": "Personal vocabulary trainer with spaced repetition",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#24343B",
-  "theme_color": "#24343B",
+  "background_color": "#0A0E15",
+  "theme_color": "#0A0E15",
   "icons": [
     {
       "src": "icon-192.png",
