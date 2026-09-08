@@ -1130,6 +1130,71 @@
   }
   .lib-count { flex-shrink: 0; }
 
+  /* ---- Read-only expanded row ---- */
+  .ro-field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 15px;
+    color: var(--cream);
+    min-height: 42px;
+  }
+  .ro-field span { min-width: 0; word-break: break-word; }
+
+  .field-with-speak {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .field-with-speak input { flex: 1; min-width: 0; }
+
+  .speak-btn.small {
+    width: 34px;
+    height: 34px;
+    margin-top: 0;
+    flex-shrink: 0;
+  }
+  .speak-btn.small svg { width: 15px; height: 15px; }
+
+  .wd-front .speak-btn.small { margin-left: 8px; vertical-align: middle; }
+
+  /* ---- Delete confirmation ---- */
+  .delete-confirm {
+    background: var(--error-bg);
+    border: 1px solid rgba(181, 83, 60, 0.5);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin: 4px 0 10px;
+    font-size: 13px;
+    color: #F0C4B6;
+    line-height: 1.45;
+  }
+  .delete-confirm strong { font-family: 'Lora', serif; }
+  .delete-confirm-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .delete-confirm-actions button {
+    flex: 1;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 12px;
+    border-radius: 9px;
+    cursor: pointer;
+  }
+  .danger-btn {
+    background: var(--error);
+    border: none;
+    color: #FFF3EF;
+  }
+
   .stat-box .num .stat-icon { font-size: 15px; margin-right: 5px; }
 
   .chart-hint {
@@ -1557,6 +1622,8 @@
     revealed: false,
     formOpen: false,
     editingId: null,
+    expandedId: null,
+    confirmDeleteId: null,
     search: '',
     loaded: false,
     typedValue: '',
@@ -2820,7 +2887,8 @@
     words.forEach(function(w){
       html += '<div class="word-detail">';
       html += '<div class="wd-top">';
-      html += '<div class="wd-front">' + escapeHtml(w.front) + '</div>';
+      html += '<div class="wd-front">' + escapeHtml(w.front) +
+        speakBtn(w.front, 'on-dark small') + '</div>';
       html += '<div class="wd-dots">' + boxDots(w.box, 'filled', '', null) + '</div>';
       html += '</div>';
       html += '<div class="wd-back">' + escapeHtml(w.back) + '</div>';
@@ -3207,31 +3275,52 @@
   // One form, used in two places: at the top when adding a new word, and
   // expanded inline under a row when editing an existing one. Only ever one
   // is open at a time, so the field ids stay unique.
-  function renderWordForm(editing){
-    var html = '<div class="add-form' + (editing ? ' inline-form' : '') + '">';
-    html += '<label>Word / phrase</label><input id="f-front" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + (editing ? escapeHtml(editing.front) : '') + '" placeholder="e.g. \u0437\u0435\u043B\u0435\u043D\u0438\u0439" />';
-    html += '<label>Meaning</label><input id="f-back" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + (editing ? escapeHtml(editing.back) : '') + '" placeholder="e.g. green" />';
-    html += '<label>Hint (optional)</label><input id="f-hint" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + (editing ? escapeHtml(editing.hint || '') : '') + '" placeholder="a nudge, shown on request during a lesson" />';
-    html += '<label>Notes (optional)</label><textarea id="f-notes" autocorrect="off" spellcheck="false" placeholder="gender, example sentence, etc.">' + (editing ? escapeHtml(editing.notes || '') : '') + '</textarea>';
-    html += '<div class="form-actions">';
-    html += '<button class="primary" data-action="save-word">' + (editing ? 'Save changes' : 'Add word') + '</button>';
-    html += '<button class="secondary" data-action="cancel-form">Cancel</button>';
-    html += '</div>';
-    if (editing){
-      var eAcc = accuracyOf(editing);
+  // One function for three states — adding, editing, and the read-only view
+  // you get by tapping a word. Sharing it guarantees the expanded row looks
+  // identical whether or not you're editing; two functions would drift.
+  function renderWordForm(word, readOnly){
+    var html = '<div class="add-form' + (word ? ' inline-form' : '') + '">';
+
+    if (readOnly){
+      html += '<label>Word / phrase</label>' +
+        '<div class="ro-field"><span>' + escapeHtml(word.front) + '</span>' +
+        speakBtn(word.front, 'on-dark small') + '</div>';
+      html += '<label>Meaning</label><div class="ro-field"><span>' + escapeHtml(word.back) + '</span></div>';
+      if (word.hint)  html += '<label>Hint</label><div class="ro-field"><span>' + escapeHtml(word.hint) + '</span></div>';
+      if (word.notes) html += '<label>Notes</label><div class="ro-field"><span>' + escapeHtml(word.notes) + '</span></div>';
+      html += '<div class="form-actions">';
+      html += '<button class="secondary" data-action="edit-word" data-id="' + word.id + '">Edit</button>';
+      html += '</div>';
+    } else {
+      html += '<label>Word / phrase</label>';
+      html += '<div class="field-with-speak">' +
+        '<input id="f-front" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + (word ? escapeHtml(word.front) : '') + '" placeholder="e.g. \u0437\u0435\u043B\u0435\u043D\u0438\u0439" />' +
+        (word ? speakBtn(word.front, 'on-dark small') : '') +
+        '</div>';
+      html += '<label>Meaning</label><input id="f-back" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + (word ? escapeHtml(word.back) : '') + '" placeholder="e.g. green" />';
+      html += '<label>Hint (optional)</label><input id="f-hint" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + (word ? escapeHtml(word.hint || '') : '') + '" placeholder="a nudge, shown on request during a lesson" />';
+      html += '<label>Notes (optional)</label><textarea id="f-notes" autocorrect="off" spellcheck="false" placeholder="gender, example sentence, etc.">' + (word ? escapeHtml(word.notes || '') : '') + '</textarea>';
+      html += '<div class="form-actions">';
+      html += '<button class="primary" data-action="save-word">' + (word ? 'Save changes' : 'Add word') + '</button>';
+      html += '<button class="secondary" data-action="cancel-form">Cancel</button>';
+      html += '</div>';
+    }
+
+    if (word){
+      var eAcc = accuracyOf(word);
       html += '<div class="edit-stats">';
       html += '<div class="es-head">Progress</div>';
       html += '<div class="es-grid">';
-      html += '<div><span class="n">' + editing.box + '<small>/5</small></span><span class="l">box</span></div>';
+      html += '<div><span class="n">' + word.box + '<small>/5</small></span><span class="l">box</span></div>';
       html += '<div><span class="n">' + (eAcc === null ? '\u2014' : eAcc + '%') + '</span><span class="l">accuracy</span></div>';
-      html += '<div><span class="n">' + editing.nRight + '</span><span class="l">right</span></div>';
-      html += '<div><span class="n">' + editing.nWrong + '</span><span class="l">wrong</span></div>';
+      html += '<div><span class="n">' + word.nRight + '</span><span class="l">right</span></div>';
+      html += '<div><span class="n">' + word.nWrong + '</span><span class="l">wrong</span></div>';
       html += '</div>';
       html += '<div class="es-line">Added: ' +
-        escapeHtml(editing.created ? sinceLabel(editing.created) : 'before this was tracked') + '</div>';
-      html += '<div class="es-line">Last practised: ' + escapeHtml(sinceLabel(editing.last)) + '</div>';
-      html += '<div class="es-line">Next due: ' + escapeHtml(editing.due <= todayStr() ? 'now' : editing.due) + '</div>';
-      html += '<div class="es-note">Editing the text keeps all of this intact.</div>';
+        escapeHtml(word.created ? sinceLabel(word.created) : 'before this was tracked') + '</div>';
+      html += '<div class="es-line">Last practised: ' + escapeHtml(sinceLabel(word.last)) + '</div>';
+      html += '<div class="es-line">Next due: ' + escapeHtml(word.due <= todayStr() ? 'now' : word.due) + '</div>';
+      if (!readOnly) html += '<div class="es-note">Editing the text keeps all of this intact.</div>';
       html += '</div>';
     }
     html += '</div>';
@@ -3249,6 +3338,8 @@
     return 'due ' + dateStr;
   }
 
+  // The line under each word reports whatever you're sorting by, so the list
+  // answers the question you're currently asking of it.
   function rowMeta(w){
     var acc = accuracyOf(w);
     switch (state.sortBy){
@@ -3348,8 +3439,13 @@
     } else {
       list.forEach(function(w){
         var isEditing = state.editingId === w.id;
-        html += '<div class="word-entry' + (isEditing ? ' is-editing' : '') + '">';
-        html += '<div class="word-row">';
+        var isOpen = isEditing || state.expandedId === w.id;
+        var confirming = state.confirmDeleteId === w.id;
+        html += '<div class="word-entry' + (isOpen ? ' is-editing' : '') + '">';
+        // The row itself toggles the expanded view. Taps on the pencil or bin
+        // resolve to those buttons first, since the handler walks up from the
+        // tapped element and finds the nearest data-action.
+        html += '<div class="word-row" data-action="toggle-word" data-id="' + w.id + '">';
         html += '<div class="box-dots-inline">' + boxDots(w.box, 'filled', '', null) + '</div>';
         html += '<div class="word-text"><div class="front">' + escapeHtml(w.front) + '</div><div class="back">' + escapeHtml(w.back) + '</div>';
         // The line under each word reports whatever you're sorting by, so
@@ -3360,9 +3456,20 @@
         html += '</div>';
         html += '<div class="row-actions">';
         html += '<button class="icon-btn' + (isEditing ? ' active' : '') + '" data-action="edit-word" data-id="' + w.id + '">' + ICONS.edit + '</button>';
-        html += '<button class="icon-btn danger" data-action="delete-word" data-id="' + w.id + '">' + ICONS.trash + '</button>';
+        html += '<button class="icon-btn danger' + (confirming ? ' active' : '') + '" data-action="ask-delete" data-id="' + w.id + '">' + ICONS.trash + '</button>';
         html += '</div></div>';
-        if (isEditing) html += renderWordForm(w);
+
+        if (confirming){
+          html += '<div class="delete-confirm">' +
+            '<span>Delete <strong>' + escapeHtml(w.front) + '</strong>? Its progress goes too.</span>' +
+            '<div class="delete-confirm-actions">' +
+            '<button class="danger-btn" data-action="delete-word" data-id="' + w.id + '">Delete</button>' +
+            '<button class="secondary" data-action="cancel-delete">Keep</button>' +
+            '</div></div>';
+        }
+
+        if (isEditing) html += renderWordForm(w, false);
+        else if (isOpen) html += renderWordForm(w, true);
         html += '</div>';
       });
     }
@@ -3585,6 +3692,8 @@
       // The box filter is a temporary drill-down from Profile, not a saved
       // view. Leaving the Library drops it.
       state.boxFilter = null;
+      state.expandedId = null;
+      state.confirmDeleteId = null;
       state.view = el.getAttribute('data-view');
       state.formOpen = false;
       state.batchOpen = false;
@@ -3713,21 +3822,44 @@
       state.editingId = null;
       render();
     }
+    else if (action === 'toggle-word'){
+      var tId = el.getAttribute('data-id');
+      state.expandedId = (state.expandedId === tId && !state.editingId) ? null : tId;
+      state.editingId = null;
+      state.formOpen = false;
+      state.confirmDeleteId = null;
+      render();
+    }
     else if (action === 'edit-word'){
       var wantId = el.getAttribute('data-id');
-      // Tapping the pencil on the row already open closes it again.
+      // Tapping the pencil on the row already being edited closes it again.
       if (state.editingId === wantId){
         state.editingId = null;
         state.formOpen = false;
+        state.expandedId = null;
       } else {
         state.editingId = wantId;
+        state.expandedId = wantId;
         state.formOpen = true;
       }
+      state.confirmDeleteId = null;
+      render();
+    }
+    else if (action === 'ask-delete'){
+      var dId = el.getAttribute('data-id');
+      state.confirmDeleteId = state.confirmDeleteId === dId ? null : dId;
+      render();
+    }
+    else if (action === 'cancel-delete'){
+      state.confirmDeleteId = null;
       render();
     }
     else if (action === 'delete-word'){
       var id = el.getAttribute('data-id');
       state.words = state.words.filter(function(w){ return w.id !== id; });
+      state.confirmDeleteId = null;
+      if (state.expandedId === id) state.expandedId = null;
+      if (state.editingId === id){ state.editingId = null; state.formOpen = false; }
       persist();
       render();
     }
