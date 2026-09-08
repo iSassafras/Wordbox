@@ -971,6 +971,24 @@
   /* The option shrinks to leave room for the speaker beside it. */
   .option-row .option-btn { flex: 1; min-width: 0; }
 
+  .tts-block {
+    margin-top: 22px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .tts-block input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--cream);
+    font-family: inherit;
+    font-size: 14px;
+    padding: 10px 12px;
+    border-radius: 9px;
+    margin-top: 10px;
+  }
+  .tts-block .form-actions { margin-top: 10px; }
+
   .pref-note {
     font-size: 11.5px;
     color: var(--cream-dim);
@@ -1781,7 +1799,125 @@
     }
   }
 
+  // ---------- GOOGLE CLOUD TTS (optional) ----------
+  // The key lives in localStorage on this device only. It is deliberately NOT
+  // written to config.js (which is public in the repo) and NOT synced to
+  // Firestore (which would copy it to every device and into the database).
+  var TTS_KEY_STORE = 'wordbox-tts-key';
+  var TTS_VOICE = 'uk-UA-Wavenet-A';
+
+  function getTtsKey(){
+    try { return localStorage.getItem(TTS_KEY_STORE) || ''; } catch (e) { return ''; }
+  }
+  function setTtsKey(v){
+    try {
+      if (v) localStorage.setItem(TTS_KEY_STORE, v);
+      else localStorage.removeItem(TTS_KEY_STORE);
+    } catch (e) {}
+  }
+
+  // Audio is cached permanently, keyed by the word. Each word therefore costs
+  // one synthesis request in its lifetime — without this the free allowance
+  // would be spent re-generating the same twenty words every lesson.
+  var audioDbPromise = null;
+  function audioDb(){
+    if (audioDbPromise) return audioDbPromise;
+    audioDbPromise = new Promise(function(resolve, reject){
+      if (!('indexedDB' in window)) return reject();
+      var req = indexedDB.open('wordbox-audio', 1);
+      req.onupgradeneeded = function(){ req.result.createObjectStore('clips'); };
+      req.onsuccess = function(){ resolve(req.result); };
+      req.onerror = function(){ reject(); };
+    }).catch(function(){ return null; });
+    return audioDbPromise;
+  }
+
+  async function cachedClip(key){
+    var db = await audioDb();
+    if (!db) return null;
+    return new Promise(function(resolve){
+      try {
+        var r = db.transaction('clips', 'readonly').objectStore('clips').get(key);
+        r.onsuccess = function(){ resolve(r.result || null); };
+        r.onerror = function(){ resolve(null); };
+      } catch (e) { resolve(null); }
+    });
+  }
+
+  async function storeClip(key, dataUrl){
+    var db = await audioDb();
+    if (!db) return;
+    try { db.transaction('clips', 'readwrite').objectStore('clips').put(dataUrl, key); } catch (e) {}
+  }
+
+  var ttsAudio = null;
+
+  function playClip(dataUrl, text){
+    try {
+      if (ttsAudio){ ttsAudio.pause(); ttsAudio = null; }
+      ttsAudio = new Audio(dataUrl);
+      ttsAudio.onplay  = function(){ setSpeaking(text); };
+      ttsAudio.onended = function(){ setSpeaking(null); };
+      ttsAudio.onerror = function(){ setSpeaking(null); speakSystem(text); };
+      var p = ttsAudio.play();
+      if (p && p.catch) p.catch(function(){ setSpeaking(null); speakSystem(text); });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async function speakGoogle(text){
+    var cacheKey = TTS_VOICE + '|' + text;
+    var hit = await cachedClip(cacheKey);
+    if (hit){ playClip(hit, text); return true; }
+
+    if (!navigator.onLine) return false;
+    var key = getTtsKey();
+    if (!key) return false;
+
+    try {
+      var res = await fetch('https://texttospeech.googleapis.com/v1/text:synthesize?key=' + encodeURIComponent(key), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          input: { text: text },
+          voice: { languageCode: 'uk-UA', name: TTS_VOICE },
+          audioConfig: { audioEncoding: 'MP3', speakingRate: 0.9 }
+        })
+      });
+      if (!res.ok) return false;
+      var data = await res.json();
+      if (!data.audioContent) return false;
+      var url = 'data:audio/mp3;base64,' + data.audioContent;
+      storeClip(cacheKey, url);
+      playClip(url, text);
+      return true;
+    } catch (e) {
+      return false;   // network, CORS, bad key — fall back quietly
+    }
+  }
+
   function speakUkrainian(text){
+    if (!canSpeak() || !text) return;
+
+    // No key means no Google path at all, so speak immediately and
+    // SYNCHRONOUSLY. This matters more than it looks: iOS only permits
+    // speechSynthesis.speak() from inside a user gesture, and awaiting the
+    // cache lookup first would push the call into a promise continuation,
+    // where iOS silently refuses it.
+    if (!getTtsKey()){
+      speakSystem(text);
+      return;
+    }
+
+    // With a key, the async path is fine — Google audio plays through an
+    // <audio> element, which the earlier unlock already cleared for
+    // programmatic playback.
+    speakGoogle(text).then(function(ok){ if (!ok) speakSystem(text); });
+  }
+
+  function speakSystem(text){
     if (!canSpeak() || !text) return;
     try {
       unlockAudio();
@@ -3304,6 +3440,30 @@
       }
     }
 
+    if ('speechSynthesis' in window || getTtsKey()){
+      var hasKey = !!getTtsKey();
+      html += '<div class="tts-block">';
+      html += '<div class="es-head">Google voice (optional)</div>';
+      if (hasKey){
+        html += '<div class="pref-note">A key is set on this device, so words are read by ' +
+          'Google\u2019s Ukrainian voice. Each word is synthesised once and cached, so it costs ' +
+          'nothing after the first play and works offline afterwards.</div>';
+        html += '<div class="form-actions">';
+        html += '<button class="secondary" data-action="clear-tts-key">Remove key</button>';
+        html += '</div>';
+      } else {
+        html += '<div class="pref-note">Paste a Google Cloud Text-to-Speech API key for a ' +
+          'better voice than the system one. Stored on this device only \u2014 never in the ' +
+          'repository and never synced. Leave empty to keep using the system voice.</div>';
+        html += '<input id="tts-key-input" type="password" autocomplete="off" autocapitalize="none" ' +
+          'autocorrect="off" spellcheck="false" placeholder="API key" />';
+        html += '<div class="form-actions">';
+        html += '<button class="primary" data-action="save-tts-key">Save key</button>';
+        html += '</div>';
+      }
+      html += '</div>';
+    }
+
     if (useFirebase && currentUser){
       html += '<div class="account-row">Signed in as ' + escapeHtml(currentUser.email) + '<button class="text-btn" data-action="sign-out">Sign out</button></div>';
     }
@@ -3459,6 +3619,18 @@
       persistSettings();
       render();
       if (state.speechOn) speakUkrainian('\u0434\u043E\u0431\u0440\u0435');   // "good"
+    }
+    else if (action === 'save-tts-key'){
+      var kEl = document.getElementById('tts-key-input');
+      var kVal = kEl ? kEl.value.trim() : '';
+      if (!kVal) return;
+      setTtsKey(kVal);
+      render();
+      speakUkrainian('\u0434\u043E\u0431\u0440\u0435');   // "good" — proves it works
+    }
+    else if (action === 'clear-tts-key'){
+      setTtsKey('');
+      render();
     }
     else if (action === 'toggle-sound'){
       state.soundOn = !state.soundOn;
