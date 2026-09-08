@@ -1688,28 +1688,68 @@
   var ukVoices = [];
   var voicesReady = false;
 
+  // Higher-quality voices are downloaded separately on iOS, so a device can
+  // end up with both the compact default and an Enhanced or Premium version
+  // of the same language. The Web Speech API exposes no quality field, but
+  // Apple puts the tier in the voice name, so rank on that and keep only the
+  // best tier present — otherwise a random pick would serve the robotic one
+  // half the time.
+  // Rank on voiceURI first. Apple's identifiers look like
+  // "com.apple.voice.enhanced.uk-UA.Lesya" and are stable regardless of the
+  // phone's display language. The visible name is localised — on a German
+  // device the enhanced voice reads "Erweitert" — so matching English words
+  // in the name alone silently fails and the compact voice wins.
+  function voiceRank(v){
+    var id = ((v.voiceURI || '') + ' ' + (v.name || '')).toLowerCase();
+    if (id.indexOf('premium') !== -1) return 3;
+    if (id.indexOf('enhanced') !== -1) return 2;
+    return 1;   // compact / default
+  }
+
   function findUkrainianVoices(){
     if (!('speechSynthesis' in window)) return [];
     var voices = window.speechSynthesis.getVoices() || [];
     if (!voices.length) return [];
     voicesReady = true;
-    return voices.filter(function(v){
+
+    var uk = voices.filter(function(v){
       return (v.lang || '').toLowerCase().indexOf('uk') === 0;   // uk-UA
     });
+    if (!uk.length) return [];
+
+    var best = Math.max.apply(null, uk.map(voiceRank));
+    // Several voices of the same tier still get picked between at random.
+    return uk.filter(function(v){ return voiceRank(v) === best; });
+  }
+
+  function voiceQualityLabel(){
+    if (!ukVoices.length) return null;
+    var r = voiceRank(ukVoices[0]);
+    return r === 3 ? 'premium' : r === 2 ? 'enhanced' : 'standard';
   }
 
   function initVoices(){
     if (!('speechSynthesis' in window)) return;
-    ukVoices = findUkrainianVoices();
-    // Safari populates the list asynchronously and doesn't reliably fire
-    // voiceschanged, so listen and also poll a few times.
-    window.speechSynthesis.onvoiceschanged = function(){
+
+    function refresh(){
+      var before = ukVoices.length ? voiceRank(ukVoices[0]) : 0;
       ukVoices = findUkrainianVoices();
-    };
+      var after = ukVoices.length ? voiceRank(ukVoices[0]) : 0;
+      // Repaint the Profile if a better voice turned up while it was open.
+      if (after !== before && state.loaded && state.view === 'stats') render();
+    }
+
+    refresh();
+    window.speechSynthesis.onvoiceschanged = refresh;
+
+    // Keep looking for the full window rather than stopping at the first hit.
+    // The built-in compact voice is there immediately; a downloaded Enhanced
+    // one can register a beat later, and stopping early would lock in the
+    // worse of the two.
     var tries = 0;
     var t = setInterval(function(){
-      if (ukVoices.length || tries++ > 6) { clearInterval(t); return; }
-      ukVoices = findUkrainianVoices();
+      refresh();
+      if (tries++ > 14) clearInterval(t);   // ~6 seconds
     }, 400);
   }
 
@@ -3251,10 +3291,16 @@
           'read with the wrong accent. Add one in Settings \u203A Accessibility \u203A ' +
           'Spoken Content \u203A Voices \u203A Ukrainian.</div>';
       } else if (state.speechOn && ukVoices.length){
-        html += '<div class="pref-note">' + ukVoices.length +
-          (ukVoices.length === 1 ? ' Ukrainian voice available.' :
-            ' Ukrainian voices available \u2014 one is picked at random each time.') +
-          '</div>';
+        var q = voiceQualityLabel();
+        var note = 'Using <strong>' + escapeHtml(ukVoices[0].name || 'unnamed') + '</strong> \u2014 ' +
+          q + ' quality' +
+          (ukVoices.length > 1 ? ', and ' + (ukVoices.length - 1) + ' more of the same tier picked between at random' : '') + '.';
+        if (q === 'standard'){
+          note += ' A better one can be downloaded free in Settings \u203A Accessibility \u203A ' +
+            'Spoken Content \u203A Voices \u203A Ukrainian \u2014 choose Premium or Enhanced. ' +
+            'The app will use it automatically.';
+        }
+        html += '<div class="pref-note">' + note + '</div>';
       }
     }
 
