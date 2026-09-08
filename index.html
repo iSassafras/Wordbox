@@ -915,6 +915,34 @@
   .sync-dot.wait  { background: var(--accent); }
   .sync-dot.local { background: var(--cream-dim); }
 
+  /* ---- Speak button ---- */
+  .speak-btn {
+    margin-top: 14px;
+    background: none;
+    border: 1px solid var(--paper-edge);
+    color: var(--ink-soft);
+    border-radius: 999px;
+    width: 42px;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.12s ease, background 0.15s ease;
+  }
+  .speak-btn:active { transform: scale(0.92); background: var(--paper-edge); }
+  .speak-btn svg { width: 19px; height: 19px; display: block; }
+
+  .pref-note {
+    font-size: 11.5px;
+    color: var(--cream-dim);
+    line-height: 1.5;
+    margin-top: 8px;
+    padding: 9px 12px;
+    background: var(--bg-elevated);
+    border-radius: 8px;
+  }
+
   /* ---- Loading ---- */
   .loading-screen {
     display: flex;
@@ -1452,6 +1480,9 @@
     sampleNote: null,
     sortBy: 'practised',
     sortDir: 'desc',
+    boxFilter: null,
+    soundOn: true,
+    speechOn: true,
     batchOpen: false,
     batchStep: 1,
     batchItems: [],
@@ -1522,6 +1553,15 @@
       if (navigator.audioSession) navigator.audioSession.type = 'playback';
     } catch (e) {}
     try {
+      // A silent utterance during the gesture unlocks speech for later
+      // automatic calls, which would otherwise be blocked outside a tap.
+      if ('speechSynthesis' in window){
+        var prime = new SpeechSynthesisUtterance(' ');
+        prime.volume = 0;
+        window.speechSynthesis.speak(prime);
+      }
+    } catch (e) {}
+    try {
       var el = document.createElement('audio');
       el.setAttribute('x-webkit-airplay', 'deny');   // keep it out of AirPlay
       el.preload = 'auto';
@@ -1563,6 +1603,69 @@
     } catch (e) {
       // Audio is a nicety; never let it break an answer.
     }
+  }
+
+  // ---------- SPEECH ----------
+  // Uses the browser's own voices (SpeechSynthesis). Nothing to download, no
+  // API, works offline — but which voices exist is entirely up to the device,
+  // so everything here degrades quietly if Ukrainian isn't installed.
+  // How many Ukrainian voices exist is entirely up to the device. iOS often
+  // ships just one; a desktop may have several. Collect all of them and pick
+  // at random per utterance, so hearing a word twice doesn't always sound
+  // identical — useful for not tying a word to one particular voice.
+  var ukVoices = [];
+  var voicesReady = false;
+
+  function findUkrainianVoices(){
+    if (!('speechSynthesis' in window)) return [];
+    var voices = window.speechSynthesis.getVoices() || [];
+    if (!voices.length) return [];
+    voicesReady = true;
+    return voices.filter(function(v){
+      return (v.lang || '').toLowerCase().indexOf('uk') === 0;   // uk-UA
+    });
+  }
+
+  function initVoices(){
+    if (!('speechSynthesis' in window)) return;
+    ukVoices = findUkrainianVoices();
+    // Safari populates the list asynchronously and doesn't reliably fire
+    // voiceschanged, so listen and also poll a few times.
+    window.speechSynthesis.onvoiceschanged = function(){
+      ukVoices = findUkrainianVoices();
+    };
+    var tries = 0;
+    var t = setInterval(function(){
+      if (ukVoices.length || tries++ > 6) { clearInterval(t); return; }
+      ukVoices = findUkrainianVoices();
+    }, 400);
+  }
+
+  function canSpeak(){
+    return state.speechOn && ('speechSynthesis' in window);
+  }
+
+  function speakUkrainian(text){
+    if (!canSpeak() || !text) return;
+    try {
+      unlockAudio();
+      window.speechSynthesis.cancel();   // queued calls otherwise stack up
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = 'uk-UA';
+      // Random pick when the device has more than one; with a single voice
+      // this simply always selects it.
+      if (ukVoices.length) u.voice = ukVoices[Math.floor(Math.random() * ukVoices.length)];
+      u.rate = 0.9;                      // a shade slow, it's for learning
+      window.speechSynthesis.speak(u);
+    } catch (e) {
+      // Speech is a nicety; never let it interrupt a lesson.
+    }
+  }
+
+  function speakBtn(text){
+    if (!canSpeak()) return '';
+    return '<button class="speak-btn" data-action="speak" data-text="' +
+      escapeHtml(text) + '" aria-label="Hear it">' + ICONS.speaker + '</button>';
   }
 
   function soundCorrect(){
@@ -1693,6 +1796,7 @@
 
   function endLesson(completed){
     clearTimeout(advanceTimer);
+    try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (e) {}
     // Only a lesson carried through to the end extends the day streak.
     // Bailing out with the X doesn't count.
     if (completed && state.lessonAnswered > 0){
@@ -2239,6 +2343,7 @@
       var settings = JSON.parse((await storageGet('settings')) || '{}');
       if (isValidSort(settings.sortBy)) state.sortBy = settings.sortBy;
       if (typeof settings.soundOn === 'boolean') state.soundOn = settings.soundOn;
+      if (typeof settings.speechOn === 'boolean') state.speechOn = settings.speechOn;
       if (isValidDir(settings.sortDir)) state.sortDir = settings.sortDir;
     } catch (e) {
       // no settings saved yet — keep the default
@@ -2249,7 +2354,12 @@
   }
 
   async function persistSettings(){
-    await storageSet('settings', JSON.stringify({ sortBy: state.sortBy, sortDir: state.sortDir }));
+    await storageSet('settings', JSON.stringify({
+      sortBy: state.sortBy,
+      sortDir: state.sortDir,
+      soundOn: state.soundOn,
+      speechOn: state.speechOn
+    }));
   }
 
   async function persist(){
@@ -2333,6 +2443,7 @@
     trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>',
     arrowUp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="6 11 12 5 18 11"></polyline></svg>',
     arrowDown: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="6 13 12 19 18 13"></polyline></svg>',
+    speaker: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path><path d="M18.5 5.5a9 9 0 0 1 0 13"></path></svg>',
     sort: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="14" y2="12"></line><line x1="4" y1="17" x2="9" y2="17"></line></svg>',
     search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="16.2" y1="16.2" x2="21" y2="21"></line></svg>',
     edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>'
@@ -2486,6 +2597,17 @@
       // Generated once per card and cached on the queue entry — regenerating
       // per render would reshuffle the buttons under the user's finger.
       if (!entry.options) entry.options = buildOptions(w, field);
+
+      // Read the Ukrainian aloud when the card first appears. Flagged on the
+      // queue entry so the many other renders (revealing an answer, the
+      // sync line ticking) don't set it off again. A short delay lets the
+      // card paint first, and means it doesn't collide with the correct or
+      // wrong tone from the previous answer.
+      if (entry.dir === 'choice-en' && !entry.spoken && canSpeak()){
+        entry.spoken = true;
+        setTimeout(function(){ speakUkrainian(w.front); }, 320);
+      }
+
       return renderChoiceCard(w, entry.options, field);
     }
     return renderTypingCard(w);
@@ -2509,6 +2631,10 @@
     html += '<div class="card-prompt-label">' + promptLabel + '</div>';
     html += '<div class="card-front' + (field === 'front' ? ' is-english' : '') + '">' +
       escapeHtml(promptText) + '</div>';
+    // Only when the Ukrainian is the thing on screen.
+    if (field === 'back') html += speakBtn(w.front);
+    // Once answered, the Ukrainian is known either way, so offer it then too.
+    else if (answered) html += speakBtn(w.front);
     if (answered && w.notes) html += '<div class="card-notes">' + escapeHtml(w.notes) + '</div>';
     html += '</div>';
 
@@ -2607,6 +2733,7 @@
           '<span class="compare-value is-right">' + d.b + '</span></div>';
         html += '</div>';
       }
+      html += speakBtn(w.front);
       if (w.notes) html += '<div class="card-notes">' + escapeHtml(w.notes) + '</div>';
       // Correct answers auto-advance; misses wait so the spelling can sink in.
       if (!state.wasCorrect){
@@ -2979,6 +3106,23 @@
       '<button class="toggle' + (state.soundOn ? ' on' : '') + '" data-action="toggle-sound">' +
       '<span class="knob"></span></button></div>';
 
+    if ('speechSynthesis' in window){
+      html += '<div class="pref-row"><span>Speak Ukrainian</span>' +
+        '<button class="toggle' + (state.speechOn ? ' on' : '') + '" data-action="toggle-speech">' +
+        '<span class="knob"></span></button></div>';
+      // Said plainly rather than letting a wrong-language voice sound broken.
+      if (state.speechOn && voicesReady && !ukVoices.length){
+        html += '<div class="pref-note">No Ukrainian voice found on this device, so words may be ' +
+          'read with the wrong accent. Add one in Settings \u203A Accessibility \u203A ' +
+          'Spoken Content \u203A Voices \u203A Ukrainian.</div>';
+      } else if (state.speechOn && ukVoices.length){
+        html += '<div class="pref-note">' + ukVoices.length +
+          (ukVoices.length === 1 ? ' Ukrainian voice available.' :
+            ' Ukrainian voices available \u2014 one is picked at random each time.') +
+          '</div>';
+      }
+    }
+
     if (useFirebase && currentUser){
       html += '<div class="account-row">Signed in as ' + escapeHtml(currentUser.email) + '<button class="text-btn" data-action="sign-out">Sign out</button></div>';
     }
@@ -3125,6 +3269,15 @@
     else if (action === 'clear-box-filter'){
       state.boxFilter = null;
       render();
+    }
+    else if (action === 'speak'){
+      speakUkrainian(el.getAttribute('data-text'));
+    }
+    else if (action === 'toggle-speech'){
+      state.speechOn = !state.speechOn;
+      persistSettings();
+      render();
+      if (state.speechOn) speakUkrainian('\u0434\u043E\u0431\u0440\u0435');   // "good"
     }
     else if (action === 'toggle-sound'){
       state.soundOn = !state.soundOn;
@@ -3363,6 +3516,8 @@
   setInterval(function(){
     if (state.view === 'cards' && !state.sessionActive) refreshSyncLine();
   }, 30000);
+
+  initVoices();
 
   if (useFirebase){
     // If the SDK can't be fetched (offline before it's been cached, or a
