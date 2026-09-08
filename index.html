@@ -2688,13 +2688,25 @@
   // sorts last, so it waits its turn rather than crowding out the backlog.
   function buildQueue(practice){
     var t = todayStr();
-    var pool = practice ? state.words.slice()
-                        : state.words.filter(function(w){ return w.due <= t; });
+    var pool;
 
-    pool.sort(function(a, b){
-      if (a.due !== b.due) return a.due < b.due ? -1 : 1;
-      return a.box - b.box;
-    });
+    if (practice){
+      // Extra practice draws at random from the whole library. Ordering by
+      // due date here would serve the same ten words every time, since
+      // nothing you do in practice mode changes the schedule.
+      pool = state.words.slice();
+      for (var i = pool.length - 1; i > 0; i--){
+        var j = Math.floor(Math.random() * (i + 1));
+        var tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
+      }
+    } else {
+      pool = state.words.filter(function(w){ return w.due <= t; });
+      pool.sort(function(a, b){
+        if (a.due !== b.due) return a.due < b.due ? -1 : 1;
+        return a.box - b.box;
+      });
+    }
+
     state.sessionQueue = pool.slice(0, LESSON_SIZE)
       .map(function(w){ return { id: w.id, dir: pickMode(w) }; });
     state.lessonWordIds = state.sessionQueue.map(function(e){ return e.id; });
