@@ -407,6 +407,9 @@
     font-weight: 600;
     line-height: 1.3;
   }
+  /* English prompts are often phrases ("to go, to walk"), so give them a
+     slightly smaller size than a single Ukrainian word needs. */
+  .card-front.is-english { font-size: 24px; }
 
   .card-back {
     margin-top: 18px;
@@ -545,8 +548,19 @@
   .icon-btn.danger:hover { color: var(--error); }
 
   .search-bar {
+    position: relative;
     margin-top: 14px;
+    display: flex;
+    align-items: center;
   }
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    display: flex;
+    color: var(--cream-dim);
+    pointer-events: none;
+  }
+  .search-icon svg { width: 16px; height: 16px; display: block; }
   .search-bar input {
     width: 100%;
     background: var(--bg-elevated);
@@ -554,8 +568,26 @@
     color: var(--cream);
     font-family: inherit;
     font-size: 14px;
-    padding: 10px 14px;
+    /* 16px gutter + 16px icon + 10px gap on the left; room for the ✕ right */
+    padding: 10px 38px 10px 38px;
     border-radius: 10px;
+  }
+  .search-bar input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .search-bar input:focus + .search-clear,
+  .search-bar input:focus ~ .search-icon { color: var(--accent-soft); }
+  .search-clear {
+    position: absolute;
+    right: 6px;
+    background: none;
+    border: none;
+    color: var(--cream-dim);
+    font-size: 13px;
+    line-height: 1;
+    padding: 8px;
+    cursor: pointer;
   }
 
   .add-row {
@@ -867,21 +899,14 @@
   .stat-acc.poor { color: #E09274; }
   /* ---- Sync status ---- */
   .sync-line {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    color: var(--cream-dim);
-    padding: 10px 12px;
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    margin-top: 10px;
-    line-height: 1.4;
+    gap: 6px;
+    flex-shrink: 0;
   }
   .sync-dot {
-    width: 7px;
-    height: 7px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     flex-shrink: 0;
     background: var(--cream-dim);
@@ -991,6 +1016,38 @@
     line-height: 1;
   }
 
+  /* ---- Inline editing ---- */
+  .word-entry { border-bottom: 1px solid var(--border); }
+  .word-entry .word-row { border-bottom: none; }
+  .word-entry.is-editing {
+    background: rgba(201, 162, 39, 0.05);
+    border-left: 2px solid var(--accent);
+    border-radius: 0 10px 10px 0;
+    padding-left: 10px;
+    margin: 4px 0 8px;
+  }
+  .add-form.inline-form {
+    background: transparent;
+    padding: 0 0 14px;
+    margin: 0;
+  }
+  .icon-btn.active { color: var(--accent-soft); }
+
+  .lib-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 16px 0 4px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cream-dim);
+  }
+  .lib-count { flex-shrink: 0; }
+
+  .stat-box .num .stat-icon { font-size: 15px; margin-right: 5px; }
+
   .chart-hint {
     font-size: 11px;
     color: var(--cream-dim);
@@ -1001,11 +1058,23 @@
 
   /* ---- Sort control ---- */
   .sort-bar {
+    position: relative;
     display: flex;
     align-items: stretch;
     gap: 8px;
     margin-top: 10px;
   }
+  .sort-icon {
+    position: absolute;
+    left: 12px;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    color: var(--cream-dim);
+    pointer-events: none;   /* tapping it still opens the select */
+  }
+  .sort-icon svg { width: 15px; height: 15px; display: block; }
   .sort-bar select {
     flex: 1;
     background: var(--bg-elevated);
@@ -1013,7 +1082,7 @@
     color: var(--cream);
     font-family: inherit;
     font-size: 14px;
-    padding: 9px 12px;
+    padding: 9px 12px 9px 36px;
     border-radius: 10px;
     -webkit-appearance: none;
     appearance: none;
@@ -1139,6 +1208,7 @@
   }
   .wd-dots { display: flex; gap: 4px; flex-shrink: 0; }
   .wd-dots span {
+    display: block;
     width: 6px; height: 6px; border-radius: 50%;
     background: var(--border);
   }
@@ -1277,26 +1347,50 @@
   }
   .bar-row {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 3px;
+    margin-bottom: 12px;
     width: 100%;
     background: none;
     border: none;
     padding: 3px 0;
     font-family: inherit;
     cursor: pointer;
+    text-align: left;
     -webkit-tap-highlight-color: transparent;
   }
   .bar-row:disabled { cursor: default; opacity: 0.45; }
   .bar-row:not(:disabled):active .bar-track { background: var(--border); }
+  .bar-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .bar-note {
+    font-size: 10.5px;
+    color: var(--cream-dim);
+    opacity: 0.75;
+    letter-spacing: 0.02em;
+    padding-left: 44px;
+  }
+  .box-chart-sub {
+    font-size: 12px;
+    color: var(--cream-dim);
+    line-height: 1.5;
+    margin: -4px 0 16px;
+  }
   .bar-row .bar-label {
     font-size: 12px;
     color: var(--cream-dim);
     width: 44px;
     flex-shrink: 0;
   }
+  /* These are <span>s because they sit inside a <button>, where <div> isn't
+     valid. Inline elements ignore width and height, so both need an explicit
+     display — without it the fill collapses and the bar looks empty. */
   .bar-track {
+    display: block;
     flex: 1;
     background: var(--bg-elevated);
     border-radius: 6px;
@@ -1304,9 +1398,12 @@
     overflow: hidden;
   }
   .bar-fill {
+    display: block;
     height: 100%;
+    min-width: 3px;
     background: var(--accent);
     border-radius: 6px;
+    transition: width 0.3s ease;
   }
   .bar-row .bar-count {
     font-size: 12px;
@@ -1574,7 +1671,7 @@
       // already reset to box 1 and due tomorrow.
       state.lessonMisses[word.id] = (state.lessonMisses[word.id] || 0) + 1;
       if (state.lessonMisses[word.id] < 3){
-        state.sessionQueue.push({ id: word.id, dir: pickMode() });
+        state.sessionQueue.push({ id: word.id, dir: pickMode(word) });
       } else {
         state.parkedThisLesson = true;
       }
@@ -1690,29 +1787,47 @@
   //   'choice' — shown the Ukrainian, pick the English from 3 options
   // Multiple choice needs two believable wrong answers drawn from the deck,
   // so it only kicks in once there are 3+ distinct meanings to draw from.
-  function pickMode(){
-    if (distinctMeaningCount() < 3) return 'typing';
-    return Math.random() < 0.5 ? 'typing' : 'choice';
+  // Three card types:
+  //   'choice-en'  Ukrainian shown, pick the English   (any box)
+  //   'choice-uk'  English shown, pick the Ukrainian   (boxes 1-2 only)
+  //   'typing'     English shown, type the Ukrainian   (box 3+ only)
+  //
+  // Recall is much harder than recognition, so producing the spelling from
+  // scratch is held back until a word has already survived a few reviews.
+  // From box 3 onward it replaces the multiple-choice version of that
+  // direction outright rather than alternating with it.
+  var TYPING_FROM_BOX = 3;
+
+  function pickMode(word){
+    var pool = [];
+    if (distinctCount('back') >= 3)  pool.push('choice-en');
+    if (word.box >= TYPING_FROM_BOX) pool.push('typing');
+    else if (distinctCount('front') >= 3) pool.push('choice-uk');
+    // A deck of one or two words can't produce distractors, so typing is all
+    // that's left regardless of box.
+    if (!pool.length) return 'typing';
+    return pool[Math.floor(Math.random() * pool.length)];
   }
 
-  function distinctMeaningCount(){
+  function distinctCount(field){
     var seen = {};
-    state.words.forEach(function(w){ seen[normalize(w.back)] = true; });
+    state.words.forEach(function(w){ seen[normalize(w[field])] = true; });
     return Object.keys(seen).length;
   }
 
   // Two distractors from other words, deduped by meaning so an option list
   // never shows the same English twice (real decks have synonyms).
-  function buildOptions(word){
-    var correct = word.back;
+  // field is 'back' (English options) or 'front' (Ukrainian options).
+  function buildOptions(word, field){
+    var correct = word[field];
     var pool = [];
     var seen = {};
     seen[normalize(correct)] = true;
     state.words.forEach(function(w){
-      var key = normalize(w.back);
+      var key = normalize(w[field]);
       if (w.id === word.id || seen[key]) return;
       seen[key] = true;
-      pool.push(w.back);
+      pool.push(w[field]);
     });
     // shuffle pool, take 2
     for (var i = pool.length - 1; i > 0; i--){
@@ -1824,27 +1939,41 @@
     return new Date(iso).toISOString().slice(0, 10);
   }
 
+  // Short form of agoLabel — this now shares a cramped line with the word
+  // count, so "2m ago" rather than "2 minutes ago".
+  function agoShort(iso){
+    if (!iso) return null;
+    var secs = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+    if (secs < 60) return 'just now';
+    var mins = Math.floor(secs / 60);
+    if (mins < 60) return mins + 'm ago';
+    var hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + 'h ago';
+    var days = Math.floor(hrs / 24);
+    if (days < 30) return days + 'd ago';
+    return new Date(iso).toISOString().slice(0, 10);
+  }
+
   function syncLineHtml(){
-    var cls = 'sync-line', dot = 'ok', text;
+    var dot = 'ok', text;
 
     if (!useFirebase){
       dot = 'local';
-      text = 'Saved on this device · sync not set up';
+      text = 'on this device';
     } else if (!navigator.onLine){
       dot = 'wait';
-      var offAgo = agoLabel(loadLastSync());
-      text = 'Offline — changes will sync when you reconnect' +
-        (offAgo ? ' · last synced ' + offAgo : '');
+      var offAgo = agoShort(loadLastSync());
+      text = offAgo ? 'offline \u00B7 synced ' + offAgo : 'offline';
     } else if (syncState === 'pending'){
       dot = 'wait';
-      text = 'Syncing…';
+      text = 'syncing\u2026';
     } else {
-      var ago = agoLabel(loadLastSync());
-      text = ago ? 'Synced ' + ago : 'Not synced yet';
+      var ago = agoShort(loadLastSync());
+      text = ago ? 'synced ' + ago : 'not synced yet';
       if (!ago) dot = 'wait';
     }
-    return '<div id="sync-line" class="' + cls + '"><span class="sync-dot ' + dot + '"></span>' +
-      escapeHtml(text) + '</div>';
+    return '<span id="sync-line" class="sync-line"><span class="sync-dot ' + dot + '"></span>' +
+      escapeHtml(text) + '</span>';
   }
 
   window.addEventListener('online',  refreshSyncLine);
@@ -1999,6 +2128,7 @@
       hint: (hint || '').trim(),
       box: 1,
       due: todayStr(),
+      created: todayStr(),
       nRight: 0,
       nWrong: 0,
       last: null
@@ -2016,6 +2146,10 @@
       hint: w.hint || '',
       box: (w.box >= 1 && w.box <= 5) ? w.box : 1,
       due: w.due || todayStr(),
+      // Words saved before this was tracked keep null rather than being
+      // stamped with today's date, which would be a made-up answer. They
+      // genuinely predate the others, and the sort treats them accordingly.
+      created: w.created || null,
       nRight: w.nRight || 0,
       nWrong: w.nWrong || 0,
       last: w.last || null
@@ -2172,7 +2306,7 @@
       return a.box - b.box;
     });
     state.sessionQueue = pool.slice(0, LESSON_SIZE)
-      .map(function(w){ return { id: w.id, dir: pickMode() }; });
+      .map(function(w){ return { id: w.id, dir: pickMode(w) }; });
     state.lessonWordIds = state.sessionQueue.map(function(e){ return e.id; });
     state.answeredThisLesson = {};
     state.lessonMisses = {};
@@ -2199,6 +2333,8 @@
     trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>',
     arrowUp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="6 11 12 5 18 11"></polyline></svg>',
     arrowDown: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="6 13 12 19 18 13"></polyline></svg>',
+    sort: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="14" y2="12"></line><line x1="4" y1="17" x2="9" y2="17"></line></svg>',
+    search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="16.2" y1="16.2" x2="21" y2="21"></line></svg>',
     edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>'
   };
 
@@ -2345,17 +2481,22 @@
     var entry = state.sessionQueue[0];
     var w = state.words.find(function(x){ return x.id === entry.id; });
 
-    if (entry.dir === 'choice'){
+    if (entry.dir === 'choice-en' || entry.dir === 'choice-uk'){
+      var field = entry.dir === 'choice-en' ? 'back' : 'front';
       // Generated once per card and cached on the queue entry — regenerating
       // per render would reshuffle the buttons under the user's finger.
-      if (!entry.options) entry.options = buildOptions(w);
-      return renderChoiceCard(w, entry.options);
+      if (!entry.options) entry.options = buildOptions(w, field);
+      return renderChoiceCard(w, entry.options, field);
     }
     return renderTypingCard(w);
   }
 
-  function renderChoiceCard(w, options){
+  // field is the side being ANSWERED: 'back' means the options are English
+  // and the prompt is Ukrainian; 'front' is the other way round.
+  function renderChoiceCard(w, options, field){
     var answered = state.chosenOption !== null;
+    var promptText = field === 'back' ? w.front : w.back;
+    var promptLabel = field === 'back' ? 'Which meaning?' : 'Which word?';
     var shakeClass = (answered && !state.wasCorrect) ? ' shake' : '';
     var popClass = (answered && state.wasCorrect) ? ' pop' : '';
 
@@ -2365,8 +2506,9 @@
     html += feedbackHtml();
     html += '<div class="flashcard choice-card' + shakeClass + popClass + '">';
     html += '<div class="box-dots">' + boxDots(w.box, 'filled', '', null) + '</div>';
-    html += '<div class="card-prompt-label">Which meaning?</div>';
-    html += '<div class="card-front">' + escapeHtml(w.front) + '</div>';
+    html += '<div class="card-prompt-label">' + promptLabel + '</div>';
+    html += '<div class="card-front' + (field === 'front' ? ' is-english' : '') + '">' +
+      escapeHtml(promptText) + '</div>';
     if (answered && w.notes) html += '<div class="card-notes">' + escapeHtml(w.notes) + '</div>';
     html += '</div>';
 
@@ -2375,7 +2517,7 @@
       var cls = 'option-btn';
       var tag = '';
       if (answered){
-        var isRight = normalize(opt) === normalize(w.back);
+        var isRight = normalize(opt) === normalize(w[field]);
         var isMine = (i === state.chosenOption);
         if (isRight){
           cls += ' is-correct';
@@ -2576,6 +2718,10 @@
     if (field === 'box')     return a.box - b.box;
     if (field === 'accuracy') return accuracyOf(a) - accuracyOf(b);
     if (field === 'practised') return a.last < b.last ? -1 : a.last > b.last ? 1 : 0;
+    if (field === 'added'){
+      var ac = a.created || '', bc = b.created || '';   // '' sorts first = oldest
+      return ac < bc ? -1 : ac > bc ? 1 : 0;
+    }
     return byName(a, b);
   }
 
@@ -2592,7 +2738,8 @@
     ['accuracy',  'Accuracy'],
     ['box',       'Box'],
     ['word',      'Word'],
-    ['meaning',   'Meaning']
+    ['meaning',   'Meaning'],
+    ['added',     'Date added']
   ];
 
   // The direction each field is most useful in when you first pick it:
@@ -2602,7 +2749,8 @@
     accuracy:  'asc',
     box:       'asc',
     word:      'asc',
-    meaning:   'asc'
+    meaning:   'asc',
+    added:     'desc'
   };
 
   function isValidSort(v){
@@ -2631,41 +2779,53 @@
     return scored.concat(unscored);
   }
 
+  // One form, used in two places: at the top when adding a new word, and
+  // expanded inline under a row when editing an existing one. Only ever one
+  // is open at a time, so the field ids stay unique.
+  function renderWordForm(editing){
+    var html = '<div class="add-form' + (editing ? ' inline-form' : '') + '">';
+    html += '<label>Word / phrase</label><input id="f-front" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + (editing ? escapeHtml(editing.front) : '') + '" placeholder="e.g. \u0437\u0435\u043B\u0435\u043D\u0438\u0439" />';
+    html += '<label>Meaning</label><input id="f-back" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + (editing ? escapeHtml(editing.back) : '') + '" placeholder="e.g. green" />';
+    html += '<label>Hint (optional)</label><input id="f-hint" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + (editing ? escapeHtml(editing.hint || '') : '') + '" placeholder="a nudge, shown on request during a lesson" />';
+    html += '<label>Notes (optional)</label><textarea id="f-notes" autocorrect="off" spellcheck="false" placeholder="gender, example sentence, etc.">' + (editing ? escapeHtml(editing.notes || '') : '') + '</textarea>';
+    html += '<div class="form-actions">';
+    html += '<button class="primary" data-action="save-word">' + (editing ? 'Save changes' : 'Add word') + '</button>';
+    html += '<button class="secondary" data-action="cancel-form">Cancel</button>';
+    html += '</div>';
+    if (editing){
+      var eAcc = accuracyOf(editing);
+      html += '<div class="edit-stats">';
+      html += '<div class="es-head">Progress</div>';
+      html += '<div class="es-grid">';
+      html += '<div><span class="n">' + editing.box + '<small>/5</small></span><span class="l">box</span></div>';
+      html += '<div><span class="n">' + (eAcc === null ? '\u2014' : eAcc + '%') + '</span><span class="l">accuracy</span></div>';
+      html += '<div><span class="n">' + editing.nRight + '</span><span class="l">right</span></div>';
+      html += '<div><span class="n">' + editing.nWrong + '</span><span class="l">wrong</span></div>';
+      html += '</div>';
+      html += '<div class="es-line">Added: ' +
+        escapeHtml(editing.created ? sinceLabel(editing.created) : 'before this was tracked') + '</div>';
+      html += '<div class="es-line">Last practised: ' + escapeHtml(sinceLabel(editing.last)) + '</div>';
+      html += '<div class="es-line">Next due: ' + escapeHtml(editing.due <= todayStr() ? 'now' : editing.due) + '</div>';
+      html += '<div class="es-note">Editing the text keeps all of this intact.</div>';
+      html += '</div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
   function renderCards(){
     if (state.batchOpen) return renderBatch();
-    var html = syncLineHtml();
+    var html = '';
 
-    if (!state.formOpen){
+    // The add form still belongs at the top — there's no row to anchor it to.
+    // Editing anchors to its own row further down instead.
+    var addingNew = state.formOpen && !state.editingId;
+    if (addingNew){
+      html += renderWordForm(null);
+    } else {
       html += '<div class="add-row">';
       html += '<button class="add-toggle" data-action="open-form">+ Add a word</button>';
       html += '<button class="add-toggle" data-action="open-batch">+ Add several</button>';
-      html += '</div>';
-    } else {
-      var editing = state.editingId ? state.words.find(function(w){ return w.id === state.editingId; }) : null;
-      html += '<div class="add-form">';
-      html += '<label>Word / phrase</label><input id="f-front" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + (editing ? escapeHtml(editing.front) : '') + '" placeholder="e.g. \u0437\u0435\u043B\u0435\u043D\u0438\u0439" />';
-      html += '<label>Meaning</label><input id="f-back" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + (editing ? escapeHtml(editing.back) : '') + '" placeholder="e.g. green" />';
-      html += '<label>Hint (optional)</label><input id="f-hint" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + (editing ? escapeHtml(editing.hint || '') : '') + '" placeholder="a nudge, shown on request during a lesson" />';
-      html += '<label>Notes (optional)</label><textarea id="f-notes" autocorrect="off" spellcheck="false" placeholder="gender, example sentence, etc.">' + (editing ? escapeHtml(editing.notes || '') : '') + '</textarea>';
-      html += '<div class="form-actions">';
-      html += '<button class="primary" data-action="save-word">' + (editing ? 'Save changes' : 'Add word') + '</button>';
-      html += '<button class="secondary" data-action="cancel-form">Cancel</button>';
-      html += '</div>';
-      if (editing){
-        var eAcc = accuracyOf(editing);
-        html += '<div class="edit-stats">';
-        html += '<div class="es-head">Progress</div>';
-        html += '<div class="es-grid">';
-        html += '<div><span class="n">' + editing.box + '<small>/5</small></span><span class="l">box</span></div>';
-        html += '<div><span class="n">' + (eAcc === null ? '\u2014' : eAcc + '%') + '</span><span class="l">accuracy</span></div>';
-        html += '<div><span class="n">' + editing.nRight + '</span><span class="l">right</span></div>';
-        html += '<div><span class="n">' + editing.nWrong + '</span><span class="l">wrong</span></div>';
-        html += '</div>';
-        html += '<div class="es-line">Last practised: ' + escapeHtml(sinceLabel(editing.last)) + '</div>';
-        html += '<div class="es-line">Next due: ' + escapeHtml(editing.due <= todayStr() ? 'now' : editing.due) + '</div>';
-        html += '<div class="es-note">Editing the text keeps all of this intact.</div>';
-        html += '</div>';
-      }
       html += '</div>';
     }
 
@@ -2685,16 +2845,24 @@
         '<p>Everything you add lands here, then gets scheduled into review automatically.</p>' +
         '<button class="secondary" data-action="load-samples">Load sample words</button>' +
         '</div>' + backupHtml;
+      html = '<div class="lib-meta"><span class="lib-count">0 words</span>' +
+        syncLineHtml() + '</div>' + html;
       return html;
     }
 
-    html += '<div class="search-bar"><input id="search-input" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Search words" value="' + escapeHtml(state.search) + '" /></div>';
+    html += '<div class="search-bar">' +
+      '<span class="search-icon">' + ICONS.search + '</span>' +
+      '<input id="search-input" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Search words" value="' + escapeHtml(state.search) + '" />' +
+      (state.search ? '<button class="search-clear" data-action="clear-search" aria-label="Clear search">\u2715</button>' : '') +
+      '</div>';
     var dirDesc = state.sortDir === 'desc';
     if (state.boxFilter){
       html += '<div class="filter-chip">Box ' + state.boxFilter +
         ' only <button data-action="clear-box-filter" aria-label="Clear filter">\u2715</button></div>';
     }
-    html += '<div class="sort-bar"><select id="sort-select" aria-label="Sort by">';
+    html += '<div class="sort-bar">' +
+      '<span class="sort-icon">' + ICONS.sort + '</span>' +
+      '<select id="sort-select" aria-label="Sort by">';
     SORT_FIELDS.forEach(function(o){
       html += '<option value="' + o[0] + '"' + (state.sortBy === o[0] ? ' selected' : '') + '>' + o[1] + '</option>';
     });
@@ -2712,10 +2880,18 @@
       return w.front.toLowerCase().indexOf(q) !== -1 || w.back.toLowerCase().indexOf(q) !== -1;
     }));
 
+    html += '<div class="lib-meta"><span class="lib-count">' +
+      (list.length === state.words.length
+        ? state.words.length + (state.words.length === 1 ? ' word' : ' words')
+        : list.length + ' of ' + state.words.length + ' words') +
+      '</span>' + syncLineHtml() + '</div>';
+
     if (list.length === 0){
       html += '<div class="empty-state"><p>No words match your search.</p></div>';
     } else {
       list.forEach(function(w){
+        var isEditing = state.editingId === w.id;
+        html += '<div class="word-entry' + (isEditing ? ' is-editing' : '') + '">';
         html += '<div class="word-row">';
         html += '<div class="box-dots-inline">' + boxDots(w.box, 'filled', '', null) + '</div>';
         html += '<div class="word-text"><div class="front">' + escapeHtml(w.front) + '</div><div class="back">' + escapeHtml(w.back) + '</div>';
@@ -2733,9 +2909,11 @@
         html += '</div>';
         html += '</div>';
         html += '<div class="row-actions">';
-        html += '<button class="icon-btn" data-action="edit-word" data-id="' + w.id + '">' + ICONS.edit + '</button>';
+        html += '<button class="icon-btn' + (isEditing ? ' active' : '') + '" data-action="edit-word" data-id="' + w.id + '">' + ICONS.edit + '</button>';
         html += '<button class="icon-btn danger" data-action="delete-word" data-id="' + w.id + '">' + ICONS.trash + '</button>';
         html += '</div></div>';
+        if (isEditing) html += renderWordForm(w);
+        html += '</div>';
       });
     }
     html += backupHtml;
@@ -2743,30 +2921,56 @@
   }
 
   // ---------- RENDER: STATS ----------
+  // Written from the same constants the scheduler uses, so these can't fall
+  // out of step with what the app actually does.
+  function boxNote(n){
+    if (n === 1) return 'new or missed \u00B7 back tomorrow';
+    var d = INTERVALS[n];
+    var note = 'after ' + d + (d === 1 ? ' day' : ' days');
+    if (n === TYPING_FROM_BOX) note += ' \u00B7 typing starts';
+    if (n === 5) note += ' \u00B7 mastered';
+    return note;
+  }
+
   function renderStats(){
-    var total = state.words.length;
-    var dueCount = state.words.filter(function(w){ return w.due <= todayStr(); }).length;
     var counts = [0,0,0,0,0];
     state.words.forEach(function(w){ counts[w.box - 1]++; });
-    var max = Math.max.apply(null, counts.concat([1]));
+    // Bars are a share of the whole vocabulary, not of the fullest box.
+    // Scaling to the largest box made every chart look the same — the biggest
+    // bar was always full — and turned a one-word difference into a dramatic
+    // gap. As a share, the bars flatten as words spread up the ladder, which
+    // is what progress actually looks like.
+    var totalWords = Math.max(state.words.length, 1);
 
+    // Only the all-time records live here. The live figures — due today, the
+    // running day streak, the current run of correct answers — are all on the
+    // home screen, and repeating them just splits your attention.
     var html = '<div class="stat-grid">';
-    html += '<div class="stat-box"><div class="num">' + total + '</div><div class="label">Words total</div></div>';
-    html += '<div class="stat-box"><div class="num">' + dueCount + '</div><div class="label">Due today</div></div>';
-    html += '<div class="stat-box"><div class="num">' + liveDayStreak() + '</div><div class="label">Day streak</div></div>';
-    html += '<div class="stat-box"><div class="num">' + state.bestDayStreak + '</div><div class="label">Longest day streak</div></div>';
-    html += '<div class="stat-box"><div class="num">' + state.streak + '</div><div class="label">Correct in a row</div></div>';
-    html += '<div class="stat-box"><div class="num">' + state.bestStreak + '</div><div class="label">Best in a row</div></div>';
+    html += '<div class="stat-box"><div class="num">' +
+      '<span class="stat-icon' + (state.bestDayStreak > 0 ? '' : ' cold') + '">\uD83D\uDD25</span>' +
+      state.bestDayStreak + '</div><div class="label">Longest day streak</div></div>';
+    html += '<div class="stat-box"><div class="num">' +
+      '<span class="stat-icon' + (state.bestStreak > 0 ? '' : ' cold') + '">\uD83C\uDFAF</span>' +
+      state.bestStreak + '</div><div class="label">Best in a row</div></div>';
     html += '</div>';
 
-    html += '<div class="box-chart"><h3>Words per box</h3>';
+    html += '<div class="box-chart"><h3>Words per box</h3>' +
+      '<p class="box-chart-sub">Each correct answer on schedule moves a word up one box, and the next review is pushed further out. A miss sends it back to box 1.</p>';
     for (var i = 0; i < 5; i++){
-      var pct = Math.round((counts[i] / max) * 100);
+      var share = counts[i] / totalWords;
+      // A non-zero box always shows a sliver, so one word out of 200 is still
+      // visible rather than rounding away to an empty track.
+      var pct = counts[i] === 0 ? 0 : Math.max(2, Math.round(share * 100));
       html += '<button class="bar-row" data-action="filter-box" data-box="' + (i+1) + '"' +
         (counts[i] === 0 ? ' disabled' : '') + '>' +
-        '<span class="bar-label">Box ' + (i+1) + '</span>' +
-        '<span class="bar-track"><span class="bar-fill" style="width:' + pct + '%"></span></span>' +
-        '<span class="bar-count">' + counts[i] + '</span>' +
+        '<span class="bar-top">' +
+          '<span class="bar-label">Box ' + (i+1) + '</span>' +
+          '<span class="bar-track"><span class="bar-fill" style="width:' + pct + '%"></span></span>' +
+          '<span class="bar-count">' + counts[i] + '</span>' +
+        '</span>' +
+        '<span class="bar-note">' +
+          (counts[i] === 0 ? '' : Math.round(share * 100) + '% \u00B7 ') +
+          boxNote(i + 1) + '</span>' +
         '</button>';
     }
     html += '<div class="chart-hint">Tap a box to see those words</div>';
@@ -2914,6 +3118,10 @@
       state.search = '';
       render();
     }
+    else if (action === 'clear-search'){
+      state.search = '';
+      render();
+    }
     else if (action === 'clear-box-filter'){
       state.boxFilter = null;
       render();
@@ -2964,7 +3172,8 @@
       var entryC = state.sessionQueue[0];
       var wordC = state.words.find(function(x){ return x.id === entryC.id; });
       state.chosenOption = idx;
-      state.wasCorrect = normalize(entryC.options[idx]) === normalize(wordC.back);
+      var cField = entryC.dir === 'choice-en' ? 'back' : 'front';
+      state.wasCorrect = normalize(entryC.options[idx]) === normalize(wordC[cField]);
       scoreStreak(state.wasCorrect);
       state.feedback = { type: state.wasCorrect ? 'correct' : 'wrong', message: reactionFor(state.wasCorrect) };
       render();
@@ -2987,8 +3196,15 @@
       render();
     }
     else if (action === 'edit-word'){
-      state.editingId = el.getAttribute('data-id');
-      state.formOpen = true;
+      var wantId = el.getAttribute('data-id');
+      // Tapping the pencil on the row already open closes it again.
+      if (state.editingId === wantId){
+        state.editingId = null;
+        state.formOpen = false;
+      } else {
+        state.editingId = wantId;
+        state.formOpen = true;
+      }
       render();
     }
     else if (action === 'delete-word'){
