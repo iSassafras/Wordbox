@@ -548,6 +548,25 @@
     border-radius: 8px;
   }
   .add-form textarea { resize: vertical; min-height: 44px; }
+  .type-select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--cream);
+    font-family: inherit;
+    font-size: 15px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .type-note {
+    font-size: 11px;
+    color: var(--cream-dim);
+    opacity: 0.75;
+    margin-top: 5px;
+    line-height: 1.4;
+  }
   .form-actions {
     display: flex;
     gap: 10px;
@@ -685,18 +704,35 @@
   }
   .batch-row {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 0;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 0;
     border-bottom: 1px solid var(--border);
   }
   .batch-word {
     font-family: 'Lora', serif;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 500;
-    flex: 0 0 40%;
     min-width: 0;
     word-break: break-word;
+  }
+  .batch-fields {
+    display: flex;
+    gap: 7px;
+    align-items: center;
+  }
+  .batch-fields .batch-back-input { flex: 1; min-width: 0; }
+  .batch-type-select {
+    flex: 0 0 108px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--cream-dim);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 9px 8px;
+    border-radius: 8px;
+    -webkit-appearance: none;
+    appearance: none;
   }
   .batch-back-input {
     flex: 1;
@@ -2321,22 +2357,31 @@
   // Two distractors from other words, deduped by meaning so an option list
   // never shows the same English twice (real decks have synonyms).
   // field is 'back' (English options) or 'front' (Ukrainian options).
+  function shuffle(a){
+    for (var i = a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  // field is 'back' (English options) or 'front' (Ukrainian options).
+  // Distractors of the same part of speech make a real test: given
+  // "green / to walk / milk" the grammar alone gives the answer away, so
+  // you're not being asked about the word at all. Same-type candidates come
+  // first and only get topped up from other types when there aren't three.
   function buildOptions(word, field){
     var correct = word[field];
-    var pool = [];
+    var sameType = [], otherType = [];
     var seen = {};
     seen[normalize(correct)] = true;
     state.words.forEach(function(w){
       var key = normalize(w[field]);
       if (w.id === word.id || seen[key]) return;
       seen[key] = true;
-      pool.push(w[field]);
+      (w.type === word.type ? sameType : otherType).push(w[field]);
     });
-    // shuffle pool, take 2
-    for (var i = pool.length - 1; i > 0; i--){
-      var j = Math.floor(Math.random() * (i + 1));
-      var t = pool[i]; pool[i] = pool[j]; pool[j] = t;
-    }
+    var pool = shuffle(sameType).concat(shuffle(otherType));
     var opts = pool.slice(0, 2);
     opts.push(correct);
     for (var k = opts.length - 1; k > 0; k--){
@@ -2622,13 +2667,45 @@
   // Meanings are all distinct so multiple choice has clean distractors.
   // Single place a word is created, so every path gets the same shape.
   // stats: nRight / nWrong counts, and `last` = date it was last answered.
-  function makeWord(front, back, notes, hint){
+  var WORD_TYPES = [
+    ['noun', 'Noun'], ['verb', 'Verb'], ['adjective', 'Adjective'],
+    ['adverb', 'Adverb'], ['preposition', 'Preposition'],
+    ['phrase', 'Phrase'], ['other', 'Other']
+  ];
+
+  // Ukrainian dictionary forms are regular enough to guess from, and the
+  // English gloss helps more than you'd expect — people write verbs as
+  // "to walk". Deliberately conservative: it never guesses adverb, because
+  // adverbs end in -о and so do neuter nouns (\u0434\u043E\u0431\u0440\u0435 vs \u0432\u0456\u043A\u043D\u043E), and a
+  // confident wrong answer is worse than a default you can correct.
+  // Prepositions are dropdown-only for the same reason: \u0432, \u043D\u0430, \u0434\u043E and \u0437 are
+  // short and look like nothing in particular.
+  function guessType(front, back){
+    var f = normalize(front), b = normalize(back);
+    if (f.indexOf(' ') !== -1) return 'phrase';        // multi-word entry
+    if (/^to\s+/.test(b)) return 'verb';               // English gloss
+    if (/\u0442\u0438(\u0441\u044F|\u0441\u044C)?$/.test(f)) return 'verb';   // infinitive -\u0442\u0438 / -\u0442\u0438\u0441\u044F
+    if (/(\u0438\u0439|\u0456\u0439)$/.test(f)) return 'adjective';    // masc. nom. sg.
+    return 'noun';                                     // commonest, safest
+  }
+
+  function isValidType(t){
+    return WORD_TYPES.some(function(o){ return o[0] === t; });
+  }
+
+  function typeLabel(t){
+    for (var i = 0; i < WORD_TYPES.length; i++) if (WORD_TYPES[i][0] === t) return WORD_TYPES[i][1];
+    return 'Other';
+  }
+
+  function makeWord(front, back, notes, hint, type){
     return {
       id: genId(),
       front: (front || '').trim(),
       back: (back || '').trim(),
       notes: (notes || '').trim(),
       hint: (hint || '').trim(),
+      type: isValidType(type) ? type : guessType(front, back),
       box: 1,
       due: todayStr(),
       created: todayStr(),
@@ -2647,6 +2724,8 @@
       back: w.back || '',
       notes: w.notes || '',
       hint: w.hint || '',
+      // Words saved before types existed get classified on load.
+      type: isValidType(w.type) ? w.type : guessType(w.front || '', w.back || ''),
       box: (w.box >= 1 && w.box <= 5) ? w.box : 1,
       due: w.due || todayStr(),
       // Words saved before this was tracked keep null rather than being
@@ -3187,6 +3266,10 @@
       var i = parseInt(inp.getAttribute('data-idx'), 10);
       if (state.batchItems[i]) state.batchItems[i].back = inp.value;
     });
+    document.querySelectorAll('.batch-type-select').forEach(function(sel){
+      var i = parseInt(sel.getAttribute('data-idx'), 10);
+      if (state.batchItems[i]) state.batchItems[i].type = sel.value;
+    });
   }
 
   function parseBatchLines(raw){
@@ -3237,9 +3320,20 @@
     }
     html += '<p class="batch-hint">Fill in the meanings. Leave one blank to drop that word.</p>';
     state.batchItems.forEach(function(item, i){
+      var guessed = item.type || guessType(item.front, item.back);
       html += '<div class="batch-row">';
       html += '<div class="batch-word">' + escapeHtml(item.front) + '</div>';
+      // Meaning and type share the second line rather than forming a literal
+      // third column. Three side by side leaves about 120px for typing an
+      // English meaning on a phone, which isn't usable.
+      html += '<div class="batch-fields">';
       html += '<input class="batch-back-input" data-idx="' + i + '" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="meaning" value="' + escapeHtml(item.back) + '" />';
+      html += '<select class="batch-type-select" data-idx="' + i + '" data-touched="' + (item.type ? '1' : '0') + '">';
+      WORD_TYPES.forEach(function(o){
+        html += '<option value="' + o[0] + '"' + (guessed === o[0] ? ' selected' : '') + '>' + o[1] + '</option>';
+      });
+      html += '</select>';
+      html += '</div>';
       html += '</div>';
     });
     html += '<div class="form-actions">';
@@ -3338,6 +3432,7 @@
         '<div class="ro-field"><span>' + escapeHtml(word.front) + '</span>' +
         speakBtn(word.front, 'on-dark small') + '</div>';
       html += '<label>Meaning</label><div class="ro-field"><span>' + escapeHtml(word.back) + '</span></div>';
+      html += '<label>Type</label><div class="ro-field"><span>' + typeLabel(word.type) + '</span></div>';
       if (word.hint)  html += '<label>Hint</label><div class="ro-field"><span>' + escapeHtml(word.hint) + '</span></div>';
       if (word.notes) html += '<label>Notes</label><div class="ro-field"><span>' + escapeHtml(word.notes) + '</span></div>';
       html += '<div class="form-actions">';
@@ -3350,6 +3445,13 @@
         (word ? speakBtn(word.front, 'on-dark small') : '') +
         '</div>';
       html += '<label>Meaning</label><input id="f-back" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + (word ? escapeHtml(word.back) : '') + '" placeholder="e.g. green" />';
+      html += '<label>Type</label><select id="f-type" class="type-select" data-touched="' + (word ? '1' : '0') + '">';
+      WORD_TYPES.forEach(function(o){
+        var sel = word ? (word.type === o[0]) : (o[0] === 'noun');
+        html += '<option value="' + o[0] + '"' + (sel ? ' selected' : '') + '>' + o[1] + '</option>';
+      });
+      html += '</select>';
+      html += '<div class="type-note">Multiple-choice options are drawn from words of the same type.</div>';
       html += '<label>Hint (optional)</label><input id="f-hint" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + (word ? escapeHtml(word.hint || '') : '') + '" placeholder="a nudge, shown on request during a lesson" />';
       html += '<label>Notes (optional)</label><textarea id="f-notes" autocorrect="off" spellcheck="false" placeholder="gender, example sentence, etc.">' + (word ? escapeHtml(word.notes || '') : '') + '</textarea>';
       html += '<div class="form-actions">';
@@ -3719,6 +3821,42 @@
       });
     }
 
+    // Same live guess on the single-word form. Only for a new word, and only
+    // until the dropdown is set by hand.
+    var fType = document.getElementById('f-type');
+    if (fType){
+      fType.addEventListener('change', function(){ fType.setAttribute('data-touched', '1'); });
+      var reguess = function(){
+        if (fType.getAttribute('data-touched') === '1') return;
+        var fr = document.getElementById('f-front'), bk = document.getElementById('f-back');
+        fType.value = guessType(fr ? fr.value : '', bk ? bk.value : '');
+      };
+      ['f-front', 'f-back'].forEach(function(id){
+        var el = document.getElementById(id);
+        if (el) el.addEventListener('input', reguess);
+      });
+    }
+
+    // Typing "to walk" should flip the type to Verb — but only while the
+    // dropdown is still showing a guess. Once it's been set by hand, leave
+    // it alone.
+    var backInputs = document.querySelectorAll('.batch-back-input');
+    for (var bi = 0; bi < backInputs.length; bi++){
+      backInputs[bi].addEventListener('input', function(e){
+        var idx = e.target.getAttribute('data-idx');
+        var sel = document.querySelector('.batch-type-select[data-idx="' + idx + '"]');
+        if (!sel || sel.getAttribute('data-touched') === '1') return;
+        var item = state.batchItems[parseInt(idx, 10)];
+        if (item) sel.value = guessType(item.front, e.target.value);
+      });
+    }
+    var typeSelects = document.querySelectorAll('.batch-type-select');
+    for (var ti = 0; ti < typeSelects.length; ti++){
+      typeSelects[ti].addEventListener('change', function(e){
+        e.target.setAttribute('data-touched', '1');
+      });
+    }
+
     var importInput = document.getElementById('import-file-input');
     if (importInput){
       importInput.addEventListener('change', function(e){
@@ -3920,14 +4058,21 @@
       var back = document.getElementById('f-back').value.trim();
       var notes = document.getElementById('f-notes').value.trim();
       var hint = document.getElementById('f-hint').value.trim();
+      var typeEl = document.getElementById('f-type');
+      // An untouched dropdown means you never expressed a preference, so let
+      // makeWord guess from the final text rather than banking the default.
+      var type = (typeEl && typeEl.getAttribute('data-touched') === '1') ? typeEl.value : '';
       if (!front || !back){ return; }
 
       if (state.editingId){
         // Editing keeps the word's box, due date and stats untouched.
         var w2 = state.words.find(function(x){ return x.id === state.editingId; });
         w2.front = front; w2.back = back; w2.notes = notes; w2.hint = hint;
+        // Only overwrite when the dropdown was actually changed; an
+        // untouched one must not silently reclassify an existing word.
+        if (isValidType(type)) w2.type = type;
       } else {
-        state.words.push(makeWord(front, back, notes, hint));
+        state.words.push(makeWord(front, back, notes, hint, type));
       }
       state.formOpen = false;
       state.editingId = null;
@@ -3971,7 +4116,7 @@
       var added = 0;
       state.batchItems.forEach(function(item){
         if (!item.front.trim() || !item.back.trim()) return;
-        state.words.push(makeWord(item.front, item.back, '', ''));
+        state.words.push(makeWord(item.front, item.back, '', '', item.type || ''));
         added++;
       });
       state.batchOpen = false;
