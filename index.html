@@ -2682,6 +2682,9 @@
   // short and look like nothing in particular.
   function guessType(front, back){
     var f = normalize(front), b = normalize(back);
+    // Terminal punctuation on either side means it's an utterance rather
+    // than a word — \u0414\u043E\u0431\u0440\u043E\u0433\u043E \u0434\u043D\u044F! or \u042F\u043A \u0441\u043F\u0440\u0430\u0432\u0438? — even when it's a single word.
+    if (/[!?]/.test(front) || /[!?]/.test(back)) return 'phrase';
     if (f.indexOf(' ') !== -1) return 'phrase';        // multi-word entry
     if (/^to\s+/.test(b)) return 'verb';               // English gloss
     if (/\u0442\u0438(\u0441\u044F|\u0441\u044C)?$/.test(f)) return 'verb';   // infinitive -\u0442\u0438 / -\u0442\u0438\u0441\u044F
