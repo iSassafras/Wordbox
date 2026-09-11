@@ -1750,7 +1750,7 @@
     lastLessonDay: null
   };
 
-  var APP_VERSION = '2026-09-11a';
+  var APP_VERSION = '2026-09-11b';
 
   var LOADING_QUOTES = [
     'Perfective or imperfective? Yes.',
@@ -1792,14 +1792,30 @@
   // context before a user gesture anyway).
   var audioCtx = null;
   var audioUnlocked = false;
+  var keepAlive = null;
 
-  // iOS silences Web Audio when the ringer switch is on mute — but not HTML5
-  // <audio> elements. Two fixes, applied together:
-  //   1. navigator.audioSession (Safari 16.4+) declares this as playback
-  //      audio, which the mute switch then leaves alone.
-  //   2. On older iOS, playing a scrap of silent <audio> alongside moves Web
-  //      Audio onto the media channel. Ugly, but it's the standard remedy.
-  var SILENT_WAV = 'data:audio/wav;base64,UklGRrQBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YZABAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA';
+  // Declaring the session type is not itself audio: it starts nothing, plays
+  // nothing, and needs no user gesture. So it happens here, at load, before
+  // any line below can create a context, an <audio> element or an utterance.
+  // Set later, it would be set after iOS had already decided what kind of
+  // session this page owns.
+  //
+  // 'ambient' means mix with whatever is already playing and never interrupt
+  // it. The price is that the ringer switch silences the app — ordinary iOS
+  // behaviour for app sound effects, and the right trade for short tones.
+  //
+  // The previous version also played a scrap of silent <audio> to move Web
+  // Audio onto the media channel so the mute switch would leave it alone.
+  // That is the exact opposite of ambient — it asks for an exclusive playback
+  // session — so it is gone. You cannot both ignore the mute switch and mix
+  // with music, and mixing is the one that was wanted.
+  var audioSessionOk = false;
+  try {
+    if (navigator.audioSession){
+      navigator.audioSession.type = 'ambient';
+      audioSessionOk = (navigator.audioSession.type === 'ambient');
+    }
+  } catch (e) {}
 
   function unlockAudio(){
     if (audioUnlocked) return;
@@ -1807,48 +1823,72 @@
     // toggles off the app should be silent AND invisible to other audio apps.
     if (!state.soundOn && !state.speechOn) return;
     audioUnlocked = true;
-    try {
-      // 'ambient', not 'playback'. Playback is an exclusive session type — it
-      // pauses whatever else is playing, so merely opening the app would stop
-      // your music. Ambient mixes instead. The cost is that the ringer switch
-      // silences these sounds, which is the normal iOS behaviour for app
-      // effects anyway, and the right trade for short feedback tones.
-      if (navigator.audioSession) navigator.audioSession.type = 'ambient';
-    } catch (e) {}
-    try {
-      if ('speechSynthesis' in window){
-        var prime = new SpeechSynthesisUtterance(' ');
-        prime.volume = 0;
-        window.speechSynthesis.speak(prime);
-      }
-    } catch (e) {}
-    try {
-      // One short silent clip, NOT looped. The previous version looped
-      // forever, holding the session open and keeping other apps ducked for
-      // as long as Wordbox was running.
-      var el = document.createElement('audio');
-      el.setAttribute('x-webkit-airplay', 'deny');
-      el.preload = 'auto';
-      el.loop = false;
-      el.volume = 0.01;
-      el.src = SILENT_WAV;
-      var p = el.play();
-      if (p && p.catch) p.catch(function(){});
-    } catch (e) {}
+    try { if (navigator.audioSession) navigator.audioSession.type = 'ambient'; } catch (e) {}
+    // Priming the speech engine is what takes the audio session on iOS, so it
+    // only happens when speech is actually switched on. Doing it for someone
+    // running with speech off was stopping their music for no benefit at all.
+    if (state.speechOn){
+      try {
+        if ('speechSynthesis' in window){
+          var prime = new SpeechSynthesisUtterance(' ');
+          prime.volume = 0;
+          window.speechSynthesis.speak(prime);
+        }
+      } catch (e) {}
+    }
   }
+
+  // Every resume() re-activates the audio session, and every activation is a
+  // fresh chance for iOS to interrupt whatever else is playing — which is the
+  // likeliest reason a sound on each card stopped the music each time, while
+  // speech (one session, held open) only did it once.
+  //
+  // Where the session is genuinely ambient, the fix is to stop letting the
+  // context lapse: a silent source holds it open, so it is activated once and
+  // then stays up. Where navigator.audioSession is missing, holding it open
+  // would keep other apps ducked indefinitely, so it falls back to the old
+  // create-and-resume behaviour rather than risking something worse.
+  function ensureCtx(){
+    var Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return null;
+    if (!audioCtx) audioCtx = new Ctx();
+    if (audioSessionOk && !keepAlive && audioCtx.createConstantSource){
+      try {
+        var src = audioCtx.createConstantSource();
+        var g = audioCtx.createGain();
+        src.offset.value = 0;   // silence, but a running node all the same
+        g.gain.value = 0;
+        src.connect(g);
+        g.connect(audioCtx.destination);
+        src.start();
+        keepAlive = src;
+      } catch (e) { keepAlive = null; }
+    }
+    if (audioCtx.state === 'suspended'){
+      try { audioCtx.resume(); } catch (e) {}
+    }
+    return audioCtx;
+  }
+
+  // Let go of the session in the background. There is nothing to play, and an
+  // app sitting on the audio session it doesn't need is the whole complaint.
+  document.addEventListener('visibilitychange', function(){
+    if (!document.hidden || !audioCtx) return;
+    try { if (keepAlive){ keepAlive.stop(); keepAlive.disconnect(); } } catch (e) {}
+    keepAlive = null;
+    try { audioCtx.suspend(); } catch (e) {}
+  });
 
   function playSeq(steps){
     if (!state.soundOn) return;
     try {
       unlockAudio();
-      var Ctx = window.AudioContext || window.webkitAudioContext;
-      if (!Ctx) return;
-      if (!audioCtx) audioCtx = new Ctx();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      var t0 = audioCtx.currentTime;
+      var ctx = ensureCtx();
+      if (!ctx) return;
+      var t0 = ctx.currentTime;
       steps.forEach(function(st){
-        var osc = audioCtx.createOscillator();
-        var gain = audioCtx.createGain();
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
         osc.type = st.type || 'sine';
         osc.frequency.setValueAtTime(st.f, t0 + st.at);
         // Ramped rather than switched on, so it doesn't click.
@@ -1856,13 +1896,29 @@
         gain.gain.exponentialRampToValueAtTime(st.v || 0.14, t0 + st.at + 0.015);
         gain.gain.exponentialRampToValueAtTime(0.0001, t0 + st.at + st.d);
         osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        gain.connect(ctx.destination);
         osc.start(t0 + st.at);
         osc.stop(t0 + st.at + st.d + 0.03);
       });
     } catch (e) {
       // Audio is a nicety; never let it break an answer.
     }
+  }
+
+  // Shown on the Profile screen. Three facts, so a music interruption can be
+  // reported as an observation rather than guessed at: whether this iOS knows
+  // the session API at all, what it thinks the session is, and whether the
+  // context is being held open or re-activated per sound.
+  function audioDiag(){
+    var bits = [];
+    try {
+      bits.push(navigator.audioSession
+        ? 'session ' + (navigator.audioSession.type || '?')
+        : 'no session api');
+    } catch (e) { bits.push('session ?'); }
+    bits.push(audioCtx ? 'ctx ' + audioCtx.state : 'ctx none');
+    bits.push(keepAlive ? 'held' : 'not held');
+    return bits.join(' · ');
   }
 
   // ---------- SPEECH ----------
@@ -2291,8 +2347,11 @@
 
   function startLesson(practice){
     // Called straight from a tap, and the only point where audio is about to
-    // be needed. iOS requires that first unlock to happen inside a gesture.
+    // be needed. iOS requires that first unlock to happen inside a gesture —
+    // and the context too, which is why it is opened here rather than at the
+    // first tone. One activation at the start of the lesson, not one per card.
     unlockAudio();
+    if (state.soundOn) ensureCtx();
     // The streak deliberately carries over. It counts consecutive correct
     // answers, and ending a lesson isn't a wrong answer.
     state.lessonDone = false;
@@ -3770,7 +3829,8 @@
       html += '</div>';
     }
 
-    html += '<div class="version-row">Wordbox \u00B7 ' + APP_VERSION + '</div>';
+    html += '<div class="version-row">Wordbox \u00B7 ' + APP_VERSION +
+      '<br />' + escapeHtml(audioDiag()) + '</div>';
 
     if (useFirebase && currentUser){
       html += '<div class="account-row">Signed in as ' + escapeHtml(currentUser.email) + '<button class="text-btn" data-action="sign-out">Sign out</button></div>';
