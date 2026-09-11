@@ -1712,6 +1712,7 @@
     confirmDeleteId: null,
     search: '',
     loaded: false,
+    showLoader: false,
     typedValue: '',
     checked: false,
     wasCorrect: null,
@@ -3750,6 +3751,10 @@
   function render(){
     var app = document.getElementById('app');
     if (!state.loaded){
+      // Held back for a moment by the timer below: a local-only load finishes
+      // in a few milliseconds, and a loader that flashes for one frame is
+      // worse than none at all.
+      if (!state.showLoader){ app.innerHTML = ''; return; }
       app.innerHTML =
         '<div class="loading-screen">' +
         '<div class="loader"><span></span><span></span><span></span></div>' +
@@ -4301,6 +4306,18 @@
   }, 30000);
 
   initVoices();
+
+  // Nothing rendered anything before loading finished, which made the loading
+  // screen unreachable — and left a blank screen during the Firebase auth and
+  // fetch, which can take a second or two. Render immediately, and bring in
+  // the loader only if the wait is long enough to be worth explaining.
+  render();
+  setTimeout(function(){
+    if (!state.loaded){
+      state.showLoader = true;
+      render();
+    }
+  }, 150);
 
   if (useFirebase){
     // If the SDK can't be fetched (offline before it's been cached, or a
