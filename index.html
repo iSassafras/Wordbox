@@ -1075,6 +1075,15 @@
   }
   .tts-block .form-actions { margin-top: 10px; }
 
+  .version-row {
+    margin-top: 20px;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--cream-dim);
+    opacity: 0.5;
+  }
+
   .pref-note {
     font-size: 11.5px;
     color: var(--cream-dim);
@@ -1741,6 +1750,8 @@
     lastLessonDay: null
   };
 
+  var APP_VERSION = '2026-09-11a';
+
   var LOADING_QUOTES = [
     'Perfective or imperfective? Yes.',
     'The apostrophe in \u0456\u043C\u2019\u044F is load-bearing.',
@@ -1930,8 +1941,17 @@
     }, 400);
   }
 
+  var voicesInited = false;
+  function ensureVoices(){
+    if (voicesInited || !state.speechOn) return;
+    voicesInited = true;
+    initVoices();
+  }
+
   function canSpeak(){
-    return state.speechOn && ('speechSynthesis' in window);
+    if (!state.speechOn || !('speechSynthesis' in window)) return false;
+    ensureVoices();
+    return true;
   }
 
   // Which text is being spoken right now. Held in a variable rather than only
@@ -3725,6 +3745,7 @@
       }
     }
 
+    if (state.speechOn) ensureVoices();
     if ('speechSynthesis' in window || getTtsKey()){
       var hasKey = !!getTtsKey();
       html += '<div class="tts-block">';
@@ -3748,6 +3769,8 @@
       }
       html += '</div>';
     }
+
+    html += '<div class="version-row">Wordbox \u00B7 ' + APP_VERSION + '</div>';
 
     if (useFirebase && currentUser){
       html += '<div class="account-row">Signed in as ' + escapeHtml(currentUser.email) + '<button class="text-btn" data-action="sign-out">Sign out</button></div>';
@@ -4313,7 +4336,10 @@
     if (state.view === 'cards' && !state.sessionActive) refreshSyncLine();
   }, 30000);
 
-  initVoices();
+  // initVoices() is NOT called here any more. It queries speechSynthesis,
+  // and on iOS that can spin up the speech audio session — enough to pause
+  // whatever else is playing, just from opening the app. It now runs only
+  // when speech is actually wanted.
 
   // Nothing rendered anything before loading finished, which made the loading
   // screen unreachable — and left a blank screen during the Firebase auth and
