@@ -1792,13 +1792,19 @@
 
   function unlockAudio(){
     if (audioUnlocked) return;
+    // Never claim the audio session unless sound is actually wanted. With both
+    // toggles off the app should be silent AND invisible to other audio apps.
+    if (!state.soundOn && !state.speechOn) return;
     audioUnlocked = true;
     try {
-      if (navigator.audioSession) navigator.audioSession.type = 'playback';
+      // 'ambient', not 'playback'. Playback is an exclusive session type — it
+      // pauses whatever else is playing, so merely opening the app would stop
+      // your music. Ambient mixes instead. The cost is that the ringer switch
+      // silences these sounds, which is the normal iOS behaviour for app
+      // effects anyway, and the right trade for short feedback tones.
+      if (navigator.audioSession) navigator.audioSession.type = 'ambient';
     } catch (e) {}
     try {
-      // A silent utterance during the gesture unlocks speech for later
-      // automatic calls, which would otherwise be blocked outside a tap.
       if ('speechSynthesis' in window){
         var prime = new SpeechSynthesisUtterance(' ');
         prime.volume = 0;
@@ -1806,20 +1812,19 @@
       }
     } catch (e) {}
     try {
+      // One short silent clip, NOT looped. The previous version looped
+      // forever, holding the session open and keeping other apps ducked for
+      // as long as Wordbox was running.
       var el = document.createElement('audio');
-      el.setAttribute('x-webkit-airplay', 'deny');   // keep it out of AirPlay
+      el.setAttribute('x-webkit-airplay', 'deny');
       el.preload = 'auto';
-      el.loop = true;
-      el.volume = 0.02;
+      el.loop = false;
+      el.volume = 0.01;
       el.src = SILENT_WAV;
       var p = el.play();
       if (p && p.catch) p.catch(function(){});
     } catch (e) {}
   }
-
-  // Must run inside a real gesture, so hang it off the first tap anywhere.
-  document.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
-  document.addEventListener('click', unlockAudio, { once: true });
 
   function playSeq(steps){
     if (!state.soundOn) return;
@@ -2265,6 +2270,9 @@
   }
 
   function startLesson(practice){
+    // Called straight from a tap, and the only point where audio is about to
+    // be needed. iOS requires that first unlock to happen inside a gesture.
+    unlockAudio();
     // The streak deliberately carries over. It counts consecutive correct
     // answers, and ending a lesson isn't a wrong answer.
     state.lessonDone = false;
