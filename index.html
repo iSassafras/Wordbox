@@ -1486,19 +1486,6 @@
     border-top: 1px solid var(--border);
   }
 
-  .samples-row {
-    margin-top: 14px;
-    text-align: center;
-  }
-  .sample-note {
-    margin-top: 8px;
-    font-size: 12px;
-    color: var(--accent-soft);
-    background: rgba(var(--accent-rgb), 0.12);
-    border-radius: 8px;
-    padding: 7px 12px;
-  }
-
   .import-summary {
     display: flex;
     gap: 8px;
@@ -1729,7 +1716,6 @@
     typedReaction: null,
     chosenOption: null,
     hintShown: false,
-    sampleNote: null,
     sortBy: 'practised',
     sortDir: 'desc',
     boxFilter: null,
@@ -1750,7 +1736,7 @@
     lastLessonDay: null
   };
 
-  var APP_VERSION = '2026-09-12b';
+  var APP_VERSION = '2026-09-12c';
 
   var LOADING_QUOTES = [
     'Perfective or imperfective? Yes.',
@@ -3661,9 +3647,6 @@
       '<button class="secondary" data-action="export-words">Export backup</button>' +
       '<button class="secondary" data-action="import-words">Import backup</button>' +
       '<input type="file" id="import-file-input" accept="application/json,.json" style="display:none" />' +
-      '</div>' +
-      '<div class="samples-row"><button class="text-btn" data-action="add-samples">Add any missing sample words</button>' +
-      (state.sampleNote ? '<div class="sample-note">' + escapeHtml(state.sampleNote) + '</div>' : '') +
       '</div>';
 
     if (state.words.length === 0){
@@ -4264,24 +4247,6 @@
       state.sortDir = state.sortDir === 'desc' ? 'asc' : 'desc';
       persistSettings();
       render();
-    }
-    else if (action === 'add-samples'){
-      // Tops up rather than replacing: only samples whose word isn't already
-      // in the deck get added, so existing progress and edits are untouched.
-      var have = {};
-      state.words.forEach(function(w){ have[normalize(w.front)] = true; });
-      var addedCount = 0;
-      seedWords().forEach(function(sw){
-        if (have[normalize(sw.front)]) return;
-        state.words.push(sw);
-        addedCount++;
-      });
-      if (addedCount) persist();
-      state.sampleNote = addedCount
-        ? addedCount + ' sample word' + (addedCount === 1 ? '' : 's') + ' added.'
-        : 'All sample words are already in your list.';
-      render();
-      setTimeout(function(){ state.sampleNote = null; render(); }, 2600);
     }
     else if (action === 'load-samples'){
       // Only offered from the empty state, so nothing can be overwritten.
