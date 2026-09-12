@@ -1750,7 +1750,7 @@
     lastLessonDay: null
   };
 
-  var APP_VERSION = '2026-09-11b';
+  var APP_VERSION = '2026-09-11c';
 
   var LOADING_QUOTES = [
     'Perfective or imperfective? Yes.',
@@ -1903,22 +1903,6 @@
     } catch (e) {
       // Audio is a nicety; never let it break an answer.
     }
-  }
-
-  // Shown on the Profile screen. Three facts, so a music interruption can be
-  // reported as an observation rather than guessed at: whether this iOS knows
-  // the session API at all, what it thinks the session is, and whether the
-  // context is being held open or re-activated per sound.
-  function audioDiag(){
-    var bits = [];
-    try {
-      bits.push(navigator.audioSession
-        ? 'session ' + (navigator.audioSession.type || '?')
-        : 'no session api');
-    } catch (e) { bits.push('session ?'); }
-    bits.push(audioCtx ? 'ctx ' + audioCtx.state : 'ctx none');
-    bits.push(keepAlive ? 'held' : 'not held');
-    return bits.join(' · ');
   }
 
   // ---------- SPEECH ----------
@@ -3829,8 +3813,7 @@
       html += '</div>';
     }
 
-    html += '<div class="version-row">Wordbox \u00B7 ' + APP_VERSION +
-      '<br />' + escapeHtml(audioDiag()) + '</div>';
+    html += '<div class="version-row">Wordbox \u00B7 ' + APP_VERSION + '</div>';
 
     if (useFirebase && currentUser){
       html += '<div class="account-row">Signed in as ' + escapeHtml(currentUser.email) + '<button class="text-btn" data-action="sign-out">Sign out</button></div>';
