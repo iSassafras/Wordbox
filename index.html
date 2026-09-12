@@ -1750,7 +1750,7 @@
     lastLessonDay: null
   };
 
-  var APP_VERSION = '2026-09-11c';
+  var APP_VERSION = '2026-09-12b';
 
   var LOADING_QUOTES = [
     'Perfective or imperfective? Yes.',
@@ -2470,14 +2470,47 @@
   //      "й" and the diaeresis in "ї" are part of the letters and must stay.
   //   2. Apostrophes (ім'я, п'ять) — keyboards produce ' or ' or ʼ
   //      interchangeably, so they're all folded to one form.
-  function normalize(s){
+  var APOSTROPHES = /[\u2018\u2019\u201B\u02B9\u02BB\u02BC\u055A\u2032\uFF07\u0060\u00B4]/g;
+
+  // Stress marks come off in NFD, not NFC. Decomposed first, every accent is a
+  // separate combining character and strips cleanly; composed first, a few of
+  // them fuse into a precomposed letter and survive \u2014 \u0435 + U+0300 becomes
+  // \u0451\u0300 (U+0450) and \u0438 + U+0300 becomes \u045D (U+045D), which no longer match the
+  // combining-mark pattern at all. NFC at the end puts \u0439 and \u0457 back together,
+  // since NFD had taken their breve and diaeresis apart too.
+  //
+  // Only the four stress accents are listed. The breve in \u0439 and the diaeresis
+  // in \u0457 are part of the letters and must not be touched.
+  function stripStress(s){
     return (s || '')
-      .normalize('NFC')
-      .replace(/[\u0300\u0301]/g, '')
-      .replace(/[\u2018\u2019\u02BC\u055A\u0060\u00B4]/g, "'")
+      .normalize('NFD')
+      .replace(/[\u0300\u0301\u0340\u0341]/g, '')
+      .normalize('NFC');
+  }
+
+  function normalize(s){
+    return stripStress(s)
+      .replace(APOSTROPHES, "'")
       .trim()
       .toLowerCase()
       .replace(/\s+/g, ' ');
+  }
+
+  // Grading a typed answer is deliberately more forgiving than normalize(),
+  // which also backs duplicate detection and has to keep separate entries
+  // apart. Typing a phrase card without its question mark is not a vocabulary
+  // mistake, so on top of case and stress marks this drops sentence
+  // punctuation, and reads a hyphen as a space.
+  //
+  // The apostrophe is NOT punctuation in Ukrainian \u2014 it marks that the
+  // preceding consonant stays hard (\u0456\u043C\u2019\u044F, \u043F\u2019\u044F\u0442\u044C) \u2014 so it survives here;
+  // only its typographic variants are folded together, above.
+  function normalizeTyped(s){
+    return normalize(s)
+      .replace(/[\u002D\u2010-\u2015]/g, ' ')
+      .replace(/[.,!?;:\u2026"\u201C\u201D\u201E\u00AB\u00BB()\[\]]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   // ---------- STORAGE (auto-detects environment) ----------
@@ -3248,14 +3281,32 @@
   // instead of the whole word looking wrong.
   // Array.from (not split('')) so combining marks and any non-BMP characters
   // stay attached to their base letter.
+  // Characters are compared the way the answer itself is graded, so nothing
+  // the grader forgives \u2014 case, apostrophe variant, stress mark \u2014 is ever
+  // highlighted as though it were the mistake.
+  function sameChar(x, y){
+    return normalize(x) === normalize(y);
+  }
+
+  // Splits into characters as they are seen rather than as they are stored: a
+  // letter keeps the combining marks that follow it, so the accent in \u043D\u0430\u0301
+  // is part of that letter and never diffed as a character of its own.
+  function chars(str){
+    var out = [];
+    Array.from(str).forEach(function(c){
+      if (out.length && /[\u0300-\u036F]/.test(c)) out[out.length - 1] += c;
+      else out.push(c);
+    });
+    return out;
+  }
+
   function diffPair(typed, correct){
-    var A = Array.from(typed), B = Array.from(correct);
+    var A = chars(typed), B = chars(correct);
     var p = 0;
-    while (p < A.length && p < B.length &&
-           A[p].toLowerCase() === B[p].toLowerCase()) p++;
+    while (p < A.length && p < B.length && sameChar(A[p], B[p])) p++;
     var s = 0;
     while (s < A.length - p && s < B.length - p &&
-           A[A.length - 1 - s].toLowerCase() === B[B.length - 1 - s].toLowerCase()) s++;
+           sameChar(A[A.length - 1 - s], B[B.length - 1 - s])) s++;
     return { a: markSpan(A, p, s), b: markSpan(B, p, s) };
   }
 
@@ -3653,8 +3704,10 @@
     var list = sortWords(state.words.filter(function(w){
       if (state.boxFilter && w.box !== state.boxFilter) return false;
       if (!state.search) return true;
-      var q = state.search.toLowerCase();
-      return w.front.toLowerCase().indexOf(q) !== -1 || w.back.toLowerCase().indexOf(q) !== -1;
+      // Normalised on both sides, so searching "\u043D\u0430\u0432\u0447\u0430\u043D\u043D\u044F" still finds a card
+      // stored as "\u043D\u0430\u0301\u0432\u0447\u0430\u043D\u043D\u044F".
+      var q = normalize(state.search);
+      return normalize(w.front).indexOf(q) !== -1 || normalize(w.back).indexOf(q) !== -1;
     }));
 
     html += '<div class="lib-meta"><span class="lib-count">' +
@@ -4057,7 +4110,7 @@
       var entryT = state.sessionQueue[0];
       var wordT = state.words.find(function(x){ return x.id === entryT.id; });
       state.typedValue = input ? input.value : '';
-      state.wasCorrect = normalize(state.typedValue) === normalize(wordT.front);
+      state.wasCorrect = normalizeTyped(state.typedValue) === normalizeTyped(wordT.front);
       state.checked = true;
       scoreStreak(state.wasCorrect);
       state.typedReaction = reactionFor(state.wasCorrect);
