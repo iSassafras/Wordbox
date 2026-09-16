@@ -1076,6 +1076,13 @@
   .tts-block .form-actions { margin-top: 10px; }
 
   .version-row {
+    display: block;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: inherit;
+    cursor: pointer;
+    text-align: left;
     margin-top: 20px;
     font-size: 10px;
     letter-spacing: 0.06em;
@@ -1083,6 +1090,24 @@
     color: var(--cream-dim);
     opacity: 0.5;
   }
+
+  .changelog {
+    margin-top: 10px;
+    padding: 12px 14px;
+    background: var(--bg-elevated);
+    border-radius: 10px;
+    font-size: 12.5px;
+    color: var(--cream-dim);
+    line-height: 1.45;
+  }
+  .cl-entry + .cl-entry { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .cl-version {
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent-soft);
+  }
+  .changelog ul { margin: 4px 0 0; padding-left: 18px; }
 
   .pref-note {
     font-size: 11.5px;
@@ -1733,10 +1758,28 @@
     committedBest: 0,
     dayStreak: 0,
     bestDayStreak: 0,
-    lastLessonDay: null
+    lastLessonDay: null,
+    changelogOpen: false
   };
 
-  var APP_VERSION = '2026-09-16b';
+  // ---------- VERSION & CHANGELOG ----------
+  // When releasing: bump APP_VERSION and add an entry at the TOP of
+  // CHANGELOG with the same version. The same lines can be pasted into the
+  // GitHub commit description. Shown under "What's new" on the Profile tab.
+  var APP_VERSION = '2026-09-16c';
+
+  var CHANGELOG = [
+    { v: '2026-09-16c', changes: [
+      'Changelog: tap the version on the Profile tab to see what changed'
+    ]},
+    { v: '2026-09-16b', changes: [
+      'Typing cards now start at box 4 instead of box 3'
+    ]},
+    { v: '2026-09-16a', changes: [
+      'Hints are now available on multiple-choice cards',
+      'Clearer placeholder texts for Hint and Notes when adding or editing a word'
+    ]}
+  ];
 
   var LOADING_QUOTES = [
     'Perfective or imperfective? Yes.',
@@ -3857,7 +3900,17 @@
       html += '</div>';
     }
 
-    html += '<div class="version-row">Wordbox \u00B7 ' + APP_VERSION + '</div>';
+    html += '<button class="version-row" data-action="toggle-changelog">Wordbox \u00B7 ' + APP_VERSION +
+      ' \u00B7 ' + (state.changelogOpen ? 'hide changes' : 'what\u2019s new') + '</button>';
+    if (state.changelogOpen){
+      html += '<div class="changelog">';
+      CHANGELOG.forEach(function(entry){
+        html += '<div class="cl-entry"><div class="cl-version">' + escapeHtml(entry.v) + '</div><ul>';
+        entry.changes.forEach(function(c){ html += '<li>' + escapeHtml(c) + '</li>'; });
+        html += '</ul></div>';
+      });
+      html += '</div>';
+    }
 
     if (useFirebase && currentUser){
       html += '<div class="account-row">Signed in as ' + escapeHtml(currentUser.email) + '<button class="text-btn" data-action="sign-out">Sign out</button></div>';
@@ -4090,6 +4143,10 @@
     }
     else if (action === 'open-lesson-review'){
       state.lessonReviewOpen = true;
+      render();
+    }
+    else if (action === 'toggle-changelog'){
+      state.changelogOpen = !state.changelogOpen;
       render();
     }
     else if (action === 'close-lesson-review'){
