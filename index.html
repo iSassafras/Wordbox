@@ -1736,7 +1736,7 @@
     lastLessonDay: null
   };
 
-  var APP_VERSION = '2026-09-12c';
+  var APP_VERSION = '2026-09-16b';
 
   var LOADING_QUOTES = [
     'Perfective or imperfective? Yes.',
@@ -2386,14 +2386,14 @@
   // so it only kicks in once there are 3+ distinct meanings to draw from.
   // Three card types:
   //   'choice-en'  Ukrainian shown, pick the English   (any box)
-  //   'choice-uk'  English shown, pick the Ukrainian   (boxes 1-2 only)
-  //   'typing'     English shown, type the Ukrainian   (box 3+ only)
+  //   'choice-uk'  English shown, pick the Ukrainian   (boxes 1-3 only)
+  //   'typing'     English shown, type the Ukrainian   (box 4+ only)
   //
   // Recall is much harder than recognition, so producing the spelling from
   // scratch is held back until a word has already survived a few reviews.
-  // From box 3 onward it replaces the multiple-choice version of that
+  // From box 4 onward it replaces the multiple-choice version of that
   // direction outright rather than alternating with it.
-  var TYPING_FROM_BOX = 3;
+  var TYPING_FROM_BOX = 4;
 
   function pickMode(word){
     var pool = [];
@@ -3218,6 +3218,14 @@
     // Only on cards where the Ukrainian is the prompt. When the options are
     // Ukrainian they each carry their own speaker instead.
     if (field === 'back') html += speakBtn(w.front);
+    // Hint only while the question is open; once answered, notes take over.
+    if (!answered && w.hint){
+      if (state.hintShown){
+        html += '<div class="hint-text">' + escapeHtml(w.hint) + '</div>';
+      } else {
+        html += '<button class="hint-btn" data-action="show-hint">Need a hint?</button>';
+      }
+    }
     if (answered && w.notes) html += '<div class="card-notes">' + escapeHtml(w.notes) + '</div>';
     html += '</div>';
 
@@ -3564,8 +3572,8 @@
       });
       html += '</select>';
       html += '<div class="type-note">Multiple-choice options are drawn from words of the same type.</div>';
-      html += '<label>Hint (optional)</label><input id="f-hint" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + (word ? escapeHtml(word.hint || '') : '') + '" placeholder="a nudge, shown on request during a lesson" />';
-      html += '<label>Notes (optional)</label><textarea id="f-notes" autocorrect="off" spellcheck="false" placeholder="gender, example sentence, etc.">' + (word ? escapeHtml(word.notes || '') : '') + '</textarea>';
+      html += '<label>Hint (optional)</label><input id="f-hint" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + (word ? escapeHtml(word.hint || '') : '') + '" placeholder="before you answer: a clue, never the word itself" />';
+      html += '<label>Notes (optional)</label><textarea id="f-notes" autocorrect="off" spellcheck="false" placeholder="after you answer: gender, example sentence, usage">' + (word ? escapeHtml(word.notes || '') : '') + '</textarea>';
       html += '<div class="form-actions">';
       html += '<button class="primary" data-action="save-word">' + (word ? 'Save changes' : 'Add word') + '</button>';
       html += '<button class="secondary" data-action="cancel-form">Cancel</button>';
