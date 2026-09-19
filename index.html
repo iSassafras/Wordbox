@@ -1254,7 +1254,11 @@
   }
   .add-form.inline-form {
     background: transparent;
-    padding: 0 0 14px;
+    /* Right inset mirrors the left one on .is-editing, so the fields, stat
+       tiles and switch stop short of the panel's rounded edge instead of
+       sitting flush against it. The row's own icons stay put, aligned with
+       the rows above and below. */
+    padding: 0 12px 14px 0;
     margin: 0;
   }
   .icon-btn.active { color: var(--accent-soft); }
@@ -1788,9 +1792,12 @@
   // When releasing: bump APP_VERSION and add an entry at the TOP of
   // CHANGELOG with the same version. The same lines can be pasted into the
   // GitHub commit description. Shown under "What's new" on the Profile tab.
-  var APP_VERSION = '2026-09-19b';
+  var APP_VERSION = '2026-09-19c';
 
   var CHANGELOG = [
+    { v: '2026-09-19c', changes: [
+      'Library: the edit and detail view now has breathing room on the right, so fields and stats no longer touch the edge'
+    ]},
     { v: '2026-09-19b', changes: [
       'Shelve a word from its edit screen to keep it out of lessons completely',
       'Shelved words keep their box, stats and remaining wait until you take them off the shelf'
