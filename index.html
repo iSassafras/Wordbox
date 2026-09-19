@@ -1792,9 +1792,12 @@
   // When releasing: bump APP_VERSION and add an entry at the TOP of
   // CHANGELOG with the same version. The same lines can be pasted into the
   // GitHub commit description. Shown under "What's new" on the Profile tab.
-  var APP_VERSION = '2026-09-19c';
+  var APP_VERSION = '2026-09-19d';
 
   var CHANGELOG = [
+    { v: '2026-09-19d', changes: [
+      'New sounds for right and wrong answers (the old tones still play if the new ones can\u2019t be loaded)'
+    ]},
     { v: '2026-09-19c', changes: [
       'Library: the edit and detail view now has breathing room on the right, so fields and stats no longer touch the edge'
     ]},
@@ -1852,10 +1855,11 @@
   function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
 
   // ---------- SOUND ----------
-  // Tones are synthesised with the Web Audio API rather than shipped as audio
-  // files: nothing extra to upload, nothing extra to cache, and it stays
-  // silent until you've actually tapped something (iOS won't start an audio
-  // context before a user gesture anyway).
+  // Right/wrong sounds come from two MP3 files next to index.html (see SOUND
+  // FILES below). The tones synthesised here with the Web Audio API are the
+  // fallback whenever a file hasn't loaded. Either way it stays silent until
+  // you've actually tapped something (iOS won't start an audio context
+  // before a user gesture anyway).
   var audioCtx = null;
   var audioUnlocked = false;
   var keepAlive = null;
@@ -1968,6 +1972,71 @@
       });
     } catch (e) {
       // Audio is a nicety; never let it break an answer.
+    }
+  }
+
+  // ---------- SOUND FILES ----------
+  // Fetched and decoded once at load. Decoding happens in an OfflineAudioContext,
+  // which never touches the speakers, so preloading can't claim the audio
+  // session or interrupt music. The decoded clips are then played through the
+  // same ambient context as the tones — deliberately not through <audio>
+  // elements, which would take a separate media session.
+  // If a file is missing, fails to decode, or hasn't finished loading yet,
+  // playClip() returns false and the synthesised tone plays instead.
+  var SOUND_FILES = {
+    correct: 'wordbox_sound_success.mp3',
+    wrong:   'wordbox_sound_failure.mp3'
+  };
+  // The files are normalised to full scale, much louder than the tones (0.14).
+  // One number to tune if they sit too loud or too quiet over music.
+  var SOUND_FILE_GAIN = 0.5;
+  var soundBuffers = {};
+  var currentClip = null;
+
+  (function preloadSounds(){
+    var Off = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    if (!Off || !window.fetch) return;
+    var decoder;
+    try { decoder = new Off(1, 1, 48000); } catch (e) { return; }
+    Object.keys(SOUND_FILES).forEach(function(name){
+      fetch(SOUND_FILES[name])
+        .then(function(r){
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.arrayBuffer();
+        })
+        .then(function(data){
+          // Callback form as well as the promise: older Safari only has the former.
+          return new Promise(function(resolve, reject){
+            var p = decoder.decodeAudioData(data, resolve, reject);
+            if (p && p.then) p.then(resolve, reject);
+          });
+        })
+        .then(function(buf){ soundBuffers[name] = buf; })
+        .catch(function(){ /* stays on the fallback tone */ });
+    });
+  })();
+
+  function playClip(name){
+    var buf = soundBuffers[name];
+    if (!buf || !state.soundOn) return false;
+    try {
+      unlockAudio();
+      var ctx = ensureCtx();
+      if (!ctx) return false;
+      // A new answer cuts off the previous clip rather than piling on top.
+      if (currentClip){ try { currentClip.stop(); } catch (e) {} currentClip = null; }
+      var src = ctx.createBufferSource();
+      var g = ctx.createGain();
+      src.buffer = buf;
+      g.gain.value = SOUND_FILE_GAIN;
+      src.connect(g);
+      g.connect(ctx.destination);
+      src.onended = function(){ if (currentClip === src) currentClip = null; };
+      src.start();
+      currentClip = src;
+      return true;
+    } catch (e) {
+      return false;
     }
   }
 
@@ -2233,9 +2302,11 @@
   }
 
   function soundCorrect(){
+    if (playClip('correct')) return;
     playSeq([{ f: 659, at: 0, d: 0.10 }, { f: 988, at: 0.085, d: 0.16 }]);
   }
   function soundWrong(){
+    if (playClip('wrong')) return;
     playSeq([{ f: 196, at: 0, d: 0.18, type: 'triangle', v: 0.11 }]);
   }
 
