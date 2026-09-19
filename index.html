@@ -1220,6 +1220,28 @@
     line-height: 1;
   }
 
+  /* ---- Shelved words ---- */
+  .shelf-row { margin-top: 18px; }
+  .shelf-note {
+    font-size: 12px;
+    color: var(--cream-dim);
+    margin: 6px 0 4px;
+    line-height: 1.4;
+  }
+  .word-entry.is-shelved .word-row .word-text .front,
+  .word-entry.is-shelved .word-row .word-text .back,
+  .word-entry.is-shelved .box-dots-inline { opacity: 0.45; }
+  .shelf-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--cream-dim);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0 7px;
+    line-height: 17px;
+  }
+
   /* ---- Inline editing ---- */
   .word-entry { border-bottom: 1px solid var(--border); }
   .word-entry .word-row { border-bottom: none; }
@@ -1766,9 +1788,13 @@
   // When releasing: bump APP_VERSION and add an entry at the TOP of
   // CHANGELOG with the same version. The same lines can be pasted into the
   // GitHub commit description. Shown under "What's new" on the Profile tab.
-  var APP_VERSION = '2026-09-19a';
+  var APP_VERSION = '2026-09-19b';
 
   var CHANGELOG = [
+    { v: '2026-09-19b', changes: [
+      'Shelve a word from its edit screen to keep it out of lessons completely',
+      'Shelved words keep their box, stats and remaining wait until you take them off the shelf'
+    ]},
     { v: '2026-09-19a', changes: [
       'Boxes 4 and 5 are now typing only — you always get the English and type the Ukrainian',
       'New app icons'
@@ -2455,7 +2481,7 @@
 
   function distinctCount(field){
     var seen = {};
-    state.words.forEach(function(w){ seen[normalize(w[field])] = true; });
+    activeWords().forEach(function(w){ seen[normalize(w[field])] = true; });
     return Object.keys(seen).length;
   }
 
@@ -2480,7 +2506,7 @@
     var sameType = [], otherType = [];
     var seen = {};
     seen[normalize(correct)] = true;
-    state.words.forEach(function(w){
+    activeWords().forEach(function(w){
       var key = normalize(w[field]);
       if (w.id === word.id || seen[key]) return;
       seen[key] = true;
@@ -2852,7 +2878,8 @@
       created: todayStr(),
       nRight: 0,
       nWrong: 0,
-      last: null
+      last: null,
+      shelved: null
     };
   }
 
@@ -2875,8 +2902,33 @@
       created: w.created || null,
       nRight: w.nRight || 0,
       nWrong: w.nWrong || 0,
-      last: w.last || null
+      last: w.last || null,
+      // The date it went on the shelf, or null. Stored as a date rather than
+      // a flag so unshelving can hand back exactly the wait that was left.
+      shelved: w.shelved || null
     };
+  }
+
+  // Shelved words are out of lessons entirely: not scheduled, not in
+  // practice, and not used as multiple-choice distractors either.
+  function activeWords(){
+    return state.words.filter(function(w){ return !w.shelved; });
+  }
+
+  function daysBetween(a, b){
+    return Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000);
+  }
+
+  // Freezing means the clock stops too. A word shelved with five days to go
+  // comes back with five days to go, rather than returning hugely overdue.
+  function setShelved(w, on){
+    if (on && !w.shelved){
+      w.shelved = todayStr();
+    } else if (!on && w.shelved){
+      var gap = daysBetween(w.shelved, todayStr());
+      if (gap > 0) w.due = addDays(w.due, gap);
+      w.shelved = null;
+    }
   }
 
   function accuracyOf(w){
@@ -3033,13 +3085,13 @@
       // Extra practice draws at random from the whole library. Ordering by
       // due date here would serve the same ten words every time, since
       // nothing you do in practice mode changes the schedule.
-      pool = state.words.slice();
+      pool = activeWords();
       for (var i = pool.length - 1; i > 0; i--){
         var j = Math.floor(Math.random() * (i + 1));
         var tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
       }
     } else {
-      pool = state.words.filter(function(w){ return w.due <= t; });
+      pool = activeWords().filter(function(w){ return w.due <= t; });
       pool.sort(function(a, b){
         if (a.due !== b.due) return a.due < b.due ? -1 : 1;
         return a.box - b.box;
@@ -3091,7 +3143,7 @@
 
   function dueCount(){
     var t = todayStr();
-    return state.words.filter(function(w){ return w.due <= t; }).length;
+    return activeWords().filter(function(w){ return w.due <= t; }).length;
   }
 
   function renderHome(){
@@ -3104,6 +3156,17 @@
         '<h2>Your box is empty</h2>' +
         '<p>Add some words and they\u2019ll be scheduled into lessons for you.</p>' +
         '<button class="primary" data-action="goto-cards">Add your first word</button>' +
+        '</div>';
+    }
+
+    // Everything shelved is a real state, not an empty box: the words are
+    // all still there, so say that rather than offering a lesson of nothing.
+    if (activeWords().length === 0){
+      return '<div class="empty-state">' +
+        '<div class="glyph">&#9679;&#9675;&#9679;</div>' +
+        '<h2>Every word is shelved</h2>' +
+        '<p>Take some off the shelf in the Library and they\u2019ll come back into lessons.</p>' +
+        '<button class="primary" data-action="goto-cards">Open Library</button>' +
         '</div>';
     }
 
@@ -3124,7 +3187,7 @@
       html += '<button class="primary start-btn" data-action="start-lesson">Start lesson' +
         '<span class="start-sub">' + sub + '</span></button>';
     } else {
-      var next = state.words.slice().sort(function(a,b){ return a.due < b.due ? -1 : 1; })[0];
+      var next = activeWords().sort(function(a,b){ return a.due < b.due ? -1 : 1; })[0];
       html += '<div class="home-clear">All caught up.' +
         (next ? ' Next word is due ' + escapeHtml(next.due) + '.' : '') + '</div>';
       html += '<button class="secondary start-btn" data-action="practice-anyway">Practice anyway</button>';
@@ -3621,6 +3684,14 @@
       html += '<div class="type-note">Multiple-choice options are drawn from words of the same type.</div>';
       html += '<label>Hint (optional)</label><input id="f-hint" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + (word ? escapeHtml(word.hint || '') : '') + '" placeholder="before you answer: a clue, never the word itself" />';
       html += '<label>Notes (optional)</label><textarea id="f-notes" autocorrect="off" spellcheck="false" placeholder="after you answer: gender, example sentence, usage">' + (word ? escapeHtml(word.notes || '') : '') + '</textarea>';
+      if (word){
+        // Applied on Save with the rest of the form, so Cancel undoes it too.
+        html += '<div class="pref-row shelf-row"><span>Shelve this word</span>' +
+          '<button type="button" id="f-shelved" class="toggle' + (word.shelved ? ' on' : '') +
+          '" data-action="toggle-shelf-draft" aria-pressed="' + (word.shelved ? 'true' : 'false') + '">' +
+          '<span class="knob"></span></button></div>';
+        html += '<div class="shelf-note">Won\u2019t come up in lessons until you unshelve it. Box, stats and due date are frozen.</div>';
+      }
       html += '<div class="form-actions">';
       html += '<button class="primary" data-action="save-word">' + (word ? 'Save changes' : 'Add word') + '</button>';
       html += '<button class="secondary" data-action="cancel-form">Cancel</button>';
@@ -3640,7 +3711,11 @@
       html += '<div class="es-line">Added: ' +
         escapeHtml(word.created ? sinceLabel(word.created) : 'before this was tracked') + '</div>';
       html += '<div class="es-line">Last practised: ' + escapeHtml(sinceLabel(word.last)) + '</div>';
-      html += '<div class="es-line">Next due: ' + escapeHtml(word.due <= todayStr() ? 'now' : word.due) + '</div>';
+      if (word.shelved){
+        html += '<div class="es-line">Shelved: ' + escapeHtml(sinceLabel(word.shelved)) + ' \u2014 not in lessons</div>';
+      } else {
+        html += '<div class="es-line">Next due: ' + escapeHtml(word.due <= todayStr() ? 'now' : word.due) + '</div>';
+      }
       if (!readOnly) html += '<div class="es-note">Editing the text keeps all of this intact.</div>';
       html += '</div>';
     }
@@ -3671,7 +3746,7 @@
       case 'practised':
         return w.last ? 'practised ' + sinceLabel(w.last) : 'not practised yet';
       case 'box':
-        return 'box ' + w.box + ' \u00B7 ' + untilLabel(w.due);
+        return 'box ' + w.box + (w.shelved ? '' : ' \u00B7 ' + untilLabel(w.due));
       case 'added':
         return w.created ? 'added ' + sinceLabel(w.created) : 'added before this was tracked';
       default:
@@ -3752,6 +3827,10 @@
       (list.length === state.words.length
         ? state.words.length + (state.words.length === 1 ? ' word' : ' words')
         : list.length + ' of ' + state.words.length + ' words') +
+      (function(){
+        var n = state.words.length - activeWords().length;
+        return n ? ', ' + n + ' shelved' : '';
+      })() +
       '</span>' + syncLineHtml() + '</div>';
 
     if (list.length === 0){
@@ -3761,7 +3840,7 @@
         var isEditing = state.editingId === w.id;
         var isOpen = isEditing || state.expandedId === w.id;
         var confirming = state.confirmDeleteId === w.id;
-        html += '<div class="word-entry' + (isOpen ? ' is-editing' : '') + '">';
+        html += '<div class="word-entry' + (isOpen ? ' is-editing' : '') + (w.shelved ? ' is-shelved' : '') + '">';
         // The row itself toggles the expanded view. Taps on the pencil or bin
         // resolve to those buttons first, since the handler walks up from the
         // tapped element and finds the nearest data-action.
@@ -3772,6 +3851,9 @@
         // the list answers the question you're currently asking of it rather
         // than showing every statistic at once.
         var meta = rowMeta(w);
+        if (w.shelved){
+          meta = '<span class="shelf-tag">shelved</span>' + (meta ? ' ' + meta : '');
+        }
         if (meta) html += '<div class="word-stats">' + meta + '</div>';
         html += '</div>';
         html += '<div class="row-actions">';
@@ -4240,6 +4322,12 @@
       persist();
       render();
     }
+    else if (action === 'toggle-shelf-draft'){
+      // DOM only: a re-render would throw away whatever is typed in the form.
+      var on = !el.classList.contains('on');
+      el.classList.toggle('on', on);
+      el.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
     else if (action === 'save-word'){
       var front = document.getElementById('f-front').value.trim();
       var back = document.getElementById('f-back').value.trim();
@@ -4258,6 +4346,8 @@
         // Only overwrite when the dropdown was actually changed; an
         // untouched one must not silently reclassify an existing word.
         if (isValidType(type)) w2.type = type;
+        var shelfEl = document.getElementById('f-shelved');
+        if (shelfEl) setShelved(w2, shelfEl.classList.contains('on'));
       } else {
         state.words.push(makeWord(front, back, notes, hint, type));
       }
