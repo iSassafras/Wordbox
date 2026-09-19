@@ -1792,9 +1792,12 @@
   // When releasing: bump APP_VERSION and add an entry at the TOP of
   // CHANGELOG with the same version. The same lines can be pasted into the
   // GitHub commit description. Shown under "What's new" on the Profile tab.
-  var APP_VERSION = '2026-09-19d';
+  var APP_VERSION = '2026-09-19e';
 
   var CHANGELOG = [
+    { v: '2026-09-19e', changes: [
+      'Sound fix attempt, plus a temporary sound status line on the Profile tab'
+    ]},
     { v: '2026-09-19d', changes: [
       'New sounds for right and wrong answers (the old tones still play if the new ones can\u2019t be loaded)'
     ]},
@@ -1976,13 +1979,11 @@
   }
 
   // ---------- SOUND FILES ----------
-  // Fetched and decoded once at load. Decoding happens in an OfflineAudioContext,
-  // which never touches the speakers, so preloading can't claim the audio
-  // session or interrupt music. The decoded clips are then played through the
-  // same ambient context as the tones — deliberately not through <audio>
-  // elements, which would take a separate media session.
-  // If a file is missing, fails to decode, or hasn't finished loading yet,
-  // playClip() returns false and the synthesised tone plays instead.
+  // The bytes are fetched at load (plain network, no audio involved). They are
+  // decoded later, by the app's real audio context, the first time it exists —
+  // i.e. on the first tap that plays a sound. Until then the tone plays.
+  // The clips play through the same ambient context as the tones, deliberately
+  // not through <audio> elements, which would take a separate media session.
   var SOUND_FILES = {
     correct: 'wordbox_sound_success.mp3',
     wrong:   'wordbox_sound_failure.mp3'
@@ -1990,35 +1991,58 @@
   // The files are normalised to full scale, much louder than the tones (0.14).
   // One number to tune if they sit too loud or too quiet over music.
   var SOUND_FILE_GAIN = 0.5;
+  var soundData = {};
   var soundBuffers = {};
   var currentClip = null;
 
-  (function preloadSounds(){
-    var Off = window.OfflineAudioContext || window.webkitOfflineAudioContext;
-    if (!Off || !window.fetch) return;
-    var decoder;
-    try { decoder = new Off(1, 1, 48000); } catch (e) { return; }
+  // TEMPORARY diagnostics, shown on the Profile tab. Remove once sound works.
+  var soundDiag = { correct: 'not started', wrong: 'not started', last: 'nothing yet' };
+  function errText(e){ return (e && (e.message || e.name)) || String(e); }
+
+  (function fetchSounds(){
+    if (!window.fetch){ soundDiag.correct = soundDiag.wrong = 'no fetch'; return; }
     Object.keys(SOUND_FILES).forEach(function(name){
+      soundDiag[name] = 'loading';
       fetch(SOUND_FILES[name])
         .then(function(r){
           if (!r.ok) throw new Error('HTTP ' + r.status);
           return r.arrayBuffer();
         })
         .then(function(data){
-          // Callback form as well as the promise: older Safari only has the former.
-          return new Promise(function(resolve, reject){
-            var p = decoder.decodeAudioData(data, resolve, reject);
-            if (p && p.then) p.then(resolve, reject);
-          });
+          soundData[name] = data;
+          soundDiag[name] = 'fetched (' + data.byteLength + ' bytes)';
+          if (audioCtx) decodeSounds(audioCtx);
         })
-        .then(function(buf){ soundBuffers[name] = buf; })
-        .catch(function(){ /* stays on the fallback tone */ });
+        .catch(function(e){ soundDiag[name] = 'fetch failed: ' + errText(e); });
     });
   })();
 
+  function decodeSounds(ctx){
+    Object.keys(soundData).forEach(function(name){
+      var data = soundData[name];
+      delete soundData[name];   // decoding consumes the bytes; one attempt each
+      soundDiag[name] = 'decoding';
+      new Promise(function(resolve, reject){
+        // Callback form as well as the promise: older Safari only has the former.
+        var p = ctx.decodeAudioData(data, resolve, reject);
+        if (p && p.then) p.then(resolve, reject);
+      }).then(function(buf){
+        soundBuffers[name] = buf;
+        soundDiag[name] = 'ready (' + buf.duration.toFixed(2) + ' s)';
+      }).catch(function(e){
+        soundDiag[name] = 'decode failed: ' + errText(e);
+      });
+    });
+  }
+
   function playClip(name){
     var buf = soundBuffers[name];
-    if (!buf || !state.soundOn) return false;
+    if (!state.soundOn){ soundDiag.last = 'sound switched off'; return false; }
+    if (!buf){
+      // Still create/resume the context so pending files get decoded.
+      try { if (state.soundOn){ unlockAudio(); var c0 = ensureCtx(); if (c0) decodeSounds(c0); } } catch (e) {}
+      return false;
+    }
     try {
       unlockAudio();
       var ctx = ensureCtx();
@@ -2034,8 +2058,10 @@
       src.onended = function(){ if (currentClip === src) currentClip = null; };
       src.start();
       currentClip = src;
+      soundDiag.last = 'clip "' + name + '", context ' + ctx.state;
       return true;
     } catch (e) {
+      soundDiag.last = 'clip "' + name + '" error: ' + errText(e);
       return false;
     }
   }
@@ -2301,13 +2327,19 @@
       '" aria-label="Hear it">' + ICONS.speaker + '</button>';
   }
 
+  function noteTone(name){
+    if (!state.soundOn) return;
+    soundDiag.last = 'tone "' + name + '", context ' + (audioCtx ? audioCtx.state : 'none');
+  }
   function soundCorrect(){
     if (playClip('correct')) return;
     playSeq([{ f: 659, at: 0, d: 0.10 }, { f: 988, at: 0.085, d: 0.16 }]);
+    noteTone('correct');
   }
   function soundWrong(){
     if (playClip('wrong')) return;
     playSeq([{ f: 196, at: 0, d: 0.18, type: 'triangle', v: 0.11 }]);
+    noteTone('wrong');
   }
 
   function reactionFor(correct){
@@ -4066,6 +4098,16 @@
 
     html += '<button class="version-row" data-action="toggle-changelog">Wordbox \u00B7 ' + APP_VERSION +
       ' \u00B7 ' + (state.changelogOpen ? 'hide changes' : 'what\u2019s new') + '</button>';
+    // TEMPORARY sound diagnostics — remove once sound works.
+    var sess = '';
+    try { sess = navigator.audioSession ? navigator.audioSession.type : 'n/a'; } catch (e) { sess = 'error'; }
+    html += '<div style="font-size:12px;opacity:.7;margin:6px 0 12px;line-height:1.5;text-align:left">' +
+      'Sound check \u2014 success: ' + escapeHtml(soundDiag.correct) +
+      '<br>failure: ' + escapeHtml(soundDiag.wrong) +
+      '<br>last played: ' + escapeHtml(soundDiag.last) +
+      '<br>sound setting: ' + (state.soundOn ? 'on' : 'off') +
+      ' \u00B7 session: ' + escapeHtml(sess) +
+      ' \u00B7 context: ' + (audioCtx ? audioCtx.state : 'none') + '</div>';
     if (state.changelogOpen){
       html += '<div class="changelog">';
       CHANGELOG.forEach(function(entry){
