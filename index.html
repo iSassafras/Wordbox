@@ -1766,9 +1766,13 @@
   // When releasing: bump APP_VERSION and add an entry at the TOP of
   // CHANGELOG with the same version. The same lines can be pasted into the
   // GitHub commit description. Shown under "What's new" on the Profile tab.
-  var APP_VERSION = '2026-09-16c';
+  var APP_VERSION = '2026-09-19a';
 
   var CHANGELOG = [
+    { v: '2026-09-19a', changes: [
+      'Boxes 4 and 5 are now typing only — you always get the English and type the Ukrainian',
+      'New app icons'
+    ]},
     { v: '2026-09-16c', changes: [
       'Changelog: tap the version on the Profile tab to see what changed'
     ]},
@@ -2422,27 +2426,27 @@
   var INTERVALS = { 2: 1, 3: 3, 4: 7, 5: 14 };
   var LESSON_SIZE = 10;
 
-  // One learning mode that alternates at random per card:
-  //   'typing' — shown the English, type the Ukrainian
-  //   'choice' — shown the Ukrainian, pick the English from 3 options
+  // Lower boxes alternate at random between the two multiple-choice
+  // directions; from box 4 the card is always typed.
   // Multiple choice needs two believable wrong answers drawn from the deck,
-  // so it only kicks in once there are 3+ distinct meanings to draw from.
+  // so it only works once there are 3+ distinct meanings to draw from.
   // Three card types:
-  //   'choice-en'  Ukrainian shown, pick the English   (any box)
+  //   'choice-en'  Ukrainian shown, pick the English   (boxes 1-3 only)
   //   'choice-uk'  English shown, pick the Ukrainian   (boxes 1-3 only)
-  //   'typing'     English shown, type the Ukrainian   (box 4+ only)
+  //   'typing'     English shown, type the Ukrainian   (box 4+, exclusively)
   //
   // Recall is much harder than recognition, so producing the spelling from
   // scratch is held back until a word has already survived a few reviews.
-  // From box 4 onward it replaces the multiple-choice version of that
-  // direction outright rather than alternating with it.
+  // From box 4 onward it takes over completely: no more multiple choice in
+  // either direction, so every review of a nearly-learned word is the hard
+  // version — English prompt, Ukrainian typed out.
   var TYPING_FROM_BOX = 4;
 
   function pickMode(word){
+    if (word.box >= TYPING_FROM_BOX) return 'typing';
     var pool = [];
     if (distinctCount('back') >= 3)  pool.push('choice-en');
-    if (word.box >= TYPING_FROM_BOX) pool.push('typing');
-    else if (distinctCount('front') >= 3) pool.push('choice-uk');
+    if (distinctCount('front') >= 3) pool.push('choice-uk');
     // A deck of one or two words can't produce distractors, so typing is all
     // that's left regardless of box.
     if (!pool.length) return 'typing';
@@ -3800,7 +3804,7 @@
     if (n === 1) return 'new or missed \u00B7 back tomorrow';
     var d = INTERVALS[n];
     var note = 'after ' + d + (d === 1 ? ' day' : ' days');
-    if (n === TYPING_FROM_BOX) note += ' \u00B7 typing starts';
+    if (n >= TYPING_FROM_BOX) note += ' \u00B7 typing only';
     if (n === 5) note += ' \u00B7 mastered';
     return note;
   }
