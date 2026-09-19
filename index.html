@@ -1792,9 +1792,12 @@
   // When releasing: bump APP_VERSION and add an entry at the TOP of
   // CHANGELOG with the same version. The same lines can be pasted into the
   // GitHub commit description. Shown under "What's new" on the Profile tab.
-  var APP_VERSION = '2026-09-19e';
+  var APP_VERSION = '2026-09-19f';
 
   var CHANGELOG = [
+    { v: '2026-09-19f', changes: [
+      'Fixed: answer sounds were silent since 2026-09-19d'
+    ]},
     { v: '2026-09-19e', changes: [
       'Sound fix attempt, plus a temporary sound status line on the Profile tab'
     ]},
@@ -1940,6 +1943,8 @@
     if (audioCtx.state === 'suspended'){
       try { audioCtx.resume(); } catch (e) {}
     }
+    // Decode any sound files that have arrived; a no-op once they're done.
+    try { decodeSounds(audioCtx); } catch (e) {}
     return audioCtx;
   }
 
@@ -2035,7 +2040,7 @@
     });
   }
 
-  function playClip(name){
+  function playSoundClip(name){
     var buf = soundBuffers[name];
     if (!state.soundOn){ soundDiag.last = 'sound switched off'; return false; }
     if (!buf){
@@ -2332,12 +2337,12 @@
     soundDiag.last = 'tone "' + name + '", context ' + (audioCtx ? audioCtx.state : 'none');
   }
   function soundCorrect(){
-    if (playClip('correct')) return;
+    if (playSoundClip('correct')) return;
     playSeq([{ f: 659, at: 0, d: 0.10 }, { f: 988, at: 0.085, d: 0.16 }]);
     noteTone('correct');
   }
   function soundWrong(){
-    if (playClip('wrong')) return;
+    if (playSoundClip('wrong')) return;
     playSeq([{ f: 196, at: 0, d: 0.18, type: 'triangle', v: 0.11 }]);
     noteTone('wrong');
   }
