@@ -1792,20 +1792,11 @@
   // When releasing: bump APP_VERSION and add an entry at the TOP of
   // CHANGELOG with the same version. The same lines can be pasted into the
   // GitHub commit description. Shown under "What's new" on the Profile tab.
-  var APP_VERSION = '2026-09-19h';
+  var APP_VERSION = '2026-09-19i';
 
   var CHANGELOG = [
-    { v: '2026-09-19h', changes: [
-      'Two more temporary sound tests for iPhone'
-    ]},
-    { v: '2026-09-19g', changes: [
-      'Temporary sound test buttons on the Profile tab'
-    ]},
-    { v: '2026-09-19f', changes: [
+    { v: '2026-09-19i', changes: [
       'Fixed: answer sounds were silent since 2026-09-19d'
-    ]},
-    { v: '2026-09-19e', changes: [
-      'Sound fix attempt, plus a temporary sound status line on the Profile tab'
     ]},
     { v: '2026-09-19d', changes: [
       'New sounds for right and wrong answers (the old tones still play if the new ones can\u2019t be loaded)'
@@ -2006,14 +1997,9 @@
   var soundBuffers = {};
   var currentClip = null;
 
-  // TEMPORARY diagnostics, shown on the Profile tab. Remove once sound works.
-  var soundDiag = { correct: 'not started', wrong: 'not started', last: 'nothing yet' };
-  function errText(e){ return (e && (e.message || e.name)) || String(e); }
-
   (function fetchSounds(){
-    if (!window.fetch){ soundDiag.correct = soundDiag.wrong = 'no fetch'; return; }
+    if (!window.fetch) return;
     Object.keys(SOUND_FILES).forEach(function(name){
-      soundDiag[name] = 'loading';
       fetch(SOUND_FILES[name])
         .then(function(r){
           if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -2021,10 +2007,9 @@
         })
         .then(function(data){
           soundData[name] = data;
-          soundDiag[name] = 'fetched (' + data.byteLength + ' bytes)';
           if (audioCtx) decodeSounds(audioCtx);
         })
-        .catch(function(e){ soundDiag[name] = 'fetch failed: ' + errText(e); });
+        .catch(function(){ /* stays on the fallback tone */ });
     });
   })();
 
@@ -2032,50 +2017,22 @@
     Object.keys(soundData).forEach(function(name){
       var data = soundData[name];
       delete soundData[name];   // decoding consumes the bytes; one attempt each
-      soundDiag[name] = 'decoding';
       new Promise(function(resolve, reject){
         // Callback form as well as the promise: older Safari only has the former.
         var p = ctx.decodeAudioData(data, resolve, reject);
         if (p && p.then) p.then(resolve, reject);
       }).then(function(buf){
         soundBuffers[name] = buf;
-        var peak = 0;
-        try {
-          var ch = buf.getChannelData(0);
-          for (var i = 0; i < ch.length; i++){ var a = Math.abs(ch[i]); if (a > peak) peak = a; }
-        } catch (e) {}
-        soundDiag[name] = 'ready (' + buf.duration.toFixed(2) + ' s, ' + buf.sampleRate +
-          ' Hz, ' + buf.numberOfChannels + ' ch, peak ' + peak.toFixed(2) + ')';
-        refreshSoundDiag();
-      }).catch(function(e){
-        soundDiag[name] = 'decode failed: ' + errText(e);
-      });
+      }).catch(function(){ /* stays on the fallback tone */ });
     });
   }
 
-  // TEMPORARY sound diagnostics — remove once sound works.
-  function soundDiagHtml(){
-    var sess = '';
-    try { sess = navigator.audioSession ? navigator.audioSession.type : 'n/a'; } catch (e) { sess = 'error'; }
-    return 'Sound check \u2014 success: ' + escapeHtml(soundDiag.correct) +
-      '<br>failure: ' + escapeHtml(soundDiag.wrong) +
-      '<br>last played: ' + escapeHtml(soundDiag.last) +
-      (soundDiag.ended ? '<br>' + escapeHtml(soundDiag.ended) : '') +
-      '<br>sound setting: ' + (state.soundOn ? 'on' : 'off') +
-      ' \u00B7 session: ' + escapeHtml(sess) +
-      ' \u00B7 context: ' + (audioCtx ? audioCtx.state + ', ' + audioCtx.sampleRate + ' Hz' : 'none');
-  }
-  function refreshSoundDiag(){
-    var el = document.getElementById('sound-diag');
-    if (el) el.innerHTML = soundDiagHtml();
-  }
-
-  function playSoundClip(name, gainOverride){
+  function playSoundClip(name){
     var buf = soundBuffers[name];
-    if (!state.soundOn){ soundDiag.last = 'sound switched off'; return false; }
+    if (!state.soundOn) return false;
     if (!buf){
-      // Still create/resume the context so pending files get decoded.
-      try { if (state.soundOn){ unlockAudio(); var c0 = ensureCtx(); if (c0) decodeSounds(c0); } } catch (e) {}
+      // Still create/resume the context; ensureCtx() decodes pending files.
+      try { unlockAudio(); ensureCtx(); } catch (e) {}
       return false;
     }
     try {
@@ -2087,23 +2044,14 @@
       var src = ctx.createBufferSource();
       var g = ctx.createGain();
       src.buffer = buf;
-      g.gain.value = gainOverride || SOUND_FILE_GAIN;
+      g.gain.value = SOUND_FILE_GAIN;
       src.connect(g);
       g.connect(ctx.destination);
-      var t0 = ctx.currentTime, w0 = Date.now();
-      src.onended = function(){
-        if (currentClip === src) currentClip = null;
-        soundDiag.ended = '"' + name + '" ended \u2014 audio clock ran ' +
-          (ctx.currentTime - t0).toFixed(2) + ' s, real time ' + ((Date.now() - w0) / 1000).toFixed(2) + ' s';
-        refreshSoundDiag();
-      };
+      src.onended = function(){ if (currentClip === src) currentClip = null; };
       src.start();
       currentClip = src;
-      soundDiag.last = 'clip "' + name + '" at gain ' + g.gain.value + ', context ' + ctx.state +
-        ', clock ' + t0.toFixed(2) + ' s';
       return true;
     } catch (e) {
-      soundDiag.last = 'clip "' + name + '" error: ' + errText(e);
       return false;
     }
   }
@@ -2369,19 +2317,13 @@
       '" aria-label="Hear it">' + ICONS.speaker + '</button>';
   }
 
-  function noteTone(name){
-    if (!state.soundOn) return;
-    soundDiag.last = 'tone "' + name + '", context ' + (audioCtx ? audioCtx.state : 'none');
-  }
   function soundCorrect(){
     if (playSoundClip('correct')) return;
     playSeq([{ f: 659, at: 0, d: 0.10 }, { f: 988, at: 0.085, d: 0.16 }]);
-    noteTone('correct');
   }
   function soundWrong(){
     if (playSoundClip('wrong')) return;
     playSeq([{ f: 196, at: 0, d: 0.18, type: 'triangle', v: 0.11 }]);
-    noteTone('wrong');
   }
 
   function reactionFor(correct){
@@ -4140,16 +4082,6 @@
 
     html += '<button class="version-row" data-action="toggle-changelog">Wordbox \u00B7 ' + APP_VERSION +
       ' \u00B7 ' + (state.changelogOpen ? 'hide changes' : 'what\u2019s new') + '</button>';
-    // TEMPORARY sound diagnostics — remove once sound works.
-    var tb = 'style="margin:4px 6px 4px 0;padding:6px 10px;font-size:12px;border-radius:8px;border:1px solid currentColor;background:none;color:inherit"';
-    html += '<div style="font-size:12px;opacity:.75;margin:6px 0 12px;text-align:left">' +
-      '<div id="sound-diag" style="line-height:1.5">' + soundDiagHtml() + '</div>' +
-      '<button ' + tb + ' data-action="test-tone">Old tone</button>' +
-      '<button ' + tb + ' data-action="test-clip">New sound</button>' +
-      '<button ' + tb + ' data-action="test-clip-loud">New sound, full volume</button>' +
-      '<button ' + tb + ' data-action="test-restart">Restart audio + tone</button>' +
-      '<button ' + tb + ' data-action="test-playback">Tone in playback mode</button>' +
-      '</div>';
     if (state.changelogOpen){
       html += '<div class="changelog">';
       CHANGELOG.forEach(function(entry){
@@ -4369,47 +4301,6 @@
     else if (action === 'clear-tts-key'){
       setTtsKey('');
       render();
-    }
-    else if (action === 'test-tone'){   // TEMPORARY
-      soundDiag.ended = '';
-      playSeq([{ f: 659, at: 0, d: 0.10 }, { f: 988, at: 0.085, d: 0.16 }]);
-      noteTone('test');
-      refreshSoundDiag();
-    }
-    else if (action === 'test-clip' || action === 'test-clip-loud'){   // TEMPORARY
-      soundDiag.ended = '';
-      if (!playSoundClip('correct', action === 'test-clip-loud' ? 1 : 0)){
-        soundDiag.last = 'clip not played (' + soundDiag.correct + ')';
-      }
-      refreshSoundDiag();
-    }
-    else if (action === 'test-restart'){   // TEMPORARY
-      // Throw the audio context away and build a fresh one, in case iOS left
-      // the old one running but disconnected from the speaker.
-      soundDiag.ended = '';
-      try { if (keepAlive){ keepAlive.stop(); keepAlive.disconnect(); } } catch (e) {}
-      keepAlive = null;
-      try { if (audioCtx) audioCtx.close(); } catch (e) {}
-      audioCtx = null;
-      playSeq([{ f: 659, at: 0, d: 0.10 }, { f: 988, at: 0.085, d: 0.16 }]);
-      soundDiag.last = 'tone after restart, context ' + (audioCtx ? audioCtx.state : 'none');
-      refreshSoundDiag();
-    }
-    else if (action === 'test-playback'){   // TEMPORARY
-      // Briefly switch to the 'playback' session, which ignores silent mode
-      // (and may pause music), then back to 'ambient'.
-      soundDiag.ended = '';
-      var before = '', during = '';
-      try { before = navigator.audioSession ? navigator.audioSession.type : 'n/a'; } catch (e) {}
-      try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
-      try { during = navigator.audioSession ? navigator.audioSession.type : 'n/a'; } catch (e) {}
-      playSeq([{ f: 659, at: 0, d: 0.10 }, { f: 988, at: 0.085, d: 0.16 }]);
-      soundDiag.last = 'tone in playback mode (session ' + before + ' \u2192 ' + during + ')';
-      refreshSoundDiag();
-      setTimeout(function(){
-        try { if (navigator.audioSession) navigator.audioSession.type = 'ambient'; } catch (e) {}
-        refreshSoundDiag();
-      }, 2000);
     }
     else if (action === 'toggle-sound'){
       state.soundOn = !state.soundOn;
