@@ -1792,9 +1792,12 @@
   // When releasing: bump APP_VERSION and add an entry at the TOP of
   // CHANGELOG with the same version. The same lines can be pasted into the
   // GitHub commit description. Shown under "What's new" on the Profile tab.
-  var APP_VERSION = '2026-09-19i';
+  var APP_VERSION = '2026-09-19j';
 
   var CHANGELOG = [
+    { v: '2026-09-19j', changes: [
+      'Experiment: trying to make answer sounds play in silent mode without pausing music'
+    ]},
     { v: '2026-09-19i', changes: [
       'Fixed: answer sounds were silent since 2026-09-19d'
     ]},
@@ -1889,6 +1892,24 @@
       audioSessionOk = (navigator.audioSession.type === 'ambient');
     }
   } catch (e) {}
+
+  // EXPERIMENT (2026-09-19j): an old iOS trick. Playing a scrap of silent
+  // <audio> is known to move Web Audio onto the media channel, which silent
+  // mode leaves alone. Under 'playback' it did that but also paused music;
+  // this tests whether it still gets past silent mode with the session kept
+  // 'ambient'. One short clip per lesson start, never looped. If it pauses
+  // music, or makes no difference, delete this function and its one call.
+  var SILENT_WAV = 'data:audio/wav;base64,UklGRrQBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YZABAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA';
+  function playSilentClip(){
+    if (!state.soundOn) return;
+    try {
+      var el = document.createElement('audio');
+      el.setAttribute('x-webkit-airplay', 'deny');
+      el.src = SILENT_WAV;
+      var p = el.play();
+      if (p && p.catch) p.catch(function(){});
+    } catch (e) {}
+  }
 
   function unlockAudio(){
     if (audioUnlocked) return;
@@ -2489,6 +2510,7 @@
     // first tone. One activation at the start of the lesson, not one per card.
     unlockAudio();
     if (state.soundOn) ensureCtx();
+    playSilentClip();   // EXPERIMENT, see playSilentClip()
     // The streak deliberately carries over. It counts consecutive correct
     // answers, and ending a lesson isn't a wrong answer.
     state.lessonDone = false;
