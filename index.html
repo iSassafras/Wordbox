@@ -1792,9 +1792,12 @@
   // When releasing: bump APP_VERSION and add an entry at the TOP of
   // CHANGELOG with the same version. The same lines can be pasted into the
   // GitHub commit description. Shown under "What's new" on the Profile tab.
-  var APP_VERSION = '2026-09-19g';
+  var APP_VERSION = '2026-09-19h';
 
   var CHANGELOG = [
+    { v: '2026-09-19h', changes: [
+      'Two more temporary sound tests for iPhone'
+    ]},
     { v: '2026-09-19g', changes: [
       'Temporary sound test buttons on the Profile tab'
     ]},
@@ -4144,6 +4147,8 @@
       '<button ' + tb + ' data-action="test-tone">Old tone</button>' +
       '<button ' + tb + ' data-action="test-clip">New sound</button>' +
       '<button ' + tb + ' data-action="test-clip-loud">New sound, full volume</button>' +
+      '<button ' + tb + ' data-action="test-restart">Restart audio + tone</button>' +
+      '<button ' + tb + ' data-action="test-playback">Tone in playback mode</button>' +
       '</div>';
     if (state.changelogOpen){
       html += '<div class="changelog">';
@@ -4377,6 +4382,34 @@
         soundDiag.last = 'clip not played (' + soundDiag.correct + ')';
       }
       refreshSoundDiag();
+    }
+    else if (action === 'test-restart'){   // TEMPORARY
+      // Throw the audio context away and build a fresh one, in case iOS left
+      // the old one running but disconnected from the speaker.
+      soundDiag.ended = '';
+      try { if (keepAlive){ keepAlive.stop(); keepAlive.disconnect(); } } catch (e) {}
+      keepAlive = null;
+      try { if (audioCtx) audioCtx.close(); } catch (e) {}
+      audioCtx = null;
+      playSeq([{ f: 659, at: 0, d: 0.10 }, { f: 988, at: 0.085, d: 0.16 }]);
+      soundDiag.last = 'tone after restart, context ' + (audioCtx ? audioCtx.state : 'none');
+      refreshSoundDiag();
+    }
+    else if (action === 'test-playback'){   // TEMPORARY
+      // Briefly switch to the 'playback' session, which ignores silent mode
+      // (and may pause music), then back to 'ambient'.
+      soundDiag.ended = '';
+      var before = '', during = '';
+      try { before = navigator.audioSession ? navigator.audioSession.type : 'n/a'; } catch (e) {}
+      try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+      try { during = navigator.audioSession ? navigator.audioSession.type : 'n/a'; } catch (e) {}
+      playSeq([{ f: 659, at: 0, d: 0.10 }, { f: 988, at: 0.085, d: 0.16 }]);
+      soundDiag.last = 'tone in playback mode (session ' + before + ' \u2192 ' + during + ')';
+      refreshSoundDiag();
+      setTimeout(function(){
+        try { if (navigator.audioSession) navigator.audioSession.type = 'ambient'; } catch (e) {}
+        refreshSoundDiag();
+      }, 2000);
     }
     else if (action === 'toggle-sound'){
       state.soundOn = !state.soundOn;
