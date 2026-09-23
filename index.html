@@ -1792,11 +1792,14 @@
   // When releasing: bump APP_VERSION and add an entry at the TOP of
   // CHANGELOG with the same version. The same lines can be pasted into the
   // GitHub commit description. Shown under "What's new" on the Profile tab.
-  var APP_VERSION = '2026-09-19j';
+  var APP_VERSION = '2026-09-19l';
 
   var CHANGELOG = [
-    { v: '2026-09-19j', changes: [
-      'Experiment: trying to make answer sounds play in silent mode without pausing music'
+    { v: '2026-09-19l', changes: [
+      'Answer sounds now play in silent mode. In exchange, other audio (music) pauses when a lesson with sound starts'
+    ]},
+    { v: '2026-09-19k', changes: [
+      'Removed the silent-mode experiment from 2026-09-19j (it didn\u2019t work)'
     ]},
     { v: '2026-09-19i', changes: [
       'Fixed: answer sounds were silent since 2026-09-19d'
@@ -1876,40 +1879,25 @@
   // Set later, it would be set after iOS had already decided what kind of
   // session this page owns.
   //
-  // 'ambient' means mix with whatever is already playing and never interrupt
-  // it. The price is that the ringer switch silences the app — ordinary iOS
-  // behaviour for app sound effects, and the right trade for short tones.
+  // iOS offers no way to both mix with music and play in silent mode:
+  //   'ambient'  mixes with music, but silent mode mutes the app.
+  //   'playback' plays in silent mode, but pauses other audio.
+  // Georg chose sound in silent mode over music (2026-09-19l). Tested first:
+  // with 'ambient', a silent <audio> clip does NOT get past silent mode.
+  // To go back to mixing with music, set this to 'ambient' — nothing else
+  // needs to change.
   //
-  // The previous version also played a scrap of silent <audio> to move Web
-  // Audio onto the media channel so the mute switch would leave it alone.
-  // That is the exact opposite of ambient — it asks for an exclusive playback
-  // session — so it is gone. You cannot both ignore the mute switch and mix
-  // with music, and mixing is the one that was wanted.
+  // Declaring the type should pause nothing by itself. Other audio should stop
+  // only once the app actually makes sound: starting a lesson with sound or
+  // speech on, tapping a speaker button, or switching sound effects on.
+  var AUDIO_SESSION_TYPE = 'playback';
   var audioSessionOk = false;
   try {
     if (navigator.audioSession){
-      navigator.audioSession.type = 'ambient';
-      audioSessionOk = (navigator.audioSession.type === 'ambient');
+      navigator.audioSession.type = AUDIO_SESSION_TYPE;
+      audioSessionOk = (navigator.audioSession.type === AUDIO_SESSION_TYPE);
     }
   } catch (e) {}
-
-  // EXPERIMENT (2026-09-19j): an old iOS trick. Playing a scrap of silent
-  // <audio> is known to move Web Audio onto the media channel, which silent
-  // mode leaves alone. Under 'playback' it did that but also paused music;
-  // this tests whether it still gets past silent mode with the session kept
-  // 'ambient'. One short clip per lesson start, never looped. If it pauses
-  // music, or makes no difference, delete this function and its one call.
-  var SILENT_WAV = 'data:audio/wav;base64,UklGRrQBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YZABAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA';
-  function playSilentClip(){
-    if (!state.soundOn) return;
-    try {
-      var el = document.createElement('audio');
-      el.setAttribute('x-webkit-airplay', 'deny');
-      el.src = SILENT_WAV;
-      var p = el.play();
-      if (p && p.catch) p.catch(function(){});
-    } catch (e) {}
-  }
 
   function unlockAudio(){
     if (audioUnlocked) return;
@@ -1917,7 +1905,7 @@
     // toggles off the app should be silent AND invisible to other audio apps.
     if (!state.soundOn && !state.speechOn) return;
     audioUnlocked = true;
-    try { if (navigator.audioSession) navigator.audioSession.type = 'ambient'; } catch (e) {}
+    try { if (navigator.audioSession) navigator.audioSession.type = AUDIO_SESSION_TYPE; } catch (e) {}
     // Priming the speech engine is what takes the audio session on iOS, so it
     // only happens when speech is actually switched on. Doing it for someone
     // running with speech off was stopping their music for no benefit at all.
@@ -1937,9 +1925,10 @@
   // likeliest reason a sound on each card stopped the music each time, while
   // speech (one session, held open) only did it once.
   //
-  // Where the session is genuinely ambient, the fix is to stop letting the
+  // Where the session type was accepted, the fix is to stop letting the
   // context lapse: a silent source holds it open, so it is activated once and
-  // then stays up. Where navigator.audioSession is missing, holding it open
+  // then stays up. (With 'playback' that also means music stays paused while
+  // the app is in front, instead of being interrupted again on every card.) Where navigator.audioSession is missing, holding it open
   // would keep other apps ducked indefinitely, so it falls back to the old
   // create-and-resume behaviour rather than risking something worse.
   function ensureCtx(){
@@ -2005,7 +1994,7 @@
   // The bytes are fetched at load (plain network, no audio involved). They are
   // decoded later, by the app's real audio context, the first time it exists —
   // i.e. on the first tap that plays a sound. Until then the tone plays.
-  // The clips play through the same ambient context as the tones, deliberately
+  // The clips play through the same audio context as the tones, deliberately
   // not through <audio> elements, which would take a separate media session.
   var SOUND_FILES = {
     correct: 'wordbox_sound_success.mp3',
@@ -2510,7 +2499,6 @@
     // first tone. One activation at the start of the lesson, not one per card.
     unlockAudio();
     if (state.soundOn) ensureCtx();
-    playSilentClip();   // EXPERIMENT, see playSilentClip()
     // The streak deliberately carries over. It counts consecutive correct
     // answers, and ending a lesson isn't a wrong answer.
     state.lessonDone = false;
