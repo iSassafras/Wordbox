@@ -447,6 +447,16 @@
      slightly smaller size than a single Ukrainian word needs. */
   .card-front.is-english { font-size: 24px; }
 
+  /* Verb aspect: dictionary-style italic under the word. Spelled out rather
+     than abbreviated — pf. and impf. are easy to misread at a glance. */
+  .card-aspect {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 15px;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+
   .card-back {
     margin-top: 18px;
     padding-top: 18px;
@@ -560,6 +570,35 @@
     -webkit-appearance: none;
     appearance: none;
   }
+  /* Segmented control (verb aspect) */
+  .seg {
+    display: flex;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 3px;
+  }
+  .seg-btn {
+    flex: 1;
+    min-width: 0;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: var(--cream-dim);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 8px 4px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .seg-btn.on {
+    background: rgba(var(--accent-rgb), 0.18);
+    border-color: var(--accent);
+    color: var(--accent-soft);
+    font-weight: 600;
+  }
+  .seg-btn:focus-visible { outline: 2px solid var(--azure-soft); outline-offset: 1px; }
   .type-note {
     font-size: 11px;
     color: var(--cream-dim);
@@ -722,6 +761,7 @@
     align-items: center;
   }
   .batch-fields .batch-back-input { flex: 1; min-width: 0; }
+  .batch-aspect { margin-top: 8px; }
   .batch-type-select {
     flex: 0 0 108px;
     background: var(--bg);
@@ -1513,6 +1553,11 @@
     color: var(--cream);
     margin-top: 2px;
   }
+  .wd-aspect {
+    font-family: 'Lora', serif;
+    color: var(--cream-dim);
+    margin-left: 4px;
+  }
   .wd-line {
     font-size: 13px;
     color: var(--cream-dim);
@@ -1792,9 +1837,18 @@
   // When releasing: bump APP_VERSION and add an entry at the TOP of
   // CHANGELOG with the same version. The same lines can be pasted into the
   // GitHub commit description. Shown under "What's new" on the Profile tab.
-  var APP_VERSION = '2026-09-19l';
+  var APP_VERSION = '2026-10-01b';
 
   var CHANGELOG = [
+    { v: '2026-10-01b', changes: [
+      'Add several: verbs get the imperfective / perfective choice too',
+      'Pasted lists can mark aspect with (pf.) or (impf.), e.g. \u0437\u0440\u043E\u0431\u0438\u0442\u0438 = to do (pf.)',
+      'Fixed: going Back from step 2 of Add several and then Next again lost the meanings you had typed'
+    ]},
+    { v: '2026-10-01a', changes: [
+      'Verbs can be marked imperfective or perfective when adding or editing them',
+      'Lesson cards show the aspect in small italics under the word, on both English and Ukrainian prompts'
+    ]},
     { v: '2026-09-19l', changes: [
       'Answer sounds now play in silent mode. In exchange, other audio (music) pauses when a lesson with sound starts'
     ]},
@@ -2964,6 +3018,28 @@
     return WORD_TYPES.some(function(o){ return o[0] === t; });
   }
 
+  // Verb aspect. Stored as '' when unset, which is every verb saved before
+  // this existed — there's no reliable way to guess it from the spelling.
+  var ASPECTS = [['', 'Not set'], ['impf', 'Imperfective'], ['pf', 'Perfective']];
+
+  function isValidAspect(a){ return a === 'impf' || a === 'pf'; }
+
+  function aspectName(a){
+    return a === 'pf' ? 'perfective' : a === 'impf' ? 'imperfective' : '';
+  }
+
+  // Aspect only means anything on a verb. A word that has since been
+  // reclassified keeps nothing stale on its card.
+  function aspectOf(w){
+    return (w && w.type === 'verb' && isValidAspect(w.aspect)) ? w.aspect : '';
+  }
+
+  // Small italic line under the word on a lesson card.
+  function cardAspectHtml(w){
+    var a = aspectOf(w);
+    return a ? '<div class="card-aspect">' + aspectName(a) + '</div>' : '';
+  }
+
   function typeLabel(t){
     for (var i = 0; i < WORD_TYPES.length; i++) if (WORD_TYPES[i][0] === t) return WORD_TYPES[i][1];
     return 'Other';
@@ -2977,6 +3053,7 @@
       notes: (notes || '').trim(),
       hint: (hint || '').trim(),
       type: isValidType(type) ? type : guessType(front, back),
+      aspect: '',
       box: 1,
       due: todayStr(),
       created: todayStr(),
@@ -2998,6 +3075,7 @@
       hint: w.hint || '',
       // Words saved before types existed get classified on load.
       type: isValidType(w.type) ? w.type : guessType(w.front || '', w.back || ''),
+      aspect: isValidAspect(w.aspect) ? w.aspect : '',
       box: (w.box >= 1 && w.box <= 5) ? w.box : 1,
       due: w.due || todayStr(),
       // Words saved before this was tracked keep null rather than being
@@ -3330,7 +3408,8 @@
         speakBtn(w.front, 'on-dark small') + '</div>';
       html += '<div class="wd-dots">' + boxDots(w.box, 'filled', '', null) + '</div>';
       html += '</div>';
-      html += '<div class="wd-back">' + escapeHtml(w.back) + '</div>';
+      html += '<div class="wd-back">' + escapeHtml(w.back) +
+        (aspectOf(w) ? ' <em class="wd-aspect">' + aspectName(aspectOf(w)) + '</em>' : '') + '</div>';
       if (w.hint)  html += '<div class="wd-line"><span>Hint</span>' + escapeHtml(w.hint) + '</div>';
       if (w.notes) html += '<div class="wd-line"><span>Notes</span>' + escapeHtml(w.notes) + '</div>';
       html += '</div>';
@@ -3429,6 +3508,7 @@
     html += '<div class="card-prompt-label">' + promptLabel + '</div>';
     html += '<div class="card-front' + (field === 'front' ? ' is-english' : '') + '">' +
       escapeHtml(promptText) + '</div>';
+    html += cardAspectHtml(w);
     // Only on cards where the Ukrainian is the prompt. When the options are
     // Ukrainian they each carry their own speaker instead.
     if (field === 'back') html += speakBtn(w.front);
@@ -3538,6 +3618,7 @@
     html += '<div class="box-dots">' + dotsHtml + '</div>';
     html += '<div class="card-prompt-label">Type the Ukrainian</div>';
     html += '<div class="card-front">' + escapeHtml(w.back) + '</div>';
+    html += cardAspectHtml(w);
 
     if (!state.checked){
       html += '<input id="typed-input" class="type-input" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Type the word\u2026" value="' + escapeHtml(state.typedValue) + '" />';
@@ -3602,13 +3683,43 @@
     });
     document.querySelectorAll('.batch-type-select').forEach(function(sel){
       var i = parseInt(sel.getAttribute('data-idx'), 10);
-      if (state.batchItems[i]) state.batchItems[i].type = sel.value;
+      // Only a type set by hand is kept. An untouched dropdown is just a
+      // guess, and must stay free to change if the line is edited after Back.
+      if (state.batchItems[i]) state.batchItems[i].type = (sel.getAttribute('data-touched') === '1') ? sel.value : '';
     });
+    document.querySelectorAll('.batch-aspect .seg').forEach(function(seg){
+      var i = parseInt(seg.getAttribute('data-idx'), 10);
+      var a = seg.getAttribute('data-value');
+      if (state.batchItems[i]) state.batchItems[i].aspect = isValidAspect(a) ? a : '';
+    });
+  }
+
+  // Aspect markers in a pasted line: (pf.) / (impf.) and their longer
+  // spellings, plus the Ukrainian dictionary forms (\u0434\u043E\u043A.) / (\u043D\u0435\u0434\u043E\u043A.).
+  // Brackets are required, so a meaning that happens to contain these
+  // letters is never touched. Allowed on either side of the =.
+  var ASPECT_MARK = /\s*\(\s*(pf|perf|perfective|impf|ipf|imperf|imperfective|\u0434\u043E\u043A|\u043D\u0435\u0434\u043E\u043A)\s*\.?\s*\)/gi;
+
+  function takeAspectMark(text, found){
+    return text.replace(ASPECT_MARK, function(_, tag){
+      var t = tag.toLowerCase();
+      found.aspect = (t === 'pf' || t === 'perf' || t === 'perfective' || t === '\u0434\u043E\u043A') ? 'pf' : 'impf';
+      return '';
+    }).trim();
+  }
+
+  function syncBatchAspect(sel){
+    var row = sel.closest('.batch-row');
+    var wrap = row && row.querySelector('.batch-aspect');
+    if (wrap) wrap.hidden = (sel.value !== 'verb');
   }
 
   function parseBatchLines(raw){
     var existing = {};
     state.words.forEach(function(w){ existing[normalize(w.front)] = true; });
+
+    var previous = {};
+    state.batchItems.forEach(function(it){ previous[normalize(it.front)] = it; });
 
     var items = [], skipped = 0, seen = {};
     raw.split('\n').forEach(function(line){
@@ -3619,12 +3730,25 @@
         front = m[1];
         back = m[2].trim();
       }
-      front = front.trim();
+      var found = { aspect: '' };
+      front = takeAspectMark(front, found);
+      back = takeAspectMark(back, found);
       if (!front) return;
       var key = normalize(front);
       if (existing[key] || seen[key]){ skipped++; return; }
       seen[key] = true;
-      items.push({ front: front, back: back });
+      var item = { front: front, back: back };
+      // A marker only makes sense on a verb, so it settles the type too.
+      if (found.aspect){ item.type = 'verb'; item.aspect = found.aspect; }
+      // Coming back from step 2: keep what was filled in there for any line
+      // that's still in the list, unless the line itself now says otherwise.
+      var prev = previous[key];
+      if (prev){
+        if (!item.back && prev.back) item.back = prev.back;
+        if (!item.type && prev.type) item.type = prev.type;
+        if (!item.aspect && prev.aspect) item.aspect = prev.aspect;
+      }
+      items.push(item);
     });
     return { items: items, skipped: skipped };
   }
@@ -3634,7 +3758,7 @@
 
     if (state.batchStep === 1){
       html += '<div class="batch-step">Step 1 of 2 \u00B7 Ukrainian</div>';
-      html += '<p class="batch-hint">One word per line. Paste pairs like <em>\u0437\u0435\u043B\u0435\u043D\u0438\u0439 = green</em> and the meanings fill in for you.</p>';
+      html += '<p class="batch-hint">One word per line. Paste pairs like <em>\u0437\u0435\u043B\u0435\u043D\u0438\u0439 = green</em> and the meanings fill in for you. Mark a verb\u2019s aspect with <em>(pf.)</em> or <em>(impf.)</em>.</p>';
       html += '<textarea id="batch-input" class="batch-textarea" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="\u0437\u0435\u043B\u0435\u043D\u0438\u0439&#10;\u0441\u0438\u043D\u0456\u0439&#10;\u0436\u043E\u0432\u0442\u0438\u0439">' + escapeHtml(state.batchRaw) + '</textarea>';
       html += '<div class="form-actions">';
       html += '<button class="primary" data-action="batch-next">Next</button>';
@@ -3668,6 +3792,16 @@
       });
       html += '</select>';
       html += '</div>';
+      // Shown only while the row's type is Verb, same as the single form.
+      var a = isValidAspect(item.aspect) ? item.aspect : '';
+      html += '<div class="batch-aspect"' + (guessed === 'verb' ? '' : ' hidden') + '>';
+      html += '<div class="seg" role="radiogroup" aria-label="Aspect of ' + escapeHtml(item.front) + '" data-idx="' + i + '" data-value="' + a + '">';
+      ASPECTS.forEach(function(o){
+        var on = (o[0] === a);
+        html += '<button type="button" class="seg-btn' + (on ? ' on' : '') + '" role="radio" aria-checked="' +
+          (on ? 'true' : 'false') + '" data-action="set-aspect-draft" data-value="' + o[0] + '">' + o[1] + '</button>';
+      });
+      html += '</div></div>';
       html += '</div>';
     });
     html += '<div class="form-actions">';
@@ -3767,6 +3901,8 @@
         speakBtn(word.front, 'on-dark small') + '</div>';
       html += '<label>Meaning</label><div class="ro-field"><span>' + escapeHtml(word.back) + '</span></div>';
       html += '<label>Type</label><div class="ro-field"><span>' + typeLabel(word.type) + '</span></div>';
+      if (aspectOf(word)) html += '<label>Aspect</label><div class="ro-field"><span>' +
+        (aspectOf(word) === 'pf' ? 'Perfective' : 'Imperfective') + '</span></div>';
       if (word.hint)  html += '<label>Hint</label><div class="ro-field"><span>' + escapeHtml(word.hint) + '</span></div>';
       if (word.notes) html += '<label>Notes</label><div class="ro-field"><span>' + escapeHtml(word.notes) + '</span></div>';
       html += '<div class="form-actions">';
@@ -3786,6 +3922,19 @@
       });
       html += '</select>';
       html += '<div class="type-note">Multiple-choice options are drawn from words of the same type.</div>';
+      // Always rendered, shown only while Type says Verb, so switching the
+      // dropdown back and forth doesn't lose the choice before Save.
+      var curAspect = word ? aspectOf(word) : '';
+      var typeNow = word ? word.type : 'noun';
+      html += '<div id="f-aspect-wrap"' + (typeNow === 'verb' ? '' : ' hidden') + '>';
+      html += '<label>Aspect</label>';
+      html += '<div id="f-aspect" class="seg" role="radiogroup" aria-label="Aspect" data-value="' + curAspect + '">';
+      ASPECTS.forEach(function(o){
+        var on = (o[0] === curAspect);
+        html += '<button type="button" class="seg-btn' + (on ? ' on' : '') + '" role="radio" aria-checked="' +
+          (on ? 'true' : 'false') + '" data-action="set-aspect-draft" data-value="' + o[0] + '">' + o[1] + '</button>';
+      });
+      html += '</div></div>';
       html += '<label>Hint (optional)</label><input id="f-hint" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + (word ? escapeHtml(word.hint || '') : '') + '" placeholder="before you answer: a clue, never the word itself" />';
       html += '<label>Notes (optional)</label><textarea id="f-notes" autocorrect="off" spellcheck="false" placeholder="after you answer: gender, example sentence, usage">' + (word ? escapeHtml(word.notes || '') : '') + '</textarea>';
       if (word){
@@ -4194,12 +4343,18 @@
     // until the dropdown is set by hand.
     var fType = document.getElementById('f-type');
     if (fType){
-      fType.addEventListener('change', function(){ fType.setAttribute('data-touched', '1'); });
+      var syncAspect = function(){
+        var wrap = document.getElementById('f-aspect-wrap');
+        if (wrap) wrap.hidden = (fType.value !== 'verb');
+      };
+      fType.addEventListener('change', function(){ fType.setAttribute('data-touched', '1'); syncAspect(); });
       var reguess = function(){
         if (fType.getAttribute('data-touched') === '1') return;
         var fr = document.getElementById('f-front'), bk = document.getElementById('f-back');
         fType.value = guessType(fr ? fr.value : '', bk ? bk.value : '');
+        syncAspect();
       };
+      syncAspect();
       ['f-front', 'f-back'].forEach(function(id){
         var el = document.getElementById(id);
         if (el) el.addEventListener('input', reguess);
@@ -4217,12 +4372,14 @@
         if (!sel || sel.getAttribute('data-touched') === '1') return;
         var item = state.batchItems[parseInt(idx, 10)];
         if (item) sel.value = guessType(item.front, e.target.value);
+        syncBatchAspect(sel);
       });
     }
     var typeSelects = document.querySelectorAll('.batch-type-select');
     for (var ti = 0; ti < typeSelects.length; ti++){
       typeSelects[ti].addEventListener('change', function(e){
         e.target.setAttribute('data-touched', '1');
+        syncBatchAspect(e.target);
       });
     }
 
@@ -4426,6 +4583,16 @@
       persist();
       render();
     }
+    else if (action === 'set-aspect-draft'){
+      // DOM only, like the shelf toggle: applied on Save, undone by Cancel.
+      var seg = el.parentNode;
+      seg.setAttribute('data-value', el.getAttribute('data-value'));
+      seg.querySelectorAll('.seg-btn').forEach(function(b){
+        var on = (b === el);
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-checked', on ? 'true' : 'false');
+      });
+    }
     else if (action === 'toggle-shelf-draft'){
       // DOM only: a re-render would throw away whatever is typed in the form.
       var on = !el.classList.contains('on');
@@ -4441,6 +4608,9 @@
       // An untouched dropdown means you never expressed a preference, so let
       // makeWord guess from the final text rather than banking the default.
       var type = (typeEl && typeEl.getAttribute('data-touched') === '1') ? typeEl.value : '';
+      var aspectEl = document.getElementById('f-aspect');
+      var aspect = aspectEl ? aspectEl.getAttribute('data-value') : '';
+      if (!isValidAspect(aspect)) aspect = '';
       if (!front || !back){ return; }
 
       if (state.editingId){
@@ -4450,10 +4620,15 @@
         // Only overwrite when the dropdown was actually changed; an
         // untouched one must not silently reclassify an existing word.
         if (isValidType(type)) w2.type = type;
+        // Cleared when the word is no longer a verb, so nothing stale
+        // reappears if it's ever switched back.
+        w2.aspect = (w2.type === 'verb') ? aspect : '';
         var shelfEl = document.getElementById('f-shelved');
         if (shelfEl) setShelved(w2, shelfEl.classList.contains('on'));
       } else {
-        state.words.push(makeWord(front, back, notes, hint, type));
+        var nw = makeWord(front, back, notes, hint, type);
+        if (nw.type === 'verb') nw.aspect = aspect;
+        state.words.push(nw);
       }
       state.formOpen = false;
       state.editingId = null;
@@ -4497,7 +4672,9 @@
       var added = 0;
       state.batchItems.forEach(function(item){
         if (!item.front.trim() || !item.back.trim()) return;
-        state.words.push(makeWord(item.front, item.back, '', '', item.type || ''));
+        var bw = makeWord(item.front, item.back, '', '', item.type || '');
+        if (bw.type === 'verb' && isValidAspect(item.aspect)) bw.aspect = item.aspect;
+        state.words.push(bw);
         added++;
       });
       state.batchOpen = false;
