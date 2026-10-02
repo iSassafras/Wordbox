@@ -696,6 +696,16 @@
     font-size: 13px;
     padding: 12px 8px;
   }
+  /* The two ways in — the Library's main actions, so they wear the accent
+     like every other primary button rather than the dashed outline. */
+  .add-row .add-toggle.main {
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    color: var(--on-accent);
+    font-weight: 600;
+  }
+  .add-row .add-toggle.main:active { background: var(--accent-soft); }
+  .add-row .add-toggle.main:focus-visible { outline: 2px solid var(--azure-soft); outline-offset: 2px; }
 
   /* ---- Batch entry ---- */
   .batch-panel {
@@ -1236,7 +1246,18 @@
   .toggle.on { background: rgba(var(--accent-rgb), 0.3); border-color: var(--accent); }
   .toggle.on .knob { transform: translateX(19px); background: var(--accent-soft); }
 
-  /* ---- Filter chip ---- */
+  /* ---- Filters ---- */
+  /* Active filters, shown as removable chips while the panel is closed,
+     so a shortened list never looks like missing words. */
+  .filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .filter-chips .filter-chip { margin-top: 0; }
+  .filter-chips .text-btn { font-size: 12px; padding: 4px 6px; }
   .filter-chip {
     display: inline-flex;
     align-items: center;
@@ -1259,6 +1280,130 @@
     padding: 0 4px;
     line-height: 1;
   }
+
+  .filter-btn {
+    position: relative;
+    flex: 0 0 42px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    color: var(--cream-dim);
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  .filter-btn svg { width: 17px; height: 17px; display: block; }
+  .filter-btn.has-filters { color: var(--accent-soft); }
+  .filter-btn.open { border-color: var(--azure); color: var(--azure-soft); }
+  .filter-btn:active { background: var(--bg); }
+  .filter-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--on-accent);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 18px;
+    text-align: center;
+  }
+  .filter-panel {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px 14px 12px;
+    margin-top: 8px;
+  }
+  .filter-group-label {
+    font-size: 12px;
+    color: var(--cream-dim);
+    margin: 12px 0 6px;
+  }
+  .filter-opts { display: flex; flex-wrap: wrap; gap: 6px; }
+  .fopt {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--cream);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 7px 11px;
+    border-radius: 999px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .fopt .n { font-size: 11px; color: var(--cream-dim); }
+  .fopt.on {
+    background: rgba(var(--accent-rgb), 0.18);
+    border-color: var(--accent);
+    color: var(--accent-soft);
+    font-weight: 600;
+  }
+  .fopt.on .n { color: var(--accent-soft); opacity: 0.8; }
+  .fopt:disabled { opacity: 0.35; cursor: default; }
+  .fopt:focus-visible { outline: 2px solid var(--azure-soft); outline-offset: 1px; }
+  .filter-note {
+    font-size: 11px;
+    color: var(--cream-dim);
+    opacity: 0.75;
+    margin-top: 6px;
+    line-height: 1.4;
+  }
+  .filter-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 14px;
+  }
+
+  /* ---- Jump to top / bottom ---- */
+  /* Floats above the tab bar, lined up with the right edge of the 480px
+     column on wide screens. Only rendered in the Library, and only shown
+     once the list is over two screens long. */
+  .jump-nav {
+    position: fixed;
+    right: max(12px, calc((100vw - 480px) / 2 + 12px));
+    bottom: calc(59px + env(safe-area-inset-bottom) + 14px);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 3px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    box-shadow: 0 6px 18px var(--card-shadow);
+    z-index: 20;
+  }
+  .jump-nav[hidden] { display: none; }
+  /* Extra room at the end of the list, so the backup buttons can scroll
+     clear of the floating buttons instead of sitting under them. */
+  body.has-jump main { padding-bottom: 190px; }
+  /* Out of the way while the keyboard is up. */
+  body.typing .jump-nav { display: none; }
+  .jump-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: none;
+    border: none;
+    color: var(--accent-soft);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  .jump-btn svg { width: 18px; height: 18px; display: block; }
+  .jump-btn:active { background: var(--bg); }
+  .jump-btn:disabled { color: var(--cream-dim); opacity: 0.3; cursor: default; }
+  .jump-btn:focus-visible { outline: 2px solid var(--azure-soft); outline-offset: 1px; }
 
   /* ---- Shelved words ---- */
   .shelf-row { margin-top: 18px; }
@@ -1814,7 +1959,10 @@
     hintShown: false,
     sortBy: 'practised',
     sortDir: 'desc',
-    boxFilter: null,
+    // Library filters. Kept while the app is open, not saved, so a fresh
+    // launch always starts on the full list.
+    filters: { boxes: [], types: [], aspect: '', status: '' },
+    filterOpen: false,
     soundOn: true,
     speechOn: true,
     importPreview: null,
@@ -1837,9 +1985,20 @@
   // When releasing: bump APP_VERSION and add an entry at the TOP of
   // CHANGELOG with the same version. The same lines can be pasted into the
   // GitHub commit description. Shown under "What's new" on the Profile tab.
-  var APP_VERSION = '2026-10-01b';
+  var APP_VERSION = '2026-10-02c';
 
   var CHANGELOG = [
+    { v: '2026-10-02c', changes: [
+      'Library: jump to bottom now stops with the backup buttons just above the floating buttons, instead of at the very end of the page'
+    ]},
+    { v: '2026-10-02b', changes: [
+      'Library: jump to top / jump to bottom buttons float above the tab bar once the list is longer than two screens'
+    ]},
+    { v: '2026-10-02a', changes: [
+      'Library: Add a word and Add several are now gold, as the main buttons',
+      'Library: new filter button next to sorting. Filter by box, word type, verb aspect, and status (due now, trouble words, not practised yet, in lessons, shelved)',
+      'Active filters show as chips under the sort bar; tap \u2715 on one to remove it'
+    ]},
     { v: '2026-10-01b', changes: [
       'Add several: verbs get the imperfective / perfective choice too',
       'Pasted lists can mark aspect with (pf.) or (impf.), e.g. \u0437\u0440\u043E\u0431\u0438\u0442\u0438 = to do (pf.)',
@@ -3310,6 +3469,9 @@
     arrowDown: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="6 13 12 19 18 13"></polyline></svg>',
     speaker: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path><path d="M18.5 5.5a9 9 0 0 1 0 13"></path></svg>',
     sort: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="14" y2="12"></line><line x1="4" y1="17" x2="9" y2="17"></line></svg>',
+    toTop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="4" x2="19" y2="4"></line><line x1="12" y1="20" x2="12" y2="9"></line><polyline points="7 13 12 8 17 13"></polyline></svg>',
+    toBottom: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="20" x2="19" y2="20"></line><line x1="12" y1="4" x2="12" y2="15"></line><polyline points="7 11 12 16 17 11"></polyline></svg>',
+    filter: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8.5V19l-4 2v-7.5z"></path></svg>',
     search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="16.2" y1="16.2" x2="21" y2="21"></line></svg>',
     edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>'
   };
@@ -4009,6 +4171,147 @@
     }
   }
 
+  // ---------- LIBRARY FILTERS ----------
+  // Four groups. Box and type allow several picks (box 1 or 2; nouns or
+  // verbs); status and aspect are one at a time. Groups combine with AND.
+  var STATUS_FILTERS = [
+    ['due',     'Due now'],
+    ['trouble', 'Trouble words'],
+    ['new',     'Not practised yet'],
+    ['active',  'In lessons'],
+    ['shelved', 'Shelved']
+  ];
+  var ASPECT_FILTERS = [['impf', 'Imperfective'], ['pf', 'Perfective'], ['none', 'Not set']];
+
+  // Trouble = answered at least this often, and right less than this share
+  // of the time. The minimum keeps one unlucky miss from counting.
+  var TROUBLE_MIN_ANSWERS = 3;
+  var TROUBLE_MAX_ACCURACY = 60;
+
+  function isTrouble(w){
+    var n = w.nRight + w.nWrong;
+    return n >= TROUBLE_MIN_ANSWERS && accuracyOf(w) < TROUBLE_MAX_ACCURACY;
+  }
+
+  function matchesStatus(w, st){
+    if (st === 'due')     return !w.shelved && w.due <= todayStr();
+    if (st === 'trouble') return isTrouble(w);
+    if (st === 'new')     return (w.nRight + w.nWrong) === 0;
+    if (st === 'active')  return !w.shelved;
+    if (st === 'shelved') return !!w.shelved;
+    return true;
+  }
+
+  // Aspect only narrows verbs; any other type picked alongside Verb still
+  // shows in full.
+  function matchesAspect(w, a){
+    if (!a || w.type !== 'verb') return true;
+    var wa = aspectOf(w);
+    return a === 'none' ? !wa : wa === a;
+  }
+
+  function matchesSearch(w){
+    if (!state.search) return true;
+    // Normalised on both sides, so searching "\u043D\u0430\u0432\u0447\u0430\u043D\u043D\u044F" still finds a card
+    // stored as "\u043D\u0430\u0301\u0432\u0447\u0430\u043D\u043D\u044F".
+    var q = normalize(state.search);
+    return normalize(w.front).indexOf(q) !== -1 || normalize(w.back).indexOf(q) !== -1;
+  }
+
+  // skip: leave one group out. Used for the counts on each option, so they
+  // say how many words you'd see if you picked it, given everything else.
+  function matchesFilters(w, skip){
+    var f = state.filters;
+    if (skip !== 'boxes'  && f.boxes.length && f.boxes.indexOf(w.box) === -1) return false;
+    if (skip !== 'types'  && f.types.length && f.types.indexOf(w.type) === -1) return false;
+    if (skip !== 'aspect' && !matchesAspect(w, f.aspect)) return false;
+    if (skip !== 'status' && f.status && !matchesStatus(w, f.status)) return false;
+    return matchesSearch(w);
+  }
+
+  function activeFilterCount(){
+    var f = state.filters;
+    return (f.boxes.length ? 1 : 0) + (f.types.length ? 1 : 0) + (f.aspect ? 1 : 0) + (f.status ? 1 : 0);
+  }
+
+  function labelFor(list, v){
+    for (var i = 0; i < list.length; i++) if (list[i][0] === v) return list[i][1];
+    return v;
+  }
+
+  function filterChipsHtml(){
+    var f = state.filters;
+    var chips = [];
+    function chip(group, text){
+      chips.push('<div class="filter-chip">' + escapeHtml(text) +
+        ' <button data-action="clear-filter-group" data-group="' + group + '" aria-label="Remove filter: ' + escapeHtml(text) + '">\u2715</button></div>');
+    }
+    if (f.boxes.length)  chip('boxes', 'Box ' + f.boxes.slice().sort().join(', '));
+    if (f.types.length)  chip('types', f.types.map(typeLabel).join(', '));
+    if (f.aspect)        chip('aspect', labelFor(ASPECT_FILTERS, f.aspect));
+    if (f.status)        chip('status', labelFor(STATUS_FILTERS, f.status));
+    if (!chips.length) return '';
+    if (chips.length > 1) chips.push('<button class="text-btn" data-action="clear-filters">Clear all</button>');
+    return '<div class="filter-chips">' + chips.join('') + '</div>';
+  }
+
+  function filterOptHtml(group, value, label, on, n){
+    return '<button type="button" class="fopt' + (on ? ' on' : '') + '" data-action="filter-toggle" data-group="' + group +
+      '" data-value="' + value + '" aria-pressed="' + (on ? 'true' : 'false') + '"' +
+      (n === 0 && !on ? ' disabled' : '') + '>' + label + '<span class="n">' + n + '</span></button>';
+  }
+
+  function filterPanelHtml(){
+    var f = state.filters;
+    function countFor(group, test){
+      var n = 0;
+      state.words.forEach(function(w){ if (matchesFilters(w, group) && test(w)) n++; });
+      return n;
+    }
+    var html = '<div class="filter-panel">';
+
+    html += '<div class="filter-group-label">Box</div><div class="filter-opts">';
+    for (var b = 1; b <= 5; b++){
+      (function(b){
+        html += filterOptHtml('boxes', b, String(b), f.boxes.indexOf(b) !== -1,
+          countFor('boxes', function(w){ return w.box === b; }));
+      })(b);
+    }
+    html += '</div>';
+
+    html += '<div class="filter-group-label">Word type</div><div class="filter-opts">';
+    WORD_TYPES.forEach(function(o){
+      html += filterOptHtml('types', o[0], o[1], f.types.indexOf(o[0]) !== -1,
+        countFor('types', function(w){ return w.type === o[0]; }));
+    });
+    html += '</div>';
+
+    if (f.types.indexOf('verb') !== -1){
+      html += '<div class="filter-group-label">Aspect</div><div class="filter-opts">';
+      ASPECT_FILTERS.forEach(function(o){
+        html += filterOptHtml('aspect', o[0], o[1], f.aspect === o[0],
+          countFor('aspect', function(w){ return w.type === 'verb' && matchesAspect(w, o[0]); }));
+      });
+      html += '</div>';
+      if (f.types.length > 1) html += '<div class="filter-note">Aspect only narrows the verbs.</div>';
+    }
+
+    html += '<div class="filter-group-label">Status</div><div class="filter-opts">';
+    STATUS_FILTERS.forEach(function(o){
+      html += filterOptHtml('status', o[0], o[1], f.status === o[0],
+        countFor('status', function(w){ return matchesStatus(w, o[0]); }));
+    });
+    html += '</div>';
+    html += '<div class="filter-note">Trouble words: answered ' + TROUBLE_MIN_ANSWERS +
+      ' times or more, and right less than ' + TROUBLE_MAX_ACCURACY + '% of the time.</div>';
+
+    html += '<div class="filter-actions">' +
+      (activeFilterCount() ? '<button class="text-btn" data-action="clear-filters">Clear all</button>' : '<span></span>') +
+      '<button class="secondary" data-action="toggle-filter-panel">Done</button></div>';
+    html += '</div>';
+    return html;
+  }
+
   function renderCards(){
     if (state.importPreview) return renderImportPreview();
     if (state.batchOpen) return renderBatch();
@@ -4021,8 +4324,8 @@
       html += renderWordForm(null);
     } else {
       html += '<div class="add-row">';
-      html += '<button class="add-toggle" data-action="open-form">+ Add a word</button>';
-      html += '<button class="add-toggle" data-action="open-batch">+ Add several</button>';
+      html += '<button class="add-toggle main" data-action="open-form">+ Add a word</button>';
+      html += '<button class="add-toggle main" data-action="open-batch">+ Add several</button>';
       html += '</div>';
     }
 
@@ -4050,10 +4353,7 @@
       (state.search ? '<button class="search-clear" data-action="clear-search" aria-label="Clear search">\u2715</button>' : '') +
       '</div>';
     var dirDesc = state.sortDir === 'desc';
-    if (state.boxFilter){
-      html += '<div class="filter-chip">Box ' + state.boxFilter +
-        ' only <button data-action="clear-box-filter" aria-label="Clear filter">\u2715</button></div>';
-    }
+    var nFilters = activeFilterCount();
     html += '<div class="sort-bar">' +
       '<span class="sort-icon">' + ICONS.sort + '</span>' +
       '<select id="sort-select" aria-label="Sort by">';
@@ -4065,16 +4365,14 @@
       (dirDesc ? 'Descending \u2014 tap for ascending' : 'Ascending \u2014 tap for descending') +
       '" title="' + (dirDesc ? 'Descending' : 'Ascending') + '">' +
       (dirDesc ? ICONS.arrowDown : ICONS.arrowUp) + '</button>';
+    html += '<button class="filter-btn' + (nFilters ? ' has-filters' : '') + (state.filterOpen ? ' open' : '') +
+      '" data-action="toggle-filter-panel" aria-expanded="' + (state.filterOpen ? 'true' : 'false') +
+      '" aria-label="Filters' + (nFilters ? ' (' + nFilters + ' active)' : '') + '">' + ICONS.filter +
+      (nFilters ? '<span class="filter-badge">' + nFilters + '</span>' : '') + '</button>';
     html += '</div>';
+    html += state.filterOpen ? filterPanelHtml() : filterChipsHtml();
 
-    var list = sortWords(state.words.filter(function(w){
-      if (state.boxFilter && w.box !== state.boxFilter) return false;
-      if (!state.search) return true;
-      // Normalised on both sides, so searching "\u043D\u0430\u0432\u0447\u0430\u043D\u043D\u044F" still finds a card
-      // stored as "\u043D\u0430\u0301\u0432\u0447\u0430\u043D\u043D\u044F".
-      var q = normalize(state.search);
-      return normalize(w.front).indexOf(q) !== -1 || normalize(w.back).indexOf(q) !== -1;
-    }));
+    var list = sortWords(state.words.filter(function(w){ return matchesFilters(w, null); }));
 
     html += '<div class="lib-meta"><span class="lib-count">' +
       (list.length === state.words.length
@@ -4087,7 +4385,11 @@
       '</span>' + syncLineHtml() + '</div>';
 
     if (list.length === 0){
-      html += '<div class="empty-state"><p>No words match your search.</p></div>';
+      html += '<div class="empty-state"><p>' +
+        (nFilters ? (state.search ? 'No words match your search and filters.' : 'No words match these filters.')
+                  : 'No words match your search.') + '</p>' +
+        (nFilters ? '<button class="secondary" data-action="clear-filters">Clear filters</button>' : '') +
+        '</div>';
     } else {
       list.forEach(function(w){
         var isEditing = state.editingId === w.id;
@@ -4300,9 +4602,12 @@
         tabBtn('cards', ICONS.cards, 'Library') +
         tabBtn('stats', ICONS.profile, 'Profile') +
         '</nav>';
+      // The list itself only: not the import preview or Add several.
+      if (state.view === 'cards' && !state.importPreview && !state.batchOpen) html += jumpNavHtml();
     }
 
     app.innerHTML = html;
+    updateJumpNav();
 
     var searchInput = document.getElementById('search-input');
     if (searchInput){
@@ -4394,6 +4699,69 @@
     }
   }
 
+  // ---------- JUMP TO TOP / BOTTOM ----------
+  function jumpNavHtml(){
+    return '<div class="jump-nav" id="jump-nav" hidden>' +
+      '<button class="jump-btn" data-action="jump-top" aria-label="Jump to top">' + ICONS.toTop + '</button>' +
+      '<button class="jump-btn" data-action="jump-bottom" aria-label="Jump to bottom">' + ICONS.toBottom + '</button>' +
+      '</div>';
+  }
+
+  // Shown only when the page is over two screens tall; each arrow is dimmed
+  // when you're already at its end.
+  // Where "jump to bottom" lands: the backup buttons resting just above the
+  // floating buttons, rather than the very end of the page. Aiming at a
+  // real element keeps it right whatever the screen size, safe area or
+  // spacing below the list.
+  function jumpBottomTarget(){
+    var se = document.scrollingElement || document.documentElement;
+    var max = Math.max(0, se.scrollHeight - window.innerHeight);
+    var row = document.querySelector('main .backup-row');
+    var nav = document.getElementById('jump-nav');
+    if (!row || !nav || nav.hidden) return max;
+    var y = window.scrollY || se.scrollTop;
+    var target = y + row.getBoundingClientRect().bottom - (nav.getBoundingClientRect().top - 12);
+    return Math.max(0, Math.min(max, Math.round(target)));
+  }
+
+  function updateJumpNav(){
+    // A re-render can remove a focused field without a focusout, so the
+    // typing flag is re-checked here rather than trusted.
+    document.body.classList.toggle('typing', isTypingField(document.activeElement));
+    var nav = document.getElementById('jump-nav');
+    if (!nav){ document.body.classList.remove('has-jump'); return; }
+    var se = document.scrollingElement || document.documentElement;
+    var vh = window.innerHeight;
+    var long = se.scrollHeight > vh * 2;
+    nav.hidden = !long;
+    document.body.classList.toggle('has-jump', long);
+    if (!long) return;
+    var y = window.scrollY || se.scrollTop;
+    nav.querySelector('[data-action="jump-top"]').disabled = y < 40;
+    nav.querySelector('[data-action="jump-bottom"]').disabled = y >= jumpBottomTarget() - 4;
+  }
+
+  function jumpTo(top){
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    try { window.scrollTo({ top: top, behavior: reduce ? 'auto' : 'smooth' }); }
+    catch (e) { window.scrollTo(0, top); }
+  }
+
+  window.addEventListener('scroll', updateJumpNav, { passive: true });
+  window.addEventListener('resize', updateJumpNav);
+
+  // Hide the jump buttons while typing, so they don't float over the
+  // keyboard or a field.
+  function isTypingField(el){
+    return el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT');
+  }
+  document.addEventListener('focusin', function(e){
+    if (isTypingField(e.target)) document.body.classList.add('typing');
+  });
+  document.addEventListener('focusout', function(e){
+    if (isTypingField(e.target)) document.body.classList.remove('typing');
+  });
+
   function tabBtn(id, icon, label){
     return '<button class="' + (state.view === id ? 'active' : '') + '" data-action="switch-view" data-view="' + id + '">' + icon + '<span>' + label + '</span></button>';
   }
@@ -4405,9 +4773,8 @@
     var action = el.getAttribute('data-action');
 
     if (action === 'switch-view'){
-      // The box filter is a temporary drill-down from Profile, not a saved
-      // view. Leaving the Library drops it.
-      state.boxFilter = null;
+      // Filters stay while you switch tabs; only the panel closes.
+      state.filterOpen = false;
       state.expandedId = null;
       state.confirmDeleteId = null;
       state.view = el.getAttribute('data-view');
@@ -4433,7 +4800,9 @@
       render();
     }
     else if (action === 'filter-box'){
-      state.boxFilter = parseInt(el.getAttribute('data-box'), 10);
+      // Drill-down from the Profile chart: that box alone, nothing else.
+      state.filters = { boxes: [parseInt(el.getAttribute('data-box'), 10)], types: [], aspect: '', status: '' };
+      state.filterOpen = false;
       state.view = 'cards';
       state.formOpen = false;
       state.batchOpen = false;
@@ -4444,8 +4813,39 @@
       state.search = '';
       render();
     }
-    else if (action === 'clear-box-filter'){
-      state.boxFilter = null;
+    else if (action === 'jump-top'){
+      jumpTo(0);
+    }
+    else if (action === 'jump-bottom'){
+      jumpTo(jumpBottomTarget());
+    }
+    else if (action === 'toggle-filter-panel'){
+      state.filterOpen = !state.filterOpen;
+      render();
+    }
+    else if (action === 'filter-toggle'){
+      var fg = el.getAttribute('data-group'), fv = el.getAttribute('data-value');
+      var ff = state.filters;
+      if (fg === 'boxes' || fg === 'types'){
+        if (fg === 'boxes') fv = parseInt(fv, 10);
+        var fi = ff[fg].indexOf(fv);
+        if (fi === -1) ff[fg].push(fv); else ff[fg].splice(fi, 1);
+        // Aspect has no meaning once Verb is no longer picked.
+        if (fg === 'types' && ff.types.indexOf('verb') === -1) ff.aspect = '';
+      } else if (fg === 'aspect' || fg === 'status'){
+        ff[fg] = (ff[fg] === fv) ? '' : fv;   // tap again to deselect
+      }
+      render();
+    }
+    else if (action === 'clear-filter-group'){
+      var cg = el.getAttribute('data-group');
+      if (cg === 'boxes' || cg === 'types') state.filters[cg] = [];
+      else if (cg === 'aspect' || cg === 'status') state.filters[cg] = '';
+      if (cg === 'types') state.filters.aspect = '';
+      render();
+    }
+    else if (action === 'clear-filters'){
+      state.filters = { boxes: [], types: [], aspect: '', status: '' };
       render();
     }
     else if (action === 'speak'){
