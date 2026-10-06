@@ -261,6 +261,40 @@
   }
   .option-btn.is-dimmed { opacity: 0.4; }
 
+  /* ---- Hidden options (recall first) ---- */
+  .option-veil-wrap {
+    position: relative;
+    width: 100%;
+  }
+  .option-list.is-veiled { pointer-events: none; user-select: none; -webkit-user-select: none; }
+  /* Blur only the words, so the buttons keep their crisp outlines and it's
+     still clear how many options there are. */
+  .option-list.is-veiled .option-text { filter: blur(8px); }
+  .option-list.is-veiled .speak-btn { opacity: 0.35; }
+  .reveal-btn {
+    position: absolute;
+    left: 50%;
+    top: calc(50% + 8px);   /* centre on the options, past the list's top margin */
+    transform: translate(-50%, -50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    background: var(--accent);
+    color: var(--on-accent);
+    border: none;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 12px 22px;
+    border-radius: 999px;
+    box-shadow: 0 6px 18px var(--card-shadow);
+    cursor: pointer;
+  }
+  .reveal-btn svg { width: 18px; height: 18px; display: block; }
+  .reveal-btn:active { transform: translate(-50%, -50%) scale(0.96); }
+  .reveal-btn:focus-visible { outline: 2px solid var(--azure-soft); outline-offset: 2px; }
+
   .choice-card { min-height: 150px; }
   .next-btn { width: 100%; margin-top: 14px; }
 
@@ -1957,6 +1991,10 @@
     typedReaction: null,
     chosenOption: null,
     hintShown: false,
+    // Hide-the-options mode: the setting itself, and whether this card's
+    // options have been uncovered yet (reset for every new card).
+    blurOptions: false,
+    optionsRevealed: false,
     sortBy: 'practised',
     sortDir: 'desc',
     // Library filters. Kept while the app is open, not saved, so a fresh
@@ -1985,9 +2023,12 @@
   // When releasing: bump APP_VERSION and add an entry at the TOP of
   // CHANGELOG with the same version. The same lines can be pasted into the
   // GitHub commit description. Shown under "What's new" on the Profile tab.
-  var APP_VERSION = '2026-10-02c';
+  var APP_VERSION = '2026-10-06a';
 
   var CHANGELOG = [
+    { v: '2026-10-06a', changes: [
+      'Profile: new “Hide answer options” switch. When on, multiple-choice options start blurred so you can recall the answer first; tap Show answers to uncover them for that card'
+    ]},
     { v: '2026-10-02c', changes: [
       'Library: jump to bottom now stops with the backup buttons just above the floating buttons, instead of at the very end of the page'
     ]},
@@ -2593,6 +2634,7 @@
     state.typedReaction = null;
     state.chosenOption = null;
     state.hintShown = false;
+    state.optionsRevealed = false;
   }
 
   // Correct answers move on by themselves once the celebration has played.
@@ -3356,6 +3398,7 @@
       if (isValidSort(settings.sortBy)) state.sortBy = settings.sortBy;
       if (typeof settings.soundOn === 'boolean') state.soundOn = settings.soundOn;
       if (typeof settings.speechOn === 'boolean') state.speechOn = settings.speechOn;
+      if (typeof settings.blurOptions === 'boolean') state.blurOptions = settings.blurOptions;
       if (isValidDir(settings.sortDir)) state.sortDir = settings.sortDir;
     } catch (e) {
       // no settings saved yet — keep the default
@@ -3370,7 +3413,8 @@
       sortBy: state.sortBy,
       sortDir: state.sortDir,
       soundOn: state.soundOn,
-      speechOn: state.speechOn
+      speechOn: state.speechOn,
+      blurOptions: state.blurOptions
     }));
   }
 
@@ -3685,7 +3729,12 @@
     if (answered && w.notes) html += '<div class="card-notes">' + escapeHtml(w.notes) + '</div>';
     html += '</div>';
 
-    html += '<div class="option-list">';
+    // With "Hide answer options" on, the options start blurred and can't be
+    // tapped (or heard) until the reveal button uncovers them, so the answer
+    // has to be recalled first rather than recognised.
+    var veiled = state.blurOptions && !state.optionsRevealed && !answered;
+    if (veiled) html += '<div class="option-veil-wrap">';
+    html += '<div class="option-list' + (veiled ? ' is-veiled" inert aria-hidden="true' : '') + '">';
     options.forEach(function(opt, i){
       var cls = 'option-btn';
       var tag = '';
@@ -3703,7 +3752,7 @@
         }
       }
       var optBtn = '<button class="' + cls + '" data-action="choose-option" data-index="' + i + '"' +
-        (answered ? ' disabled' : '') + '>' +
+        ((answered || veiled) ? ' disabled' : '') + '>' +
         '<span class="option-text">' + escapeHtml(opt) + '</span>' +
         (tag ? '<span class="option-tag">' + tag + '</span>' : '') +
         '</button>';
@@ -3718,6 +3767,13 @@
       }
     });
     html += '</div>';
+    if (veiled){
+      html += '<button class="reveal-btn" data-action="reveal-options">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>' +
+        'Show answers</button>';
+      html += '</div>';
+    }
 
     if (answered && !state.wasCorrect){
       html += '<button class="primary next-btn" data-action="next-card">Next card</button>';
@@ -4493,6 +4549,13 @@
       '<button class="toggle' + (state.soundOn ? ' on' : '') + '" data-action="toggle-sound">' +
       '<span class="knob"></span></button></div>';
 
+    html += '<div class="pref-row"><span>Hide answer options</span>' +
+      '<button class="toggle' + (state.blurOptions ? ' on' : '') + '" data-action="toggle-blur-options" ' +
+      'aria-pressed="' + (state.blurOptions ? 'true' : 'false') + '">' +
+      '<span class="knob"></span></button></div>';
+    html += '<div class="pref-note">Multiple-choice options start blurred. Try to recall the ' +
+      'answer first, then tap <strong>Show answers</strong> to pick it.</div>';
+
     if ('speechSynthesis' in window){
       html += '<div class="pref-row"><span>Speak Ukrainian</span>' +
         '<button class="toggle' + (state.speechOn ? ' on' : '') + '" data-action="toggle-speech">' +
@@ -4873,6 +4936,15 @@
       state.soundOn = !state.soundOn;
       persistSettings();
       if (state.soundOn) soundCorrect();
+      render();
+    }
+    else if (action === 'toggle-blur-options'){
+      state.blurOptions = !state.blurOptions;
+      persistSettings();
+      render();
+    }
+    else if (action === 'reveal-options'){
+      state.optionsRevealed = true;
       render();
     }
     else if (action === 'goto-cards'){
