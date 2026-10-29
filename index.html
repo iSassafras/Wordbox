@@ -1951,6 +1951,184 @@
     text-align: right;
     flex-shrink: 0;
   }
+
+  /* ---- Two lesson types on the home screen ---- */
+  /* The hero splits in two, each count sitting directly above its button. */
+  .due-hero.split {
+    display: flex;
+    align-items: stretch;
+    padding: 24px 8px 20px;
+  }
+  .due-half { flex: 1; min-width: 0; }
+  .due-divider {
+    width: 1px;
+    margin: 6px 0;
+    background: rgba(221, 228, 240, 0.12);
+  }
+  .due-hero.split .due-num { font-size: 50px; }
+  /* Nothing due on one side: that number alone goes green. */
+  .due-num.zero { color: var(--success); }
+  .due-next {
+    font-size: 11px;
+    color: var(--cream-dim);
+    opacity: 0.8;
+    margin-top: 4px;
+  }
+  .start-row {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  .start-row .start-btn {
+    flex: 1;
+    min-width: 0;
+    margin-bottom: 0;
+    padding: 15px 8px;
+    font-size: 16px;
+  }
+
+  /* Vocab | Declension switch at the top of Library and Profile. */
+  .kind-switch { margin: 4px 0 8px; }
+  .kind-switch .seg-btn { font-size: 14px; padding: 9px 4px; }
+
+  /* ---- Declension card ---- */
+  .card-front.decl-en { font-size: 21px; line-height: 1.35; }
+  .decl-frame {
+    margin-top: 16px;
+    font-family: 'Lora', serif;
+    font-size: 19px;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .decl-gap {
+    display: inline-block;
+    min-width: 76px;
+    border-bottom: 2px solid var(--ink-soft);
+    margin: 0;
+    line-height: 1.2;
+  }
+  .decl-gap.filled {
+    min-width: 0;
+    border-bottom-color: var(--success);
+    color: var(--success-ink);
+    font-weight: 600;
+  }
+  .decl-base {
+    margin-top: 8px;
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+
+  /* ---- Declension library ---- */
+  .case-head {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent-soft);
+    margin: 22px 0 2px;
+  }
+  .case-head span { color: var(--cream-dim); text-transform: none; letter-spacing: 0; margin-left: 4px; }
+  .pattern-detail { padding: 0 12px 14px 0; }
+  .pattern-sent {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+  }
+  .pattern-sent .ps-text { flex: 1; min-width: 0; }
+  .ps-uk { font-family: 'Lora', serif; font-size: 15px; line-height: 1.4; }
+  .ps-uk strong { color: var(--accent-soft); font-weight: 600; }
+  .ps-en { font-size: 12px; color: var(--cream-dim); margin-top: 2px; }
+  .pattern-detail .pref-row { margin-top: 12px; }
+  .ro-empty { color: var(--cream-dim); font-style: italic; }
+  .sent-list .pattern-sent:first-child { border-top: none; }
+  .sent-list { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 2px 10px; }
+  .sent-list .es-note { margin: 8px 0; }
+  .sent-list .sent-form { padding-right: 0 !important; }
+  .pd-head, .import-part-head {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent-soft);
+    margin: 4px 0 2px;
+  }
+  .import-part-head { margin: 14px 0 8px; }
+  .import-part-head:first-of-type { margin-top: 2px; }
+  .pattern-sent .icon-btn { padding: 4px; margin-top: 4px; }
+  .pattern-sent .icon-btn svg { width: 15px; height: 15px; }
+  .pattern-detail .add-row { margin: 10px 0 4px; }
+  .pattern-detail .add-row .add-toggle { font-size: 12.5px; padding: 10px 6px; }
+  .ps-en em { font-family: 'Lora', serif; }
+  .sent-form { border-top: 1px solid var(--border); padding-top: 12px !important; }
+  .sent-form .batch-textarea { font-size: 14px; min-height: 130px; }
+  .batch-textarea.pat-batch { font-size: 14px; min-height: 240px; }
+  .copy-prompt-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--cream);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 13px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+  .copy-prompt-btn svg { width: 15px; height: 15px; display: block; }
+  .copy-prompt-btn:active { background: var(--bg); }
+  .copy-prompt-btn.copied { border-color: var(--success); color: var(--success-text); }
+  .copy-prompt-note { font-size: 11.5px; color: var(--cream-dim); opacity: 0.8; margin: 6px 0 12px; line-height: 1.4; }
+  .batch-errors { color: var(--error-text); background: var(--error-bg); border-color: rgba(var(--error-rgb), 0.5); }
+  .batch-errors ul { margin: 6px 0 0; padding-left: 18px; }
+  .pb-group { border-top: 1px solid var(--border); padding: 12px 0 4px; }
+  .pb-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .pb-name { font-family: 'Lora', serif; font-size: 16px; font-weight: 600; }
+  .pb-tag {
+    font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--cream-dim); border: 1px solid var(--border); border-radius: 999px; padding: 2px 8px;
+  }
+  .pb-tag.is-new { color: var(--accent-soft); border-color: rgba(var(--accent-rgb), 0.45); }
+  .pb-meaning { font-size: 12.5px; color: var(--cream-dim); margin: 3px 0 4px; }
+  .pb-group .pattern-sent { border-top: none; padding: 6px 0; }
+  .form-actions button:disabled { opacity: 0.45; cursor: default; }
+
+  /* Live preview of a sentence card while adding or editing one. */
+  .sent-preview-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cream-dim);
+    margin: 14px 0 6px;
+  }
+  .sent-preview {
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 12px;
+    padding: 14px 14px 12px;
+    text-align: center;
+  }
+  .sp-en { font-family: 'Lora', serif; font-weight: 600; font-size: 16px; line-height: 1.35; }
+  .sp-en em, .sp-uk em { font-weight: 400; color: var(--ink-soft); }
+  .sp-uk { font-family: 'Lora', serif; font-size: 16px; line-height: 1.55; margin-top: 8px; }
+  .sp-uk .decl-gap { min-width: 60px; }
+  .sp-answer { font-size: 12px; color: var(--ink-soft); margin-top: 6px; }
+  .sp-answer strong { color: var(--success-ink); }
+  .sent-preview .decl-base { font-size: 13px; margin-top: 4px; }
+  .form-error {
+    margin-top: 8px;
+    font-size: 12.5px;
+    color: var(--error-text);
+    background: var(--error-bg);
+    border-radius: 8px;
+    padding: 7px 10px;
+  }
 </style>
 </head>
 <body>
@@ -2016,16 +2194,100 @@
     dayStreak: 0,
     bestDayStreak: 0,
     lastLessonDay: null,
-    changelogOpen: false
+    changelogOpen: false,
+    // Which kind of lesson is running: 'vocab' (words) or 'decl'
+    // (preposition + declension sentences).
+    lessonKind: 'vocab',
+    // Which side Library and Profile show. One setting for both tabs, so
+    // switching in one carries over to the other.
+    libKind: 'vocab',
+    // Declension patterns, with their sentences and progress. Library data,
+    // like the words: added, edited and deleted in the Library.
+    patterns: [],
+    patternsSnapshot: null,
+    lessonDeclShown: [],
+    declExpanded: null,
+    // Pattern library sort and filters, mirroring the word list.
+    declSortBy: 'case',
+    declSortDir: 'asc',
+    declFilters: { boxes: [], cases: [], status: '' },
+    declFilterOpen: false,
+    declSearch: '',
+    // Pattern form: null, 'new', or the id being edited.
+    patEditing: null,
+    patConfirmDelete: null,
+    // Sentence form inside an open pattern: { pid, idx } (idx -1 = new).
+    sentEditing: null,
+    sentConfirmDelete: null,
+    // Add several sentences: the pattern id, the text, and a note on
+    // lines that couldn't be added.
+    sentBatchPid: null,
+    sentBatchRaw: '',
+    sentBatchNote: '',
+    // Add several patterns: open?, step 1 (paste) or 2 (preview), the text.
+    patBatchOpen: false,
+    patDraft: null,
+    // The copy being edited: sentences, last-shown index and shelf switch.
+    patWork: null,
+    patBatchStep: 1,
+    patBatchRaw: ''
   };
 
   // ---------- VERSION & CHANGELOG ----------
   // When releasing: bump APP_VERSION and add an entry at the TOP of
   // CHANGELOG with the same version. The same lines can be pasted into the
   // GitHub commit description. Shown under "What's new" on the Profile tab.
-  var APP_VERSION = '2026-10-06a';
+  var APP_VERSION = '2026-10-29i';
 
   var CHANGELOG = [
+    { v: '2026-10-29i', changes: [
+      'Lessons are less predictable: among entries that are equally due, the pick is random, and the cards in a lesson come up in random order. Most overdue entries still get picked first'
+    ]},
+    { v: '2026-10-29h', changes: [
+      'Library and Profile use the same wording for words and patterns: “entries”'
+    ]},
+    { v: '2026-10-29g', changes: [
+      'Editing a pattern works like editing a word: changes to its sentences and the shelf switch are a draft until you tap Save changes, and Cancel undoes all of them',
+      'Save changes also takes a sentence that is still open in its form, or lines still in the paste box'
+    ]},
+    { v: '2026-10-29f', changes: [
+      'Pattern library: sort (case, last practised, accuracy, box, preposition, date added) and filters (box, case, status), like the word list',
+      'Tapping a pattern shows everything read-only, like a word: preposition, case, meaning, accepted spellings, note, sentences and progress. Edit turns the same view into the form'
+    ]},
+    { v: '2026-10-29e', changes: [
+      'Editing a pattern now shows its sentences under the pattern fields, so you can add, edit and delete sentences without leaving edit mode',
+      'One backup file for the whole library: words and declension patterns, with their progress. The Export and Import buttons do the same on both sides of the Library',
+      'Older backups (words only) still import, and leave your patterns as they are'
+    ]},
+    { v: '2026-10-29d', changes: [
+      'Every Add several (words, patterns, and sentences inside a pattern) has a Copy AI prompt button',
+      'The prompt tells an AI the exact format the box reads, to check spelling and grammar, and the library’s conventions (infinitive with aspect, nominative singular, masculine adjectives, ? or ! on phrases, case endings in sentences)',
+      'Inside a pattern, the prompt names that pattern and lists its existing sentences so they aren’t repeated'
+    ]},
+    { v: '2026-10-29c', changes: [
+      'Library \u203A Declension: new Add several, for pasting whole patterns with their sentences in one go',
+      'Format: a line like # \u0432\u0437\u0434\u043E\u0432\u0436 + Genitive = along | also: \u0443\u0437\u0434\u043E\u0432\u0436 | note: \u2026 starts a pattern, and the lines under it are its sentences',
+      'A preview shows what will be added before anything is saved. Patterns you already have get the new sentences added, and sentences you already have are skipped'
+    ]},
+    { v: '2026-10-29b', changes: [
+      'Declension patterns are now your own library data, like words. The 39 built-in patterns are copied in once, with the progress you already have',
+      'Library \u203A Declension: add, edit and delete patterns (preposition, case, meaning, accepted spellings, note)',
+      'Inside a pattern: add, edit and delete sentences, with a live preview of the card. Add several pastes one sentence per line: English = Ukrainian with [gap] = forms',
+      'Search patterns and sentences, and export / import a pattern backup',
+      'No patterns left? Load sample patterns brings the built-in set back'
+    ]},
+    { v: '2026-10-29a', changes: [
+      'New lesson type: Declension. Each card gives a short English sentence and the Ukrainian with a gap; type the preposition + adjective + noun',
+      'Home: two buttons side by side, Vocab and Declension, each with its own count of what’s ready',
+      'Declension has 39 built-in patterns (preposition + case), each with 4–5 sentences across genders and plural. Each pattern has its own box and due date',
+      'The hint on a declension card shows the case, e.g. у / в + Locative',
+      'Either lesson extends the day streak, and correct answers in both count towards correct in a row',
+      'Library and Profile: Vocab | Declension switch at the top. Tap a pattern to see its sentences, stats, or to shelve it'
+    ]},
+    { v: '2026-10-28a', changes: [
+      'New box 6: words come back after 30 days. A correct answer on schedule in box 5 moves a word up to box 6, and it stays there with a 30-day wait as long as you keep getting it right',
+      'Mastered now means box 6'
+    ]},
     { v: '2026-10-06a', changes: [
       'Profile: new “Hide answer options” switch. When on, multiple-choice options start blurred so you can recall the answer first; tap Show answers to uncover them for that card'
     ]},
@@ -2650,7 +2912,13 @@
     clearTimeout(advanceTimer);
     var entry = state.sessionQueue.shift();
     if (!entry) { render(); return; }
-    var word = state.words.find(function(x){ return x.id === entry.id; });
+    // A word, or a declension pattern's progress record: both carry the same
+    // box / due / counts fields, so everything below applies to either.
+    var word = lessonItem(entry.id);
+    if (state.lessonKind === 'decl'){
+      state.lessonDeclShown.push({ id: entry.id, si: entry.si });
+      word.si = entry.si;
+    }
 
     // Two guards keep the boxes meaningful. Spaced repetition only tests
     // anything if the interval has actually elapsed, so:
@@ -2660,7 +2928,7 @@
     //      it right would promote it — a miss would cost nothing.
     //   2. Promotion also requires the word to have been genuinely due.
     //      "Practice anyway" pulls words early; drilling one five times in an
-    //      afternoon shouldn't walk it up to box 5.
+    //      afternoon shouldn't walk it up to the top box.
     //
     // Demotion is deliberately not conditional on either. Getting a word
     // wrong is real evidence you don't know it, whenever it happens.
@@ -2675,8 +2943,8 @@
       state.lessonCorrect++;
       word.nRight++;
       if (firstAnswerThisLesson && wasDue){
-        word.box = Math.min(word.box + 1, 5);
-        word.due = addDays(todayStr(), INTERVALS[word.box] || 14);
+        word.box = Math.min(word.box + 1, MAX_BOX);
+        word.due = addDays(todayStr(), INTERVALS[word.box] || INTERVALS[MAX_BOX]);
       }
     } else {
       word.nWrong++;
@@ -2692,7 +2960,11 @@
       // already reset to box 1 and due tomorrow.
       state.lessonMisses[word.id] = (state.lessonMisses[word.id] || 0) + 1;
       if (state.lessonMisses[word.id] < 3){
-        state.sessionQueue.push({ id: word.id, dir: pickMode(word) });
+        // A missed pattern comes back with a different sentence, so the
+        // retry tests the rule rather than the sentence you just saw.
+        state.sessionQueue.push(state.lessonKind === 'decl'
+          ? { id: word.id, si: pickSentence(patternById(word.id), entry.si) }
+          : { id: word.id, dir: pickMode(word) });
       } else {
         state.parkedThisLesson = true;
       }
@@ -2725,6 +2997,7 @@
       state.committedBest = state.bestStreak;
       registerLessonDay();
       state.wordsSnapshot = null;
+      state.patternsSnapshot = null;
       persist();
     } else {
       // Abandoned. Restore the words to how they were when the lesson began
@@ -2734,6 +3007,10 @@
       if (state.wordsSnapshot){
         state.words = state.wordsSnapshot.map(normalizeWord);
         state.wordsSnapshot = null;
+      }
+      if (state.patternsSnapshot){
+        state.patterns = state.patternsSnapshot.map(normalizePattern);
+        state.patternsSnapshot = null;
       }
       state.streak = state.committedStreak;
       state.bestStreak = state.committedBest;
@@ -2747,7 +3024,8 @@
     render();
   }
 
-  function startLesson(practice){
+  function startLesson(practice, kind){
+    state.lessonKind = (kind === 'decl') ? 'decl' : 'vocab';
     // Called straight from a tap, and the only point where audio is about to
     // be needed. iOS requires that first unlock to happen inside a gesture —
     // and the context too, which is why it is opened here rather than at the
@@ -2766,6 +3044,7 @@
     // the live copy but not written anywhere until the lesson is finished.
     // This snapshot is what an abandoned lesson rolls back to.
     state.wordsSnapshot = JSON.parse(JSON.stringify(state.words));
+    state.patternsSnapshot = JSON.parse(JSON.stringify(state.patterns));
     state.sessionActive = true;
     state.view = 'home';
     render();
@@ -2808,7 +3087,11 @@
     }
   }
 
-  var INTERVALS = { 2: 1, 3: 3, 4: 7, 5: 14 };
+  // Days until the next review once a word lands in a box. The top box
+  // keeps its interval: a correct answer there leaves the word in place and
+  // books the next check another 30 days out.
+  var MAX_BOX = 6;
+  var INTERVALS = { 2: 1, 3: 3, 4: 7, 5: 14, 6: 30 };
   var LESSON_SIZE = 10;
 
   // Lower boxes alternate at random between the two multiple-choice
@@ -2929,6 +3212,427 @@
       .replace(/[.,!?;:\u2026"\u201C\u201D\u201E\u00AB\u00BB()\[\]]/g, '')
       .replace(/\s+/g, ' ')
       .trim();
+  }
+
+  // ---------- DECLENSION PATTERNS ----------
+  // Starter set, from Georg's preposition sheet (checked and corrected). Each
+  // pattern is one preposition + case. Copied into the library once (see
+  // seedPatterns); after that the library copy is the one that counts.
+  //
+  // Sentence: [English, Ukrainian frame, dictionary forms]
+  //   The gap is in [square brackets]. Alternatives that also count as right
+  //   go inside the brackets after a | (e.g. a second valid ending).
+  //   Dictionary forms are shown under the gap so the card tests the endings
+  //   and the preposition, not which synonym for "bag" you happen to pick.
+  // accept: spellings of the preposition that all count (у/в, з/із/зі, ...).
+  var DECL_CASES = {
+    gen:  { en: 'Genitive',     uk: 'Родовий' },
+    dat:  { en: 'Dative',       uk: 'Давальний' },
+    acc:  { en: 'Accusative',   uk: 'Знахідний' },
+    ins:  { en: 'Instrumental', uk: 'Орудний' },
+    loc:  { en: 'Locative',     uk: 'Місцевий' }
+  };
+  var DECL_CASE_ORDER = ['gen', 'dat', 'acc', 'ins', 'loc'];
+
+  var DECL_PATTERNS = [
+    // ---- Genitive ----
+    { id: 'gen-bez', c: 'gen', prep: 'без', accept: ['без'], meaning: 'without', s: [
+      ['I drink coffee without white sugar.', 'Я п’ю каву [без білого цукру].', 'білий · цукор'],
+      ['He went out without a warm jacket.', 'Він вийшов [без теплої куртки].', 'теплий · куртка'],
+      ['A room without a big window.', 'Кімната [без великого вікна].', 'великий · вікно'],
+      ['We came without the little children.', 'Ми прийшли [без малих дітей].', 'малий · діти']
+    ]},
+    { id: 'gen-bilia', c: 'gen', prep: 'біля', accept: ['біля', 'коло', 'близько'], meaning: 'near, next to', note: 'коло and близько work too', s: [
+      ['We live near a big park.', 'Ми живемо [біля великого парку].', 'великий · парк'],
+      ['The café is near the old school.', 'Кафе [біля старої школи].', 'старий · школа'],
+      ['He is standing near the open window.', 'Він стоїть [біля відчиненого вікна].', 'відчинений · вікно'],
+      ['The bench is near the tall trees.', 'Лавка стоїть [біля високих дерев].', 'високий · дерево']
+    ]},
+    { id: 'gen-vid', c: 'gen', prep: 'від', accept: ['від'], meaning: 'from (a person), away from; key to', s: [
+      ['I got a letter from an old friend.', 'Я отримав листа [від старого друга].', 'старий · друг'],
+      ['This is the key to the new car.', 'Це ключ [від нової машини].', 'новий · машина'],
+      ['We live far from the big city.', 'Ми живемо далеко [від великого міста].', 'великий · місто'],
+      ['Greetings from old friends!', 'Привіт [від старих друзів]!', 'старий · друг']
+    ]},
+    { id: 'gen-protiahom', c: 'gen', prep: 'протягом', accept: ['протягом', 'впродовж', 'упродовж'], meaning: 'during, throughout', note: 'впродовж works too', s: [
+      ['It rained throughout the whole day.', 'Дощ ішов [протягом цілого дня].', 'цілий · день'],
+      ['We talked during the first hour.', 'Ми говорили [протягом першої години].', 'перший · година'],
+      ['She worked throughout the whole summer.', 'Вона працювала [протягом цілого літа].', 'цілий · літо'],
+      ['He lived here over the last years.', 'Він жив тут [протягом останніх років].', 'останній · рік']
+    ]},
+    { id: 'gen-dlia', c: 'gen', prep: 'для', accept: ['для'], meaning: 'for (someone / a purpose)', s: [
+      ['This gift is for my younger brother.', 'Цей подарунок [для молодшого брата].', 'молодший · брат'],
+      ['This coffee is for my older sister.', 'Ця кава [для старшої сестри].', 'старший · сестра'],
+      ['This is a bowl for the little kitten.', 'Це миска [для маленького кошеняти].', 'маленький · кошеня'],
+      ['This room is for the new students.', 'Ця кімната [для нових студентів].', 'новий · студент']
+    ]},
+    { id: 'gen-do', c: 'gen', prep: 'до', accept: ['до'], meaning: 'to, as far as; until', s: [
+      ['We are driving to the old castle.', 'Ми їдемо [до старого замку].', 'старий · замок'],
+      ['She goes to the new school.', 'Вона ходить [до нової школи].', 'новий · школа'],
+      ['How far is it to the neighbouring village?', 'Як далеко [до сусіднього села]?', 'сусідній · село'],
+      ['We went to see old friends.', 'Ми поїхали [до старих друзів].', 'старий · друг']
+    ]},
+    { id: 'gen-z', c: 'gen', prep: 'з', accept: ['з', 'із', 'зі'], meaning: 'from, out of, off', note: 'із and зі count too', s: [
+      ['Take the book off the big table.', 'Візьми книжку [з великого столу].', 'великий · стіл'],
+      ['He came back from a long trip.', 'Він повернувся [з довгої подорожі].', 'довгий · подорож'],
+      ['She is from a small village.', 'Вона [з маленького села].', 'маленький · село'],
+      ['Letters from different countries.', 'Листи [з різних країн].', 'різний · країна']
+    ]},
+    { id: 'gen-za', c: 'gen', prep: 'за', accept: ['за'], meaning: 'in the time of, under; in (conditions)', s: [
+      ['This house was built under Soviet rule.', 'Цей будинок побудували [за радянської влади].', 'радянський · влада'],
+      ['In good weather we walk in the park.', '[За гарної погоди] ми гуляємо в парку.', 'гарний · погода'],
+      ['In the old days people lived differently.', '[За старих часів] люди жили інакше.', 'старий · час'],
+      ['Under the old king the country was poor.', '[За старого короля] країна була бідною.', 'старий · король']
+    ]},
+    { id: 'gen-zamist', c: 'gen', prep: 'замість', accept: ['замість'], meaning: 'instead of', s: [
+      ['I drink tea instead of black coffee.', 'Я п’ю чай [замість чорної кави].', 'чорний · кава'],
+      ['Instead of a long letter I wrote a short message.', '[Замість довгого листа] я написав коротке повідомлення.', 'довгий · лист'],
+      ['Instead of red wine they drank water.', '[Замість червоного вина] вони пили воду.', 'червоний · вино'],
+      ['Instead of new shoes he bought a book.', '[Замість нових черевиків] він купив книжку.', 'новий · черевик']
+    ]},
+    { id: 'gen-krim', c: 'gen', prep: 'крім', accept: ['крім', 'окрім'], meaning: 'except, apart from', note: 'окрім works too', s: [
+      ['Everyone came except the new director.', 'Прийшли всі, [крім нового директора].', 'новий · директор'],
+      ['I read everything except the last page.', 'Я прочитав усе, [крім останньої сторінки].', 'останній · сторінка'],
+      ['We have everything except cold milk.', 'У нас є все, [крім холодного молока].', 'холодний · молоко'],
+      ['Nobody knew except close friends.', 'Ніхто не знав, [крім близьких друзів].', 'близький · друг']
+    ]},
+    { id: 'gen-navkolo', c: 'gen', prep: 'навколо', accept: ['навколо', 'довкола', 'навкруг'], meaning: 'around', s: [
+      ['We walked around the old castle.', 'Ми гуляли [навколо старого замку].', 'старий · замок'],
+      ['There are many cafés around the central square.', '[Навколо центральної площі] багато кафе.', 'центральний · площа'],
+      ['The children are running around the big tree.', 'Діти бігають [навколо великого дерева].', 'великий · дерево'],
+      ['There is a fence around the new houses.', '[Навколо нових будинків] є паркан.', 'новий · будинок']
+    ]},
+    { id: 'gen-pislia', c: 'gen', prep: 'після', accept: ['після'], meaning: 'after', s: [
+      ['After a long day I rest.', '[Після довгого дня] я відпочиваю.', 'довгий · день'],
+      ['After my morning coffee I work.', '[Після ранкової кави] я працюю.', 'ранковий · кава'],
+      ['After the important meeting we went home.', '[Після важливого засідання] ми пішли додому.', 'важливий · засідання'],
+      ['We’ll meet after the summer holidays.', 'Зустрінемося [після літніх канікул].', 'літній · канікули']
+    ]},
+    { id: 'gen-proty', c: 'gen', prep: 'проти', accept: ['проти'], meaning: 'against', s: [
+      ['We are walking against a strong wind.', 'Ми йдемо [проти сильного вітру].', 'сильний · вітер'],
+      ['They are protesting against the new reform.', 'Вони протестують [проти нової реформи].', 'новий · реформа'],
+      ['I am against the new rule.', 'Я [проти нового правила].', 'новий · правило'],
+      ['They played against strong teams.', 'Вони грали [проти сильних команд].', 'сильний · команда']
+    ]},
+    { id: 'gen-zarady', c: 'gen', prep: 'заради', accept: ['заради', 'ради'], meaning: 'for the sake of', note: 'ради works too', s: [
+      ['He did it for the sake of a good friend.', 'Він зробив це [заради доброго друга].', 'добрий · друг'],
+      ['She works for the sake of her little daughter.', 'Вона працює [заради маленької доньки].', 'маленький · донька'],
+      ['We work for the sake of a better future.', 'Ми працюємо [заради кращого майбутнього].', 'кращий · майбутнє'],
+      ['They stayed for the sake of the little children.', 'Вони залишилися [заради малих дітей].', 'малий · діти']
+    ]},
+    { id: 'gen-u', c: 'gen', prep: 'у / в', accept: ['у', 'в'], meaning: '(someone) has', note: 'у мене є = I have', s: [
+      ['Our old neighbour has a dog.', '[У старого сусіда] є собака.', 'старий · сусід'],
+      ['My younger sister has a cat.', '[У молодшої сестри] є кіт.', 'молодший · сестра'],
+      ['The little kitten has blue eyes.', '[У маленького кошеняти] блакитні очі.', 'маленький · кошеня'],
+      ['The new neighbours have a big garden.', '[У нових сусідів] великий сад.', 'новий · сусід']
+    ]},
+    { id: 'gen-shchodo', c: 'gen', prep: 'щодо', accept: ['щодо'], meaning: 'regarding, concerning', s: [
+      ['I have a question regarding the new project.', 'У мене питання [щодо нового проєкту].', 'новий · проєкт'],
+      ['There is news regarding the next meeting.', 'Є новини [щодо наступної зустрічі].', 'наступний · зустріч'],
+      ['I have doubts regarding the important decision.', 'У мене сумніви [щодо важливого рішення].', 'важливий · рішення'],
+      ['He said nothing regarding future plans.', 'Він нічого не сказав [щодо майбутніх планів].', 'майбутній · план']
+    ]},
+    { id: 'gen-sered', c: 'gen', prep: 'серед', accept: ['серед', 'посеред'], meaning: 'among, in the middle of', s: [
+      ['It happened in broad daylight.', 'Це сталося [серед білого дня].', 'білий · день'],
+      ['He woke up in the dead of night.', 'Він прокинувся [серед глибокої ночі].', 'глибокий · ніч'],
+      ['The house stands in the middle of a wide field.', 'Будинок стоїть [серед широкого поля].', 'широкий · поле'],
+      ['I feel good among old friends.', 'Я почуваюся добре [серед старих друзів].', 'старий · друг']
+    ]},
+
+    // ---- Dative ----
+    { id: 'dat-vsuperech', c: 'dat', prep: 'всупереч', accept: ['всупереч', 'усупереч'], meaning: 'contrary to, despite', s: [
+      ['We went to the sea despite the bad forecast.', 'Ми поїхали на море [всупереч поганому прогнозу].', 'поганий · прогноз'],
+      ['She married against her own will.', 'Вона вийшла заміж [всупереч власній волі].', 'власний · воля'],
+      ['He parks here contrary to the strict rule.', 'Він паркується тут [всупереч суворому правилу].', 'суворий · правило'],
+      ['Contrary to all expectations, we won.', '[Всупереч усім очікуванням] ми виграли.', 'весь · очікування']
+    ]},
+    { id: 'dat-zavdiaky', c: 'dat', prep: 'завдяки', accept: ['завдяки'], meaning: 'thanks to', s: [
+      ['I know Ukrainian thanks to a good teacher.', 'Я знаю українську [завдяки доброму вчителеві|завдяки доброму вчителю].', 'добрий · вчитель'],
+      ['Thanks to the warm weather we walked for a long time.', '[Завдяки теплій погоді] ми довго гуляли.', 'теплий · погода'],
+      ['Thanks to the quick decision we made it in time.', '[Завдяки швидкому рішенню] ми встигли.', 'швидкий · рішення'],
+      ['I found a job thanks to good friends.', 'Я знайшов роботу [завдяки добрим друзям].', 'добрий · друг']
+    ]},
+    { id: 'dat-naperekir', c: 'dat', prep: 'наперекір', accept: ['наперекір'], meaning: 'in defiance of, in spite of', s: [
+      ['We kept going in spite of the cold wind.', 'Ми йшли вперед [наперекір холодному вітрові|наперекір холодному вітру].', 'холодний · вітер'],
+      ['They survived in defiance of cruel fate.', 'Вони вижили [наперекір злій долі].', 'злий · доля'],
+      ['He became a musician in defiance of his parents’ wish.', 'Він став музикантом [наперекір батьківському бажанню].', 'батьківський · бажання'],
+      ['She finished university in spite of all the difficulties.', 'Вона закінчила університет [наперекір усім труднощам].', 'весь · труднощі']
+    ]},
+
+    // ---- Accusative ----
+    { id: 'acc-u', c: 'acc', prep: 'у / в', accept: ['у', 'в'], meaning: 'into, to (where to?)', s: [
+      ['He went to the new office.', 'Він пішов [у новий офіс].', 'новий · офіс'],
+      ['Put it into the big bag.', 'Поклади це [у велику сумку].', 'великий · сумка'],
+      ['We moved to a small village.', 'Ми переїхали [в маленьке село].', 'маленький · село'],
+      ['Pour the tea into the clean cups.', 'Налий чай [у чисті чашки].', 'чистий · чашка']
+    ]},
+    { id: 'acc-za', c: 'acc', prep: 'за', accept: ['за'], meaning: 'for (thanks, pay); behind (where to?)', s: [
+      ['Thanks for the tasty coffee.', 'Дякую [за смачну каву].', 'смачний · кава'],
+      ['He paid for the new ticket.', 'Він заплатив [за новий квиток].', 'новий · квиток'],
+      ['The ball rolled behind the old armchair.', 'М’яч закотився [за старе крісло].', 'старий · крісло'],
+      ['Thanks for the beautiful flowers.', 'Дякую [за гарні квіти].', 'гарний · квіти'],
+      ['She married a young doctor.', 'Вона вийшла заміж [за молодого лікаря].', 'молодий · лікар']
+    ]},
+    { id: 'acc-kriz', c: 'acc', prep: 'крізь', accept: ['крізь'], meaning: 'through', s: [
+      ['We walked through the thick fog.', 'Ми йшли [крізь густий туман].', 'густий · туман'],
+      ['The sun shines through the thin curtain.', 'Сонце світить [крізь тонку штору].', 'тонкий · штора'],
+      ['I looked through the dirty window.', 'Я дивився [крізь брудне вікно].', 'брудний · вікно'],
+      ['She smiled through bitter tears.', 'Вона усміхнулася [крізь гіркі сльози].', 'гіркий · сльоза']
+    ]},
+    { id: 'acc-na', c: 'acc', prep: 'на', accept: ['на'], meaning: 'onto, to (where to?); at (look at)', s: [
+      ['Put the cup onto the kitchen table.', 'Постав чашку [на кухонний стіл].', 'кухонний · стіл'],
+      ['Let’s go to the central square.', 'Ходімо [на центральну площу].', 'центральний · площа'],
+      ['We are going to the Black Sea.', 'Ми їдемо [на Чорне море].', 'чорний · море'],
+      ['Put the books onto the top shelves.', 'Поклади книжки [на верхні полиці].', 'верхній · полиця'],
+      ['Look at the little dog!', 'Подивись [на маленького собаку]!', 'маленький · собака']
+    ]},
+    { id: 'acc-pid', c: 'acc', prep: 'під', accept: ['під'], meaning: 'under (where to?)', s: [
+      ['Put the bag under the big table.', 'Поклади сумку [під великий стіл].', 'великий · стіл'],
+      ['The cat crawled under the warm blanket.', 'Кіт заліз [під теплу ковдру].', 'теплий · ковдра'],
+      ['The child hid under the big bed.', 'Дитина сховалася [під велике ліжко].', 'великий · ліжко'],
+      ['Put the boxes under the wooden stairs.', 'Постав коробки [під дерев’яні сходи].', 'дерев’яний · сходи']
+    ]},
+    { id: 'acc-po', c: 'acc', prep: 'по', accept: ['по'], meaning: 'to fetch, to go and get', s: [
+      ['Go and get some fresh bread.', 'Піди [по свіжий хліб].', 'свіжий · хліб'],
+      ['She went to fetch cold water.', 'Вона пішла [по холодну воду].', 'холодний · вода'],
+      ['He went to get fresh milk.', 'Він пішов [по свіже молоко].', 'свіжий · молоко'],
+      ['I’m going to pick up my younger brother.', 'Я йду [по молодшого брата].', 'молодший · брат'],
+      ['Go and get new batteries.', 'Піди [по нові батарейки].', 'новий · батарейка']
+    ]},
+    { id: 'acc-pro', c: 'acc', prep: 'про', accept: ['про'], meaning: 'about', s: [
+      ['He told me about the new plan.', 'Він розповів [про новий план].', 'новий · план'],
+      ['We talked about the new job.', 'Ми говорили [про нову роботу].', 'новий · робота'],
+      ['I read about an ancient city.', 'Я читав [про стародавнє місто].', 'стародавній · місто'],
+      ['This is a book about wild animals.', 'Це книжка [про диких тварин].', 'дикий · тварина'],
+      ['This is a film about a brave hero.', 'Це фільм [про сміливого героя].', 'сміливий · герой']
+    ]},
+    { id: 'acc-cherez', c: 'acc', prep: 'через', accept: ['через'], meaning: 'across, through; because of', s: [
+      ['We were late because of the heavy rain.', 'Ми запізнилися [через сильний дощ].', 'сильний · дощ'],
+      ['We crossed the wide road.', 'Ми перейшли [через широку дорогу].', 'широкий · дорога'],
+      ['We walked across the frozen lake.', 'Ми йшли [через замерзле озеро].', 'замерзлий · озеро'],
+      ['He failed the exam because of small mistakes.', 'Він не склав іспит [через дрібні помилки].', 'дрібний · помилка']
+    ]},
+
+    // ---- Instrumental ----
+    { id: 'ins-mizh', c: 'ins', prep: 'між', accept: ['між', 'поміж'], meaning: 'between', note: 'usually with plural nouns', s: [
+      ['We put the tent between the tall trees.', 'Ми поставили намет [між високими деревами].', 'високий · дерево'],
+      ['There is a garden between the old houses.', '[Між старими будинками] є сад.', 'старий · будинок'],
+      ['Between close friends there are no secrets.', '[Між близькими друзями] немає таємниць.', 'близький · друг'],
+      ['Sit down between the new students.', 'Сідай [між новими студентами].', 'новий · студент']
+    ]},
+    { id: 'ins-pered', c: 'ins', prep: 'перед', accept: ['перед'], meaning: 'in front of; before', s: [
+      ['Let’s meet in front of the old school.', 'Зустрінемося [перед старою школою].', 'старий · школа'],
+      ['I’m nervous before the important exam.', 'Я хвилююся [перед важливим іспитом].', 'важливий · іспит'],
+      ['She is standing in front of a big mirror.', 'Вона стоїть [перед великим дзеркалом].', 'великий · дзеркало'],
+      ['Before the winter holidays we go home.', '[Перед зимовими канікулами] ми їдемо додому.', 'зимовий · канікули']
+    ]},
+    { id: 'ins-nad', c: 'ins', prep: 'над', accept: ['над'], meaning: 'above, over; (work) on', s: [
+      ['A lamp hangs above the kitchen table.', 'Лампа висить [над кухонним столом].', 'кухонний · стіл'],
+      ['Birds fly over the wide river.', 'Птахи літають [над широкою річкою].', 'широкий · річка'],
+      ['Hang the picture above the new bed.', 'Повісь картину [над новим ліжком].', 'новий · ліжко'],
+      ['Clouds above the high mountains.', 'Хмари [над високими горами].', 'високий · гора'],
+      ['He is working on a new project.', 'Він працює [над новим проєктом].', 'новий · проєкт']
+    ]},
+    { id: 'ins-z', c: 'ins', prep: 'з', accept: ['з', 'із', 'зі'], meaning: 'with', note: 'із and зі count too', s: [
+      ['I drink coffee with warm milk.', 'Я п’ю каву [з теплим молоком].', 'теплий · молоко'],
+      ['I’m going to the cinema with an old friend.', 'Я йду в кіно [зі старим другом].', 'старий · друг'],
+      ['She is talking with the new neighbour.', 'Вона розмовляє [з новою сусідкою].', 'новий · сусідка'],
+      ['A salad with fresh vegetables.', 'Салат [зі свіжими овочами].', 'свіжий · овоч']
+    ]},
+    { id: 'ins-za', c: 'ins', prep: 'за', accept: ['за'], meaning: 'behind, beyond (where?)', s: [
+      ['The garden is behind the old house.', 'Сад [за старим будинком].', 'старий · будинок'],
+      ['The shop is behind the new school.', 'Магазин [за новою школою].', 'новий · школа'],
+      ['The cat is sleeping behind the old armchair.', 'Кіт спить [за старим кріслом].', 'старий · крісло'],
+      ['The sun hid behind the dark clouds.', 'Сонце сховалося [за темними хмарами].', 'темний · хмара']
+    ]},
+    { id: 'ins-pid', c: 'ins', prep: 'під', accept: ['під'], meaning: 'under (where?)', s: [
+      ['The cat sleeps under the kitchen table.', 'Кіт спить [під кухонним столом].', 'кухонний · стіл'],
+      ['The keys are under the old newspaper.', 'Ключі [під старою газетою].', 'старий · газета'],
+      ['The dog is lying under the big tree.', 'Собака лежить [під великим деревом].', 'великий · дерево'],
+      ['We sat under the bright stars.', 'Ми сиділи [під яскравими зорями].', 'яскравий · зоря']
+    ]},
+
+    // ---- Locative ----
+    { id: 'loc-u', c: 'loc', prep: 'у / в', accept: ['у', 'в'], meaning: 'in, at (where?)', s: [
+      ['I work in a big office.', 'Я працюю [у великому офісі].', 'великий · офіс'],
+      ['She studies at a new school.', 'Вона вчиться [в новій школі].', 'новий · школа'],
+      ['We live in a small town.', 'Ми живемо [в маленькому місті].', 'маленький · місто'],
+      ['There are many people in the city parks.', '[У міських парках] багато людей.', 'міський · парк']
+    ]},
+    { id: 'loc-na', c: 'loc', prep: 'на', accept: ['на'], meaning: 'on, at (where?)', s: [
+      ['The cup is on the kitchen table.', 'Чашка [на кухонному столі].', 'кухонний · стіл'],
+      ['We met on the central square.', 'Ми зустрілися [на центральній площі].', 'центральний · площа'],
+      ['We were on holiday at the Black Sea.', 'Ми відпочивали [на Чорному морі].', 'чорний · море'],
+      ['The books are on the top shelves.', 'Книжки [на верхніх полицях].', 'верхній · полиця'],
+      ['I was at a big concert.', 'Я був [на великому концерті].', 'великий · концерт']
+    ]},
+    { id: 'loc-o', c: 'loc', prep: 'о / об', accept: ['о', 'об'], meaning: 'at (clock time)', note: 'об before a vowel', s: [
+      ['The lesson starts at seven o’clock.', 'Урок починається [о сьомій годині].', 'сьомий · година'],
+      ['Let’s meet at five o’clock.', 'Зустрінемося [о п’ятій годині].', 'п’ятий · година'],
+      ['I get up at six o’clock.', 'Я встаю [о шостій годині].', 'шостий · година'],
+      ['The shop opens at eleven o’clock.', 'Магазин відкривається [об одинадцятій годині].', 'одинадцятий · година']
+    ]},
+    { id: 'loc-po', c: 'loc', prep: 'по', accept: ['по'], meaning: 'along, around, all over', note: 'never по + Dative: по країнах, not по країнам', s: [
+      ['We walked around the old park.', 'Ми гуляли [по старому парку].', 'старий · парк'],
+      ['He is walking along the long street.', 'Він іде [по довгій вулиці].', 'довгий · вулиця'],
+      ['The children ran around the green field.', 'Діти бігали [по зеленому полю|по зеленому полі].', 'зелений · поле'],
+      ['We travelled around different countries.', 'Ми подорожували [по різних країнах].', 'різний · країна']
+    ]},
+    { id: 'loc-pry', c: 'loc', prep: 'при', accept: ['при'], meaning: 'in the presence of; at, by; under', s: [
+      ['Don’t say that in the presence of the little daughter.', 'Не кажи цього [при маленькій доньці].', 'маленький · донька'],
+      ['At our first meeting he was shy.', '[При першій зустрічі] він був сором’язливий.', 'перший · зустріч'],
+      ['Read in bright light.', 'Читай [при яскравому світлі].', 'яскравий · світло'],
+      ['Under the new director everything changed.', '[При новому директорові|При новому директору] все змінилося.', 'новий · директор'],
+      ['Don’t argue in front of strangers.', 'Не сварися [при чужих людях].', 'чужий · люди']
+    ]}
+  ];
+
+  // ---------- PATTERNS AS LIBRARY DATA ----------
+  // DECL_PATTERNS above is only the starter set, like the sample words: it's
+  // copied into the library once, on the first launch that has no patterns
+  // saved, and from then on the library copy is what lessons use. Editing or
+  // deleting a pattern never touches the list above, and changing the list
+  // above never touches a library that already exists.
+  //
+  // A pattern carries its own progress (box, due, counts, shelved), the same
+  // fields a word has, so the scheduler treats both alike. `si` is the
+  // sentence shown last, so the next lesson picks a different one.
+  // Sentences: { en, uk, base }, with the gap in uk in [square brackets].
+  function sentenceFromRaw(a){
+    if (Array.isArray(a)) return { en: (a[0] || '').trim(), uk: (a[1] || '').trim(), base: (a[2] || '').trim() };
+    a = a || {};
+    return { en: (a.en || '').trim(), uk: (a.uk || '').trim(), base: (a.base || '').trim() };
+  }
+
+  // "у / в" -> ['у', 'в']. The accepted spellings when none are given.
+  function prepVariants(prep){
+    return (prep || '').split(/[\/,]/).map(function(x){ return x.trim(); }).filter(Boolean);
+  }
+
+  function normalizePattern(p){
+    p = p || {};
+    var prep = (p.prep || '').trim();
+    var accept = Array.isArray(p.accept)
+      ? p.accept.map(function(x){ return (x || '').trim(); }).filter(Boolean) : [];
+    if (!accept.length) accept = prepVariants(prep);
+    return {
+      id: p.id || genId(),
+      c: DECL_CASES[p.c] ? p.c : 'gen',
+      prep: prep,
+      accept: accept,
+      meaning: (p.meaning || '').trim(),
+      note: (p.note || '').trim(),
+      s: (Array.isArray(p.s) ? p.s : []).map(sentenceFromRaw).filter(function(x){ return x.uk; }),
+      box: (p.box >= 1 && p.box <= MAX_BOX) ? p.box : 1,
+      due: p.due || todayStr(),
+      nRight: p.nRight || 0,
+      nWrong: p.nWrong || 0,
+      last: p.last || null,
+      shelved: p.shelved || null,
+      si: (typeof p.si === 'number') ? p.si : -1,
+      created: p.created || null
+    };
+  }
+
+  // The one-time import. `progress` is what version 2026-10-29a saved
+  // separately (box, due, counts per built-in pattern), so lessons done
+  // with that version carry over instead of starting from scratch.
+  function seedPatterns(progress){
+    return DECL_PATTERNS.map(function(p){
+      var r = (progress && progress[p.id]) || {};
+      return normalizePattern({
+        id: p.id, c: p.c, prep: p.prep, accept: p.accept, meaning: p.meaning, note: p.note, s: p.s,
+        box: r.box, due: r.due, nRight: r.nRight, nWrong: r.nWrong, last: r.last, shelved: r.shelved,
+        si: (typeof r.s === 'number') ? r.s : -1,
+        created: todayStr()
+      });
+    });
+  }
+
+  function patternById(id){
+    for (var i = 0; i < state.patterns.length; i++) if (state.patterns[i].id === id) return state.patterns[i];
+    return null;
+  }
+
+  // "у / в + Locative". Used as the card hint and as the pattern's name.
+  function patternLabel(p){
+    return (p.prep || '?') + ' + ' + DECL_CASES[p.c].en;
+  }
+
+  // Only patterns with at least one sentence can be in a lesson; a freshly
+  // added one sits out until its first sentence is in.
+  function activePatterns(){
+    return state.patterns.filter(function(p){ return !p.shelved && p.s.length > 0; });
+  }
+
+  function declDueCount(){
+    var t = todayStr();
+    return activePatterns().filter(function(p){ return p.due <= t; }).length;
+  }
+
+  // What's wrong with a Ukrainian sentence, or '' if it's usable: exactly
+  // one [gap], with something in it.
+  function gapProblem(uk){
+    var open = (uk.match(/\[/g) || []).length, close = (uk.match(/\]/g) || []).length;
+    if (!open && !close) return 'Put the part to type in [square brackets].';
+    if (open !== 1 || close !== 1) return 'Use exactly one [gap].';
+    var m = uk.match(/^([^\[\]]*)\[([^\[\]]*)\]([^\[\]]*)$/);
+    if (!m) return 'The [ must come before the ].';
+    if (!m[2].split('|')[0].trim()) return 'The gap is empty.';
+    return '';
+  }
+
+  // Splits "Я живу [у місті|в місті]." into the parts around the gap.
+  // Alternatives after a | also count as right; the first one is shown.
+  function parseSentence(s){
+    if (!s) return null;
+    var m = (s.uk || '').match(/^([^\[\]]*)\[([^\[\]]+)\]([^\[\]]*)$/);
+    if (!m) return null;
+    var answers = m[2].split('|').map(function(a){ return a.trim(); }).filter(Boolean);
+    if (!answers.length) return null;
+    return { en: s.en, pre: m[1], post: m[3], answers: answers, base: s.base,
+      full: m[1] + answers[0] + m[3] };
+  }
+
+  // Any sentence of the pattern except the one shown last time, so the
+  // same sentence never comes up twice running.
+  function pickSentence(p, avoid){
+    var n = p.s.length;
+    if (n < 2) return 0;
+    if (!(avoid >= 0 && avoid < n)) return Math.floor(Math.random() * n);
+    var i = Math.floor(Math.random() * (n - 1));
+    return i >= avoid ? i + 1 : i;
+  }
+
+  // Graded like a typed word (case, punctuation, stress marks and apostrophe
+  // style don't matter). On top of that, every accepted spelling of the
+  // preposition counts: у or в, з / із / зі, о or об, and any synonyms.
+  // Spellings can be several words long, so the longest match comes off first.
+  function gradeDecl(typed, p, sent){
+    var t = normalizeTyped(typed);
+    var ok = p.accept.map(normalizeTyped).filter(Boolean)
+      .sort(function(a, b){ return b.length - a.length; });
+    function rest(x){
+      for (var i = 0; i < ok.length; i++){
+        if (x === ok[i]) return '';
+        if (x.indexOf(ok[i] + ' ') === 0) return x.slice(ok[i].length + 1);
+      }
+      return null;
+    }
+    var tr = rest(t);
+    return sent.answers.some(function(a){
+      var e = normalizeTyped(a);
+      if (t === e) return true;
+      var er = rest(e);
+      return tr !== null && er !== null && tr === er;
+    });
+  }
+
+  // The thing a lesson card is about: a word or a pattern. Both carry the
+  // same box / due / counts fields.
+  function lessonItem(id){
+    if (state.lessonKind === 'decl') return patternById(id);
+    return state.words.find(function(x){ return x.id === id; });
   }
 
   // ---------- STORAGE (auto-detects environment) ----------
@@ -3277,7 +3981,7 @@
       // Words saved before types existed get classified on load.
       type: isValidType(w.type) ? w.type : guessType(w.front || '', w.back || ''),
       aspect: isValidAspect(w.aspect) ? w.aspect : '',
-      box: (w.box >= 1 && w.box <= 5) ? w.box : 1,
+      box: (w.box >= 1 && w.box <= MAX_BOX) ? w.box : 1,
       due: w.due || todayStr(),
       // Words saved before this was tracked keep null rather than being
       // stamped with today's date, which would be a made-up answer. They
@@ -3361,9 +4065,13 @@
     // null means nothing was ever saved — a true first run, so seed.
     // '[]' means the list was saved and is empty (everything deleted),
     // which must stay empty rather than silently refilling itself.
+    // Seeding saves once, at the end of loading. Saving here would also
+    // write the (still empty) patterns before they've been read, and the
+    // one-time pattern import below would then find "[]" and skip itself.
+    var needsSave = false;
     if (raw === null || raw === undefined){
       state.words = seedWords();
-      persist();
+      needsSave = true;
     } else {
       try {
         var parsed = JSON.parse(raw);
@@ -3391,6 +4099,25 @@
       // nothing saved yet
     }
 
+    // Declension patterns. Same rule as the words: null means none were
+    // ever saved, so this is the one-time import of the starter set (with
+    // any progress the previous version kept separately). '[]' means they
+    // were all deleted, and stays empty.
+    var rawPatterns = await storageGet('patterns');
+    if (rawPatterns === null || rawPatterns === undefined){
+      var oldProgress = {};
+      try { oldProgress = JSON.parse((await storageGet('decl')) || '{}') || {}; } catch (e) {}
+      state.patterns = seedPatterns(oldProgress);
+      needsSave = true;
+    } else {
+      try {
+        var pp = JSON.parse(rawPatterns);
+        state.patterns = Array.isArray(pp) ? pp.map(normalizePattern) : [];
+      } catch (e) {
+        state.patterns = [];
+      }
+    }
+
     // Settings live alongside the words, so a stale or unknown value from an
     // older version falls back to the default rather than breaking the list.
     try {
@@ -3400,10 +4127,13 @@
       if (typeof settings.speechOn === 'boolean') state.speechOn = settings.speechOn;
       if (typeof settings.blurOptions === 'boolean') state.blurOptions = settings.blurOptions;
       if (isValidDir(settings.sortDir)) state.sortDir = settings.sortDir;
+      if (isValidDSort(settings.declSortBy)) state.declSortBy = settings.declSortBy;
+      if (isValidDir(settings.declSortDir)) state.declSortDir = settings.declSortDir;
     } catch (e) {
       // no settings saved yet — keep the default
     }
 
+    if (needsSave) persist();
     state.loaded = true;
     render();
   }
@@ -3414,7 +4144,9 @@
       sortDir: state.sortDir,
       soundOn: state.soundOn,
       speechOn: state.speechOn,
-      blurOptions: state.blurOptions
+      blurOptions: state.blurOptions,
+      declSortBy: state.declSortBy,
+      declSortDir: state.declSortDir
     }));
   }
 
@@ -3424,6 +4156,9 @@
     // per card.
     await storageSetMany({
       words: JSON.stringify(state.words),
+      // Patterns travel in the same write, so a finished lesson of either
+      // kind is one save.
+      patterns: JSON.stringify(state.patterns),
       streaks: JSON.stringify({
         current: state.committedStreak,
         best: state.committedBest,
@@ -3459,10 +4194,11 @@
   //
   // Ordering is by how overdue a word is (oldest due date first), with box as
   // the tiebreaker. Sorting by box instead would starve mastered words: with a
-  // standing backlog of box-1 words, a box-5 word could stay overdue forever
+  // standing backlog of box-1 words, a top-box word could stay overdue forever
   // and never be checked. It also means a word you just missed (due = today)
   // sorts last, so it waits its turn rather than crowding out the backlog.
   function buildQueue(practice){
+    if (state.lessonKind === 'decl') return buildDeclQueue(practice);
     var t = todayStr();
     var pool;
 
@@ -3476,14 +4212,20 @@
         var tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
       }
     } else {
-      pool = activeWords().filter(function(w){ return w.due <= t; });
+      // Shuffled first, so that among words equally due (same day, same box)
+      // the pick is random. The sort is stable, so without this they came up
+      // in the order they were added to the library.
+      pool = shuffle(activeWords().filter(function(w){ return w.due <= t; }));
       pool.sort(function(a, b){
         if (a.due !== b.due) return a.due < b.due ? -1 : 1;
         return a.box - b.box;
       });
     }
 
-    state.sessionQueue = pool.slice(0, LESSON_SIZE)
+    // The sort only decides WHICH words make it into the lesson. The order
+    // they come up in is shuffled again, so the lesson doesn't run oldest
+    // due date first, box 1 before box 2, and so on.
+    state.sessionQueue = shuffle(pool.slice(0, LESSON_SIZE))
       .map(function(w){ return { id: w.id, dir: pickMode(w) }; });
     state.lessonWordIds = state.sessionQueue.map(function(e){ return e.id; });
     state.answeredThisLesson = {};
@@ -3494,9 +4236,37 @@
     state.lessonAnswered = 0;
   }
 
+  // Same rules as the word queue: most overdue first, then lowest box.
+  // Patterns are shuffled first so ties (e.g. all the brand-new ones) come up
+  // in a mixed order instead of always starting with the Genitive.
+  function buildDeclQueue(practice){
+    var t = todayStr();
+    var pool = shuffle(activePatterns().slice());
+    if (!practice){
+      pool = pool.filter(function(p){ return p.due <= t; });
+      pool.sort(function(a, b){
+        var pa = a, pb = b;
+        if (pa.due !== pb.due) return pa.due < pb.due ? -1 : 1;
+        return pa.box - pb.box;
+      });
+    }
+    // As with words: the sort picks which patterns, the shuffle sets the order.
+    state.sessionQueue = shuffle(pool.slice(0, LESSON_SIZE)).map(function(p){
+      return { id: p.id, si: pickSentence(p, p.si) };
+    });
+    state.lessonWordIds = state.sessionQueue.map(function(e){ return e.id; });
+    state.lessonDeclShown = [];
+    state.answeredThisLesson = {};
+    state.lessonMisses = {};
+    state.parkedThisLesson = false;
+    state.lessonTotal = state.sessionQueue.length;
+    state.lessonCorrect = 0;
+    state.lessonAnswered = 0;
+  }
+
   function boxDots(box, filledClass, dotClass, container){
     var html = '';
-    for (var i = 1; i <= 5; i++){
+    for (var i = 1; i <= MAX_BOX; i++){
       html += '<span class="' + dotClass + (i <= box ? ' ' + filledClass : '') + '"></span>';
     }
     return html;
@@ -3517,6 +4287,7 @@
     toBottom: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="20" x2="19" y2="20"></line><line x1="12" y1="4" x2="12" y2="15"></line><polyline points="7 11 12 16 17 11"></polyline></svg>',
     filter: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8.5V19l-4 2v-7.5z"></path></svg>',
     search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="16.2" y1="16.2" x2="21" y2="21"></line></svg>',
+    clipboard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="8" height="4" rx="1"></rect><path d="M16 5h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"></path></svg>',
     edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>'
   };
 
@@ -3538,54 +4309,62 @@
     if (state.lessonReviewOpen) return renderLessonReview();
     if (state.lessonDone) return renderLessonSummary();
 
-    if (state.words.length === 0){
-      return '<div class="empty-state">' +
-        '<div class="glyph">&#9679;&#9675;&#9679;</div>' +
-        '<h2>Your box is empty</h2>' +
-        '<p>Add some words and they\u2019ll be scheduled into lessons for you.</p>' +
-        '<button class="primary" data-action="goto-cards">Add your first word</button>' +
-        '</div>';
-    }
-
-    // Everything shelved is a real state, not an empty box: the words are
-    // all still there, so say that rather than offering a lesson of nothing.
-    if (activeWords().length === 0){
-      return '<div class="empty-state">' +
-        '<div class="glyph">&#9679;&#9675;&#9679;</div>' +
-        '<h2>Every word is shelved</h2>' +
-        '<p>Take some off the shelf in the Library and they\u2019ll come back into lessons.</p>' +
-        '<button class="primary" data-action="goto-cards">Open Library</button>' +
-        '</div>';
-    }
-
+    // Two lesson types side by side, each count directly above its button.
     var due = dueCount();
-    var lessonSize = Math.min(due, LESSON_SIZE);
+    var dDue = declDueCount();
+    var nActive = activeWords().length;
+    var nPatterns = activePatterns().length;
+
+    function earliest(items){
+      return items.slice().sort(function(a, b){ return a.due < b.due ? -1 : 1; })[0];
+    }
+    function half(n, one, many, nextItem){
+      var h = '<div class="due-half">';
+      h += '<div class="due-num' + (n === 0 ? ' zero' : '') + '">' + n + '</div>';
+      h += '<div class="due-label">' + (n === 1 ? one : many) + '</div>';
+      if (n === 0 && nextItem) h += '<div class="due-next">next ' + untilLabel(nextItem.due) + '</div>';
+      return h + '</div>';
+    }
+    // Primary when there is something due; otherwise a quieter button that
+    // offers practice anyway (or points at the Library when there's nothing
+    // to practise at all).
+    function startBtn(kind, label, n, nAvail, emptySub, emptyAction){
+      if (nAvail === 0){
+        return '<button class="secondary start-btn" data-action="' + emptyAction + '" data-kind="' + kind + '">' +
+          label + '<span class="start-sub">' + emptySub + '</span></button>';
+      }
+      if (n > 0){
+        var size = Math.min(n, LESSON_SIZE);
+        var sub = n > LESSON_SIZE ? size + ' of ' + n : size + ' card' + (size === 1 ? '' : 's');
+        return '<button class="primary start-btn" data-action="start-lesson" data-kind="' + kind + '">' +
+          label + '<span class="start-sub">' + sub + '</span></button>';
+      }
+      return '<button class="secondary start-btn" data-action="practice-anyway" data-kind="' + kind + '">' +
+        label + '<span class="start-sub">practice anyway</span></button>';
+    }
 
     var html = '<div class="home">';
 
-    html += '<div class="due-hero' + (due === 0 ? ' is-clear' : '') + '">';
-    html += '<div class="due-num">' + due + '</div>';
-    html += '<div class="due-label">' + (due === 1 ? 'word ready' : 'words ready') + '</div>';
+    html += '<div class="due-hero split' + (due === 0 && dDue === 0 ? ' is-clear' : '') + '">';
+    html += half(due, 'word ready', 'words ready', earliest(activeWords()));
+    html += '<div class="due-divider"></div>';
+    html += half(dDue, 'pattern ready', 'patterns ready',
+      earliest(activePatterns()));
     html += '</div>';
 
-    if (due > 0){
-      var sub = due > LESSON_SIZE
-        ? lessonSize + ' of ' + due
-        : lessonSize + ' card' + (lessonSize === 1 ? '' : 's');
-      html += '<button class="primary start-btn" data-action="start-lesson">Start lesson' +
-        '<span class="start-sub">' + sub + '</span></button>';
-    } else {
-      var next = activeWords().sort(function(a,b){ return a.due < b.due ? -1 : 1; })[0];
-      html += '<div class="home-clear">All caught up.' +
-        (next ? ' Next word is due ' + escapeHtml(next.due) + '.' : '') + '</div>';
-      html += '<button class="secondary start-btn" data-action="practice-anyway">Practice anyway</button>';
-    }
+    html += '<div class="start-row">';
+    html += startBtn('vocab', 'Vocab', due, nActive,
+      state.words.length === 0 ? 'add words' : 'all shelved',
+      state.words.length === 0 ? 'goto-cards' : 'open-library');
+    html += startBtn('decl', 'Declension', dDue, nPatterns,
+      state.patterns.length === 0 ? 'add patterns' : 'none active', 'open-library');
+    html += '</div>';
 
     html += '<div class="home-stats">';
     html += '<div class="home-stat"><span class="n">' +
       '<span class="stat-icon' + (doneToday() ? '' : ' cold') + '">\uD83D\uDD25</span>' +
       liveDayStreak() + '</span><span class="l">day streak</span></div>';
-    var mastered = state.words.filter(function(w){ return w.box === 5; }).length;
+    var mastered = state.words.filter(function(w){ return w.box === MAX_BOX; }).length;
     html += '<div class="home-stat"><span class="n">' +
       '<span class="stat-icon' + (mastered > 0 ? '' : ' cold') + '">\uD83C\uDFC6</span>' +
       mastered + '</span><span class="l">mastered</span></div>';
@@ -3600,7 +4379,43 @@
     return html;
   }
 
+  // The full sentence with the gap's answer picked out in bold.
+  function sentenceHtml(sent){
+    return escapeHtml(sent.pre) + '<strong>' + escapeHtml(sent.answers[0]) + '</strong>' + escapeHtml(sent.post);
+  }
+
+  function renderDeclLessonReview(){
+    // Every sentence that came up, in order, once each (a missed pattern
+    // comes back with a different sentence, so both are listed).
+    var seen = {}, shown = [];
+    state.lessonDeclShown.forEach(function(e){
+      var k = e.id + ':' + e.si;
+      if (!seen[k]){ seen[k] = true; shown.push(e); }
+    });
+    var html = '<div class="home">';
+    html += '<div class="review-list-head">Sentences from this lesson</div>';
+    shown.forEach(function(e){
+      var p = patternById(e.id);
+      var sent = p && parseSentence(p.s[e.si]);
+      if (!sent) return;
+      html += '<div class="word-detail">';
+      html += '<div class="wd-top">';
+      html += '<div class="wd-front">' + escapeHtml(patternLabel(p)) + '</div>';
+      html += '<div class="wd-dots">' + boxDots(p.box, 'filled', '', null) + '</div>';
+      html += '</div>';
+      html += '<div class="pattern-sent"><div class="ps-text"><div class="ps-uk">' + sentenceHtml(sent) +
+        '</div><div class="ps-en">' + escapeHtml(sent.en) + '</div></div>' + speakBtn(sent.full, 'on-dark small') + '</div>';
+      html += '<div class="wd-line"><span>Means</span>' + escapeHtml(p.meaning) + '</div>';
+      if (p.note) html += '<div class="wd-line"><span>Note</span>' + escapeHtml(p.note) + '</div>';
+      html += '</div>';
+    });
+    html += '<button class="secondary start-btn" data-action="close-lesson-review">Back</button>';
+    html += '</div>';
+    return html;
+  }
+
   function renderLessonReview(){
+    if (state.lessonKind === 'decl') return renderDeclLessonReview();
     var words = state.lessonWordIds
       .map(function(id){ return state.words.find(function(w){ return w.id === id; }); })
       .filter(Boolean);
@@ -3642,11 +4457,14 @@
     html += '<div><span class="n">' + state.streak + '</span><span class="l">correct in a row</span></div>';
     html += '</div></div>';
 
-    if (dueCount() > 0){
-      html += '<button class="primary start-btn" data-action="start-lesson">Another lesson' +
-        '<span class="start-sub">' + Math.min(dueCount(), LESSON_SIZE) + ' cards left</span></button>';
+    var isDecl = state.lessonKind === 'decl';
+    var left = isDecl ? declDueCount() : dueCount();
+    if (left > 0){
+      html += '<button class="primary start-btn" data-action="start-lesson" data-kind="' + state.lessonKind + '">Another lesson' +
+        '<span class="start-sub">' + Math.min(left, LESSON_SIZE) + ' cards left</span></button>';
     }
-    html += '<button class="secondary start-btn" data-action="open-lesson-review">Review these words</button>';
+    html += '<button class="secondary start-btn" data-action="open-lesson-review">' +
+      (isDecl ? 'Review these sentences' : 'Review these words') + '</button>';
     html += '<button class="secondary start-btn" data-action="dismiss-summary">Done</button>';
     html += '</div>';
     return html;
@@ -3674,6 +4492,7 @@
     }
 
     var entry = state.sessionQueue[0];
+    if (state.lessonKind === 'decl') return renderDeclCard(entry);
     var w = state.words.find(function(x){ return x.id === entry.id; });
 
     if (entry.dir === 'choice-en' || entry.dir === 'choice-uk'){
@@ -3874,6 +4693,66 @@
     return html;
   }
 
+  // Declension card: English sentence, the Ukrainian with a gap, and the
+  // dictionary forms of the adjective and noun underneath. You type the
+  // preposition + adjective + noun into the gap.
+  function renderDeclCard(entry){
+    var p = patternById(entry.id);
+    var prog = p;
+    var sent = parseSentence(p.s[entry.si]);
+    var shakeClass = (state.checked && !state.wasCorrect) ? ' shake' : '';
+    var popClass = (state.checked && state.wasCorrect) ? ' pop' : '';
+
+    var html = '<div class="review-wrap">';
+    html += streakHtml();
+    html += feedbackHtml();
+    html += '<div class="flashcard' + shakeClass + popClass + '">';
+    html += '<div class="box-dots">' + boxDots(prog.box, 'filled', '', null) + '</div>';
+    html += '<div class="card-prompt-label">Fill the gap</div>';
+    html += '<div class="card-front is-english decl-en">' + escapeHtml(sent.en) + '</div>';
+
+    // Before answering the gap is a blank line; afterwards it holds the
+    // correct answer, so the finished sentence reads as a whole.
+    html += '<div class="decl-frame">' + escapeHtml(sent.pre) +
+      (state.checked
+        ? '<span class="decl-gap filled">' + escapeHtml(sent.answers[0]) + '</span>'
+        : '<span class="decl-gap">&nbsp;</span>') +
+      escapeHtml(sent.post) + '</div>';
+
+    if (!state.checked){
+      html += '<div class="decl-base">' + escapeHtml(sent.base) + '</div>';
+      html += '<input id="typed-input" class="type-input" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Preposition + adjective + noun…" value="' + escapeHtml(state.typedValue) + '" />';
+      if (state.hintShown){
+        html += '<div class="hint-text">' + escapeHtml(patternLabel(p)) + '</div>';
+      } else {
+        html += '<button class="hint-btn" data-action="show-hint">Need a hint?</button>';
+      }
+      html += '<button class="primary" data-action="check-typed">Check</button>';
+    } else {
+      html += '<div class="type-feedback ' + (state.wasCorrect ? 'correct' : 'incorrect') + '">';
+      html += escapeHtml(state.typedReaction || (state.wasCorrect ? 'Correct!' : 'Not quite.'));
+      html += '</div>';
+      if (!state.wasCorrect){
+        var typed = (state.typedValue || '').trim();
+        var d = diffPair(typed, sent.answers[0]);
+        html += '<div class="answer-compare">';
+        html += '<div class="compare-row"><span class="compare-label">You typed</span>' +
+          '<span class="compare-value is-wrong">' + (typed ? d.a : '<em>nothing</em>') + '</span></div>';
+        html += '<div class="compare-row"><span class="compare-label">Correct</span>' +
+          '<span class="compare-value is-right">' + d.b + '</span></div>';
+        html += '</div>';
+      }
+      html += speakBtn(sent.full);
+      html += '<div class="card-notes">' + escapeHtml(patternLabel(p)) + ' · ' + escapeHtml(p.meaning) +
+        (p.note ? ' · ' + escapeHtml(p.note) : '') + '</div>';
+      if (!state.wasCorrect){
+        html += '<button class="primary" data-action="next-card">Next card</button>';
+      }
+    }
+    html += '</div></div>';
+    return html;
+  }
+
   function streakHtml(){
     if (state.streak < 2) return '';
     return '<div class="streak-badge' + (state.streak >= 5 ? ' hot' : '') + '">' +
@@ -3976,6 +4855,7 @@
 
     if (state.batchStep === 1){
       html += '<div class="batch-step">Step 1 of 2 \u00B7 Ukrainian</div>';
+      html += promptButtonHtml('words');
       html += '<p class="batch-hint">One word per line. Paste pairs like <em>\u0437\u0435\u043B\u0435\u043D\u0438\u0439 = green</em> and the meanings fill in for you. Mark a verb\u2019s aspect with <em>(pf.)</em> or <em>(impf.)</em>.</p>';
       html += '<textarea id="batch-input" class="batch-textarea" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="\u0437\u0435\u043B\u0435\u043D\u0438\u0439&#10;\u0441\u0438\u043D\u0456\u0439&#10;\u0436\u043E\u0432\u0442\u0438\u0439">' + escapeHtml(state.batchRaw) + '</textarea>';
       html += '<div class="form-actions">';
@@ -4174,7 +5054,7 @@
       html += '<div class="edit-stats">';
       html += '<div class="es-head">Progress</div>';
       html += '<div class="es-grid">';
-      html += '<div><span class="n">' + word.box + '<small>/5</small></span><span class="l">box</span></div>';
+      html += '<div><span class="n">' + word.box + '<small>/' + MAX_BOX + '</small></span><span class="l">box</span></div>';
       html += '<div><span class="n">' + (eAcc === null ? '\u2014' : eAcc + '%') + '</span><span class="l">accuracy</span></div>';
       html += '<div><span class="n">' + word.nRight + '</span><span class="l">right</span></div>';
       html += '<div><span class="n">' + word.nWrong + '</span><span class="l">wrong</span></div>';
@@ -4327,7 +5207,7 @@
     var html = '<div class="filter-panel">';
 
     html += '<div class="filter-group-label">Box</div><div class="filter-opts">';
-    for (var b = 1; b <= 5; b++){
+    for (var b = 1; b <= MAX_BOX; b++){
       (function(b){
         html += filterOptHtml('boxes', b, String(b), f.boxes.indexOf(b) !== -1,
           countFor('boxes', function(w){ return w.box === b; }));
@@ -4368,10 +5248,810 @@
     return html;
   }
 
+  function kindSwitchHtml(){
+    var k = state.libKind;
+    return '<div class="seg kind-switch" role="radiogroup" aria-label="Show">' +
+      '<button class="seg-btn' + (k === 'vocab' ? ' on' : '') + '" role="radio" aria-checked="' + (k === 'vocab') +
+        '" data-action="set-kind" data-kind="vocab">Vocab</button>' +
+      '<button class="seg-btn' + (k === 'decl' ? ' on' : '') + '" role="radio" aria-checked="' + (k === 'decl') +
+        '" data-action="set-kind" data-kind="decl">Declension</button>' +
+      '</div>';
+  }
+
+  // Mini card shown under the sentence form, updated as you type, so the
+  // gap is visible exactly where the lesson will put it.
+  function sentPreviewHtml(en, uk, base){
+    var problem = uk.trim() ? gapProblem(uk) : '';
+    var html = '<div class="sent-preview-label">Preview</div>';
+    html += '<div class="sent-preview">';
+    html += '<div class="sp-en">' + (en.trim() ? escapeHtml(en) : '<em>English sentence</em>') + '</div>';
+    var sent = parseSentence({ en: en, uk: uk, base: base });
+    if (sent){
+      html += '<div class="sp-uk">' + escapeHtml(sent.pre) + '<span class="decl-gap">&nbsp;</span>' + escapeHtml(sent.post) + '</div>';
+      html += '<div class="sp-answer">Answer: <strong>' + escapeHtml(sent.answers.join(' / ')) + '</strong></div>';
+    } else {
+      html += '<div class="sp-uk"><em>' + (uk.trim() ? escapeHtml(uk) : 'Ukrainian with the [gap]') + '</em></div>';
+    }
+    if (base.trim()) html += '<div class="decl-base">' + escapeHtml(base) + '</div>';
+    html += '</div>';
+    if (problem) html += '<div class="form-error">' + escapeHtml(problem) + '</div>';
+    return html;
+  }
+
+  function renderSentenceForm(s){
+    s = s || { en: '', uk: '', base: '' };
+    var html = '<div class="add-form inline-form sent-form">';
+    html += '<label for="f-s-en">English</label>';
+    html += '<input id="f-s-en" type="text" autocomplete="off" placeholder="After a long day I rest." value="' + escapeHtml(s.en) + '" />';
+    html += '<label for="f-s-uk">Ukrainian, with the part to type in [square brackets]</label>';
+    html += '<input id="f-s-uk" type="text" autocomplete="off" autocapitalize="sentences" autocorrect="off" spellcheck="false" placeholder="[Після довгого дня] я відпочиваю." value="' + escapeHtml(s.uk) + '" />';
+    html += '<div class="type-note">A second right answer can go after a | inside the brackets: [доброму вчителеві|доброму вчителю]</div>';
+    html += '<label for="f-s-base">Dictionary forms (optional)</label>';
+    html += '<input id="f-s-base" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="довгий · день" value="' + escapeHtml(s.base) + '" />';
+    html += '<div id="s-preview">' + sentPreviewHtml(s.en, s.uk, s.base) + '</div>';
+    html += '<div class="form-actions">';
+    html += '<button class="primary" data-action="save-sentence">OK</button>';
+    html += '<button class="secondary" data-action="cancel-sentence">Cancel</button>';
+    html += '</div></div>';
+    return html;
+  }
+
+  function renderSentBatch(){
+    var html = '<div class="add-form inline-form sent-form">';
+    html += '<p class="batch-hint">One sentence per line: <em>English = Ukrainian with [gap] = dictionary forms</em>. The forms are optional.</p>';
+    html += promptButtonHtml('sentences', state.sentBatchPid);
+    if (state.sentBatchNote) html += '<div class="batch-note">' + escapeHtml(state.sentBatchNote) + '</div>';
+    html += '<textarea id="sent-batch-input" class="batch-textarea" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="After a long day I rest. = [Після довгого дня] я відпочиваю. = довгий · день">' +
+      escapeHtml(state.sentBatchRaw) + '</textarea>';
+    html += '<div class="form-actions">';
+    html += '<button class="primary" data-action="save-sent-batch">Add sentences</button>';
+    html += '<button class="secondary" data-action="cancel-sent-batch">Cancel</button>';
+    html += '</div></div>';
+    return html;
+  }
+
+  // Splits pasted lines into sentences. Lines that don't work stay behind,
+  // with the reason, so they can be fixed and added again.
+  function parseSentBatch(raw){
+    var good = [], bad = [];
+    raw.split('\n').forEach(function(line, n){
+      if (!line.trim()) return;
+      var parts = line.split(/\s*(?:\t|=)\s*/);
+      var en = (parts[0] || '').trim(), uk = (parts[1] || '').trim(), base = parts.slice(2).join(' ').trim();
+      var why = !uk ? 'needs English = Ukrainian' : !en ? 'no English' : gapProblem(uk);
+      if (why) bad.push({ line: line, why: 'Line ' + (n + 1) + ': ' + why.replace(/\.$/, '') });
+      else good.push({ en: en, uk: uk, base: base });
+    });
+    return { good: good, bad: bad };
+  }
+
+  // The pattern's own fields (no buttons). Shared by Add a pattern and by
+  // editing an open pattern, so both look the same.
+  function patternFieldsHtml(p){
+    var isNew = !p;
+    p = p || { prep: '', c: 'gen', accept: [], meaning: '', note: '' };
+    // Only the extras: the variants in the Preposition field always count.
+    var own = prepVariants(p.prep).map(normalize);
+    var acceptShown = p.accept.filter(function(x){ return own.indexOf(normalize(x)) === -1; }).join(', ');
+    // Typed but not yet saved: kept across the re-renders that adding or
+    // editing a sentence causes while the pattern is open for editing.
+    var d = state.patDraft;
+    if (d && d.id === (isNew ? 'new' : p.id)){
+      p = { prep: d.prep, c: d.c, accept: [], meaning: d.meaning, note: d.note };
+      acceptShown = d.accept;
+    }
+    var html = '<label for="f-p-prep">Preposition</label>';
+    html += '<input id="f-p-prep" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="у / в" value="' + escapeHtml(p.prep) + '" />';
+    html += '<label for="f-p-case">Case</label>';
+    html += '<select id="f-p-case" class="type-select">';
+    DECL_CASE_ORDER.forEach(function(c){
+      html += '<option value="' + c + '"' + (p.c === c ? ' selected' : '') + '>' + DECL_CASES[c].en + ' · ' + DECL_CASES[c].uk + '</option>';
+    });
+    html += '</select>';
+    html += '<label for="f-p-meaning">Meaning</label>';
+    html += '<input id="f-p-meaning" type="text" autocomplete="off" placeholder="in, at (where?)" value="' + escapeHtml(p.meaning) + '" />';
+    html += '<label for="f-p-accept">Other accepted spellings (optional)</label>';
+    html += '<input id="f-p-accept" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="e.g. із, зі" value="' + escapeHtml(acceptShown) + '" />';
+    html += '<div class="type-note">Separated by commas. Any of them counts as right at the start of the gap. ' +
+      'Variants written with / in the Preposition field (у / в) always count.</div>';
+    html += '<label for="f-p-note">Note (optional)</label>';
+    html += '<input id="f-p-note" type="text" autocomplete="off" placeholder="Shown after answering" value="' + escapeHtml(p.note) + '" />';
+    return html;
+  }
+
+  // Add a pattern, at the top of the list.
+  function renderPatternForm(){
+    var html = '<div class="add-form">';
+    html += patternFieldsHtml(null);
+    html += '<div class="form-actions">';
+    html += '<button class="primary" data-action="save-pattern">Add pattern</button>';
+    html += '<button class="secondary" data-action="cancel-pattern">Cancel</button>';
+    html += '</div></div>';
+    return html;
+  }
+
+  // ---------- AI PROMPTS FOR "ADD SEVERAL" ----------
+  // Each Add several panel has a button that copies one of these. Paste it
+  // into any AI chat, add what you need at the end, and its answer comes
+  // back in exactly the format the panel reads, checked against the
+  // library's conventions.
+  var PROMPT_CLOSE = [
+    '',
+    'Output:',
+    '- Before the code block, list briefly anything you corrected in my input or weren’t sure about (or say “No corrections”).',
+    '- Then put the finished lines in ONE plain code block, with nothing else inside it: no numbering, no bullets, no headings, no comments.'
+  ];
+
+  var SENTENCE_RULES = [
+    'Rules for every sentence:',
+    '- Short, everyday and easy: simple vocabulary, about A2–B1 level, one clause where possible.',
+    '- The gap contains exactly the preposition + one adjective + one noun, nothing else. The adjective and noun must be in the case that the preposition requires in that meaning.',
+    '- Vary the noun across the sentences: masculine, feminine, neuter and plural.',
+    '- The English must be a natural translation of the Ukrainian and must not give away which case is needed.',
+    '- If two endings are both correct standard Ukrainian (e.g. dative -ові / -у: доброму вчителеві / доброму вчителю), put both inside the gap separated by |, the more common one first.',
+    '- Use natural, modern standard Ukrainian. No Russianisms, no surzhyk. Prefer the forms Ukrainian style guides recommend.',
+    '- Check the grammar of every sentence carefully, especially the case endings of the adjective and noun, and the choice of у / в and з / із / зі for euphony.',
+    '- No stress marks. Use the Ukrainian apostrophe ’ (п’ять, дерев’яний).',
+    '',
+    'Sentence line format (one sentence per line):',
+    'English sentence = Ukrainian sentence with the [gap in square brackets] = adjective · noun',
+    '- Exactly one pair of square brackets per line, around the gap.',
+    '- The last part gives the dictionary forms of the adjective and noun in the gap, separated by · : the adjective in the masculine nominative singular, the noun in the nominative singular (nouns that only exist in the plural, like двері or канікули, stay plural).',
+    '- Use “ = ” (with spaces) only as the separator, never inside a sentence.'
+  ];
+
+  function promptForWords(){
+    return [
+      'You are helping me add Ukrainian vocabulary to my flashcard app. I’ll give you words or phrases, with or without English meanings. Return them ready to paste into the app’s “Add several” box.',
+      '',
+      'Check and correct each entry:',
+      '- Fix any spelling mistakes in the Ukrainian.',
+      '- If I gave a meaning, check that it is right and fix it if not. If I didn’t, add a short, common English meaning.',
+      '- Verbs: the infinitive (читати, not читаю). Mark the aspect at the end of the line with (impf.) or (pf.). English verb meanings start with “to”.',
+      '- Nouns: the nominative singular (nouns that only exist in the plural, like двері, stay plural).',
+      '- Adjectives: the masculine nominative singular (зелений, not зелена).',
+      '- Phrases and whole sentences are learned as they are, so the rules above don’t apply to them. Each phrase must end with ? or ! (! for anything that isn’t a question): that is how the app recognises a phrase. If an entry works better as a phrase than as a single word, suggest that.',
+      '- Use natural, modern standard Ukrainian. No stress marks. Use the Ukrainian apostrophe ’ (ім’я).',
+      '- One meaning per line. If a word has two very different meanings, give the more common one and mention the other above the code block.',
+      '',
+      'Line format: ukrainian = english',
+      'Examples:',
+      'зелений = green',
+      'читати = to read (impf.)',
+      'прочитати = to read (pf.)',
+      'Як справи? = How are you?',
+      'До побачення! = Goodbye!'
+    ].concat(PROMPT_CLOSE, ['', 'Here is my list:', '']).join('\n');
+  }
+
+  function promptForSentences(p){
+    var lines = [
+      'You are helping me write practice sentences for my Ukrainian flashcard app. Each card shows a short English sentence and the Ukrainian translation with a gap; I type the missing preposition + adjective + noun, to practise the case endings.',
+      '',
+      'The pattern: ' + patternLabel(p) + (p.meaning ? ' (' + p.meaning + ')' : '') + '.'
+    ];
+    if (p.accept.length > 1) lines.push('Accepted spellings of the preposition: ' + p.accept.join(', ') + '.');
+    if (p.note) lines.push('Note: ' + p.note);
+    lines.push('', 'Write 4 new sentences for this pattern unless I ask for a different number, or check and reformat the sentences I give you. First check that ' +
+      (p.prep || 'the preposition') + ' really takes the ' + DECL_CASES[p.c].en + ' in this meaning, and tell me if not.', '');
+    lines = lines.concat(SENTENCE_RULES);
+    var ex = p.s.length ? p.s[0] : null;
+    lines.push('', 'Example:', ex
+      ? ex.en + ' = ' + ex.uk + (ex.base ? ' = ' + ex.base : '')
+      : 'We walk along the wide river. = Ми гуляємо [вздовж широкої річки]. = широкий · річка');
+    if (p.s.length > 1){
+      lines.push('', 'Sentences I already have for this pattern (don’t repeat them or their adjective + noun pairs):');
+      p.s.forEach(function(s){ lines.push(s.en + ' = ' + s.uk); });
+    }
+    return lines.concat(PROMPT_CLOSE, ['', 'What I need:', '']).join('\n');
+  }
+
+  function promptForPatterns(){
+    var have = state.patterns.map(function(p){ return patternLabel(p); });
+    var lines = [
+      'You are helping me add preposition patterns to my Ukrainian flashcard app. A pattern is one preposition + the case it takes in one meaning. Each pattern has practice sentences: the card shows a short English sentence and the Ukrainian translation with a gap, and I type the missing preposition + adjective + noun, to practise the case endings.',
+      '',
+      'Write the patterns I ask for, each with 4 sentences unless I ask for a different number, or check and reformat the ones I give you.',
+      '',
+      'Pattern header line (one per pattern):',
+      '# preposition + Case = English meaning | also: other spellings | note: short note',
+      '- Case is exactly one of: Genitive, Dative, Accusative, Instrumental, Locative.',
+      '- Spelling variants that alternate for euphony go in the preposition, separated by “ / ”: у / в, з / із / зі, о / об.',
+      '- Synonyms that should also count as right go after “also:”, separated by commas (# біля + Genitive = near, next to | also: коло, близько).',
+      '- “also” and “note” are optional; leave them out when there’s nothing to say. A note is shown after answering, so keep it to a few words.',
+      '- The same preposition with two cases is two patterns (на + Accusative = onto (where to?) and на + Locative = on (where?)). Say “where to?” / “where?” in the meaning when that is the difference.',
+      '- Check that the preposition really takes that case in that meaning in modern standard Ukrainian, and correct me if not (for example, по “along, around” takes the Locative, not the Dative).',
+      '',
+      'Under each header line, its sentences, one per line. Leave a blank line between patterns.',
+      ''
+    ].concat(SENTENCE_RULES, [
+      '',
+      'Example:',
+      '# вздовж + Genitive = along | also: уздовж',
+      'We walk along the wide river. = Ми гуляємо [вздовж широкої річки]. = широкий · річка',
+      'Trees grow along the old road. = [Вздовж старої дороги] ростуть дерева. = старий · дорога',
+      '',
+      '# повз + Accusative = past',
+      'We drove past the old church. = Ми проїхали [повз стару церкву]. = старий · церква'
+    ]);
+    if (have.length){
+      lines.push('', 'Patterns I already have (if you add sentences to one of these, write its header exactly like this and they’ll be added to it):');
+      lines.push(have.join('; '));
+    }
+    return lines.concat(PROMPT_CLOSE, ['', 'What I need:', '']).join('\n');
+  }
+
+  function promptButtonHtml(kind, pid){
+    return '<button type="button" class="copy-prompt-btn" data-action="copy-prompt" data-kind="' + kind + '"' +
+      (pid ? ' data-id="' + pid + '"' : '') + '>' + ICONS.clipboard +
+      '<span>Copy AI prompt</span></button>' +
+      '<div class="copy-prompt-note">Paste it into an AI chat, add what you need, and paste its answer back here.</div>';
+  }
+
+  // Clipboard API first; the hidden-textarea route covers older Safari and
+  // anything opened over plain http.
+  function copyText(text){
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.top = '-1000px';
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, text.length);
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+      return Promise.resolve(ok);
+    }
+    if (navigator.clipboard && window.isSecureContext){
+      return navigator.clipboard.writeText(text).then(function(){ return true; }, fallback);
+    }
+    return fallback();
+  }
+
+  // ---------- ADD SEVERAL PATTERNS ----------
+  // One paste can hold any number of patterns with their sentences:
+  //
+  //   # вздовж + Genitive = along | also: уздовж | note: usually with places
+  //   We walk along the wide river. = Ми гуляємо [вздовж широкої річки]. = широкий · річка
+  //   Trees grow along the old road. = [Вздовж старої дороги] ростуть дерева. = старий · дорога
+  //
+  //   # повз + Accusative = past
+  //   ...
+  //
+  // A # line starts a pattern; the lines under it are its sentences, in the
+  // same format as a pattern's own Add several. A pattern you already have
+  // (same preposition and case) isn't duplicated: its new sentences are
+  // added to it, and its progress stays.
+  function caseFromName(x){
+    var n = normalize(x).replace(/\.$/, '');
+    var map = [['gen', 'gen'], ['род', 'gen'], ['dat', 'dat'], ['дав', 'dat'],
+      ['acc', 'acc'], ['зна', 'acc'], ['ins', 'ins'], ['ору', 'ins'],
+      ['loc', 'loc'], ['prep', 'loc'], ['міс', 'loc']];
+    for (var i = 0; i < map.length; i++) if (n.indexOf(map[i][0]) === 0) return map[i][1];
+    return null;
+  }
+
+  function parsePatternHeader(line){
+    var parts = line.replace(/^#+\s*/, '').split('|');
+    var head = parts[0];
+    var eq = head.indexOf('=');
+    var left = (eq === -1 ? head : head.slice(0, eq)).trim();
+    var meaning = eq === -1 ? '' : head.slice(eq + 1).trim();
+    var plus = left.lastIndexOf('+');
+    if (plus === -1) return { why: 'write it as # preposition + Case = meaning' };
+    var prep = left.slice(0, plus).trim();
+    var c = caseFromName(left.slice(plus + 1).trim());
+    if (!prep) return { why: 'no preposition before the +' };
+    if (!c) return { why: 'the case must be Genitive, Dative, Accusative, Instrumental or Locative' };
+    var accept = prepVariants(prep), note = '';
+    parts.slice(1).forEach(function(opt){
+      var m = opt.match(/^\s*(also|note)\s*:\s*(.*)$/i);
+      if (!m) return;
+      if (m[1].toLowerCase() === 'note') note = m[2].trim();
+      else m[2].split(',').forEach(function(a){
+        a = a.trim();
+        if (a && accept.map(normalize).indexOf(normalize(a)) === -1) accept.push(a);
+      });
+    });
+    return { prep: prep, c: c, meaning: meaning, accept: accept, note: note };
+  }
+
+  function parsePatternBatch(raw){
+    var groups = [], errors = [], cur = null, curBroken = false;
+    raw.split('\n').forEach(function(line, n){
+      if (!line.trim()) return;
+      var where = 'Line ' + (n + 1) + ': ';
+      if (/^\s*#/.test(line)){
+        var h = parsePatternHeader(line.trim());
+        if (h.why){ errors.push(where + h.why); cur = null; curBroken = true; return; }
+        cur = h; cur.sentences = []; curBroken = false;
+        groups.push(cur);
+        return;
+      }
+      if (!cur){
+        // Sentences under a header that couldn't be read are skipped quietly:
+        // the header's own error already says what to fix.
+        if (!curBroken) errors.push(where + 'a sentence before any # pattern line');
+        return;
+      }
+      var r = parseSentBatch(line);
+      if (r.bad.length) errors.push(where + r.bad[0].why.replace(/^Line \d+: /, ''));
+      else cur.sentences.push(r.good[0]);
+    });
+
+    // Patterns named twice in one paste become one.
+    var merged = [], byKey = {};
+    groups.forEach(function(g){
+      var k = patternKey(g);
+      if (byKey[k]){
+        byKey[k].sentences = byKey[k].sentences.concat(g.sentences);
+        g.accept.forEach(function(a){ if (byKey[k].accept.indexOf(a) === -1) byKey[k].accept.push(a); });
+        if (!byKey[k].meaning) byKey[k].meaning = g.meaning;
+        if (!byKey[k].note) byKey[k].note = g.note;
+      } else { byKey[k] = g; merged.push(g); }
+    });
+
+    // Match against the library, and drop sentences already there.
+    merged.forEach(function(g){
+      var have = {};
+      g.existing = null;
+      state.patterns.forEach(function(p){ if (patternKey(p) === patternKey(g)) g.existing = p; });
+      if (g.existing) g.existing.s.forEach(function(s){ have[normalize(s.uk)] = true; });
+      var kept = [];
+      g.dupes = 0;
+      g.sentences.forEach(function(s){
+        var k = normalize(s.uk);
+        if (have[k]) { g.dupes++; return; }
+        have[k] = true; kept.push(s);
+      });
+      g.sentences = kept;
+    });
+    return { groups: merged, errors: errors };
+  }
+
+  function renderPatternBatch(){
+    var html = '<div class="batch-panel">';
+    if (state.patBatchStep === 1){
+      html += '<div class="batch-step">Add several patterns \u00B7 Step 1 of 2</div>';
+      html += promptButtonHtml('patterns');
+      html += '<p class="batch-hint">Start each pattern with a line like ' +
+        '<em># вздовж + Genitive = along | also: уздовж | note: …</em> ' +
+        '(also and note are optional). Under it, one sentence per line: ' +
+        '<em>English = Ukrainian with [gap] = forms</em>. A pattern you already have gets the new sentences added.</p>';
+      html += '<textarea id="pat-batch-input" class="batch-textarea pat-batch" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="# вздовж + Genitive = along&#10;We walk along the river. = Ми гуляємо [вздовж широкої річки]. = широкий · річка">' +
+        escapeHtml(state.patBatchRaw) + '</textarea>';
+      html += '<div class="form-actions">';
+      html += '<button class="primary" data-action="pat-batch-next">Next</button>';
+      html += '<button class="secondary" data-action="cancel-pat-batch">Cancel</button>';
+      html += '</div></div>';
+      return html;
+    }
+
+    var res = parsePatternBatch(state.patBatchRaw);
+    var nNew = 0, nExt = 0, nSent = 0, nDupes = 0;
+    res.groups.forEach(function(g){
+      if (g.existing){ if (g.sentences.length) nExt++; } else nNew++;
+      nSent += g.sentences.length;
+      nDupes += g.dupes;
+    });
+    html += '<div class="batch-step">Add several patterns · Step 2 of 2</div>';
+    html += '<div class="import-summary">';
+    html += '<div><span class="n">' + nNew + '</span><span class="l">new patterns</span></div>';
+    html += '<div><span class="n">' + nExt + '</span><span class="l">added to</span></div>';
+    html += '<div><span class="n">' + nSent + '</span><span class="l">sentences</span></div>';
+    html += '</div>';
+    if (res.errors.length){
+      html += '<div class="batch-note batch-errors"><strong>' + res.errors.length +
+        (res.errors.length === 1 ? ' line' : ' lines') + ' won’t be added.</strong> Go Back to fix ' +
+        (res.errors.length === 1 ? 'it' : 'them') + ', or add the rest without.<ul>' +
+        res.errors.map(function(e){ return '<li>' + escapeHtml(e) + '</li>'; }).join('') + '</ul></div>';
+    }
+    if (nDupes){
+      html += '<div class="batch-note">' + nDupes + (nDupes === 1 ? ' sentence is' : ' sentences are') +
+        ' already in your library and will be skipped.</div>';
+    }
+    res.groups.forEach(function(g){
+      html += '<div class="pb-group">';
+      html += '<div class="pb-head"><span class="pb-name">' + escapeHtml(patternLabel(g)) + '</span>' +
+        '<span class="pb-tag' + (g.existing ? '' : ' is-new') + '">' + (g.existing ? 'already have' : 'new') + '</span></div>';
+      if (g.meaning && !g.existing) html += '<div class="pb-meaning">' + escapeHtml(g.meaning) +
+        (g.accept.length > 1 ? ' · accepts ' + escapeHtml(g.accept.join(', ')) : '') + '</div>';
+      if (!g.sentences.length){
+        html += '<div class="pb-meaning">' + (g.existing ? 'Nothing new to add.' : 'No sentences yet — it won’t be in lessons until you add some.') + '</div>';
+      }
+      g.sentences.forEach(function(s){
+        var sent = parseSentence(s);
+        html += '<div class="pattern-sent"><div class="ps-text"><div class="ps-uk">' + sentenceHtml(sent) + '</div>' +
+          '<div class="ps-en">' + escapeHtml(s.en) + (s.base ? ' · <em>' + escapeHtml(s.base) + '</em>' : '') + '</div></div></div>';
+      });
+      html += '</div>';
+    });
+    var nothing = !nNew && !nSent;
+    html += '<div class="form-actions">';
+    html += '<button class="primary" data-action="pat-batch-save"' + (nothing ? ' disabled' : '') + '>' +
+      (nothing ? 'Nothing to add' : 'Add') + '</button>';
+    html += '<button class="secondary" data-action="pat-batch-back">Back</button>';
+    html += '<button class="secondary" data-action="cancel-pat-batch">Cancel</button>';
+    html += '</div></div>';
+    return html;
+  }
+
+  function patternMatches(p, q){
+    if (!q) return true;
+    var hay = [p.prep, p.meaning, p.note, DECL_CASES[p.c].en, DECL_CASES[p.c].uk].concat(p.accept);
+    p.s.forEach(function(s){ hay.push(s.en, s.uk.replace(/[\[\]|]/g, ' '), s.base); });
+    return normalize(hay.join(' \u0000 ')).indexOf(q) !== -1;
+  }
+
+  // ---------- PATTERN LIBRARY: SORT & FILTER ----------
+  // Same controls as the word list. Sorting by case keeps the case headings;
+  // any other order is one flat list, since a heading per case would split it.
+  var DSORT_FIELDS = [
+    ['case',      'Case'],
+    ['practised', 'Last practised'],
+    ['accuracy',  'Accuracy'],
+    ['box',       'Box'],
+    ['prep',      'Preposition'],
+    ['added',     'Date added']
+  ];
+  var DSORT_DEFAULT_DIR = { 'case': 'asc', practised: 'desc', accuracy: 'asc', box: 'asc', prep: 'asc', added: 'desc' };
+  function isValidDSort(v){ return DSORT_FIELDS.some(function(o){ return o[0] === v; }); }
+
+  var DSTATUS_FILTERS = [
+    ['due',      'Due now'],
+    ['trouble',  'Trouble patterns'],
+    ['new',      'Not practised yet'],
+    ['active',   'In lessons'],
+    ['shelved',  'Shelved'],
+    ['empty',    'No sentences']
+  ];
+
+  function patMatchesStatus(p, st){
+    if (st === 'due')     return !p.shelved && p.s.length > 0 && p.due <= todayStr();
+    if (st === 'trouble') return isTrouble(p);
+    if (st === 'new')     return (p.nRight + p.nWrong) === 0;
+    if (st === 'active')  return !p.shelved && p.s.length > 0;
+    if (st === 'shelved') return !!p.shelved;
+    if (st === 'empty')   return p.s.length === 0;
+    return true;
+  }
+
+  function patMatchesFilters(p, skip){
+    var f = state.declFilters;
+    if (skip !== 'boxes' && f.boxes.length && f.boxes.indexOf(p.box) === -1) return false;
+    if (skip !== 'cases' && f.cases.length && f.cases.indexOf(p.c) === -1) return false;
+    if (skip !== 'status' && f.status && !patMatchesStatus(p, f.status)) return false;
+    return patternMatches(p, normalize(state.declSearch));
+  }
+
+  function declFilterCount(){
+    var f = state.declFilters;
+    return (f.boxes.length ? 1 : 0) + (f.cases.length ? 1 : 0) + (f.status ? 1 : 0);
+  }
+
+  function patByName(a, b){
+    return normalize(a.prep).localeCompare(normalize(b.prep), 'uk') ||
+      DECL_CASE_ORDER.indexOf(a.c) - DECL_CASE_ORDER.indexOf(b.c);
+  }
+
+  function sortPatterns(list){
+    var field = isValidDSort(state.declSortBy) ? state.declSortBy : 'case';
+    var dir = state.declSortDir === 'desc' ? -1 : 1;
+    function cmp(a, b){
+      switch (field){
+        case 'case':      return (DECL_CASE_ORDER.indexOf(a.c) - DECL_CASE_ORDER.indexOf(b.c)) || patByName(a, b);
+        case 'practised': return a.last < b.last ? -1 : a.last > b.last ? 1 : 0;
+        case 'accuracy':  return accuracyOf(a) - accuracyOf(b);
+        case 'box':       return (a.box - b.box) || (a.due < b.due ? -1 : a.due > b.due ? 1 : 0);
+        case 'prep':      return patByName(a, b);
+        case 'added':     return (a.created || '') < (b.created || '') ? -1 : (a.created || '') > (b.created || '') ? 1 : 0;
+      }
+      return 0;
+    }
+    // As with words: no history parks at the end whichever way you sort.
+    var scored = [], unscored = [];
+    list.forEach(function(p){
+      var has = field === 'accuracy' ? (p.nRight + p.nWrong) > 0 : field === 'practised' ? !!p.last : true;
+      (has ? scored : unscored).push(p);
+    });
+    scored.sort(function(a, b){ return (dir * cmp(a, b)) || patByName(a, b); });
+    unscored.sort(patByName);
+    return scored.concat(unscored);
+  }
+
+  // The line under each pattern answers whatever you're sorting by.
+  function patRowMeta(p){
+    var acc = accuracyOf(p);
+    var n = p.s.length + (p.s.length === 1 ? ' sentence' : ' sentences');
+    if (!p.s.length) return '<span class="shelf-tag">no sentences yet</span>';
+    switch (state.declSortBy){
+      case 'accuracy':
+        if (acc === null) return 'not practised yet';
+        return '<span class="stat-acc' + (acc >= 80 ? ' good' : acc < 50 ? ' poor' : '') + '">' +
+          acc + '%</span> · ' + p.nRight + ' right, ' + p.nWrong + ' wrong';
+      case 'practised':
+        return p.last ? 'practised ' + sinceLabel(p.last) : 'not practised yet';
+      case 'box':
+        return 'box ' + p.box + (p.shelved ? '' : ' · ' + untilLabel(p.due));
+      case 'added':
+        return p.created ? 'added ' + sinceLabel(p.created) : 'added before this was tracked';
+      default:
+        return (p.shelved ? '' : (p.last ? untilLabel(p.due) : 'new') + ' · ') + n;
+    }
+  }
+
+  function dfilterOptHtml(group, value, label, on, n){
+    return '<button type="button" class="fopt' + (on ? ' on' : '') + '" data-action="dfilter-toggle" data-group="' + group +
+      '" data-value="' + value + '" aria-pressed="' + (on ? 'true' : 'false') + '"' +
+      (n === 0 && !on ? ' disabled' : '') + '>' + label + '<span class="n">' + n + '</span></button>';
+  }
+
+  function declFilterPanelHtml(){
+    var f = state.declFilters;
+    function countFor(group, test){
+      var n = 0;
+      state.patterns.forEach(function(p){ if (patMatchesFilters(p, group) && test(p)) n++; });
+      return n;
+    }
+    var html = '<div class="filter-panel">';
+    html += '<div class="filter-group-label">Box</div><div class="filter-opts">';
+    for (var b = 1; b <= MAX_BOX; b++){
+      (function(b){
+        html += dfilterOptHtml('boxes', b, String(b), f.boxes.indexOf(b) !== -1, countFor('boxes', function(p){ return p.box === b; }));
+      })(b);
+    }
+    html += '</div>';
+    html += '<div class="filter-group-label">Case</div><div class="filter-opts">';
+    DECL_CASE_ORDER.forEach(function(c){
+      html += dfilterOptHtml('cases', c, DECL_CASES[c].en, f.cases.indexOf(c) !== -1, countFor('cases', function(p){ return p.c === c; }));
+    });
+    html += '</div>';
+    html += '<div class="filter-group-label">Status</div><div class="filter-opts">';
+    DSTATUS_FILTERS.forEach(function(o){
+      html += dfilterOptHtml('status', o[0], o[1], f.status === o[0], countFor('status', function(p){ return patMatchesStatus(p, o[0]); }));
+    });
+    html += '</div>';
+    html += '<div class="filter-note">Trouble patterns: answered ' + TROUBLE_MIN_ANSWERS +
+      ' times or more, and right less than ' + TROUBLE_MAX_ACCURACY + '% of the time.</div>';
+    html += '<div class="filter-actions">' +
+      (declFilterCount() ? '<button class="text-btn" data-action="dclear-filters">Clear all</button>' : '<span></span>') +
+      '<button class="secondary" data-action="toggle-dfilter-panel">Done</button></div>';
+    html += '</div>';
+    return html;
+  }
+
+  function declFilterChipsHtml(){
+    var f = state.declFilters, chips = [];
+    function chip(group, text){
+      chips.push('<div class="filter-chip">' + escapeHtml(text) +
+        ' <button data-action="dclear-filter-group" data-group="' + group + '" aria-label="Remove filter: ' + escapeHtml(text) + '">✕</button></div>');
+    }
+    if (f.boxes.length) chip('boxes', 'Box ' + f.boxes.slice().sort().join(', '));
+    if (f.cases.length) chip('cases', f.cases.map(function(c){ return DECL_CASES[c].en; }).join(', '));
+    if (f.status)       chip('status', labelFor(DSTATUS_FILTERS, f.status));
+    if (!chips.length) return '';
+    if (chips.length > 1) chips.push('<button class="text-btn" data-action="dclear-filters">Clear all</button>');
+    return '<div class="filter-chips">' + chips.join('') + '</div>';
+  }
+
+  function renderDeclLibrary(){
+    if (state.patBatchOpen) return renderPatternBatch();
+    var html = kindSwitchHtml();
+
+    if (state.patEditing === 'new') html += renderPatternForm(null);
+    else html += '<div class="add-row">' +
+      '<button class="add-toggle main" data-action="open-pattern-form">+ Add a pattern</button>' +
+      '<button class="add-toggle main" data-action="open-pat-batch">+ Add several</button></div>';
+
+    var backupHtml = '<div class="backup-row">' +
+      '<button class="secondary" data-action="export-backup">Export backup</button>' +
+      '<button class="secondary" data-action="import-backup">Import backup</button>' +
+      '<input type="file" id="import-file-input" accept="application/json,.json" style="display:none" />' +
+      '</div>';
+
+    if (!state.patterns.length){
+      html += '<div class="lib-meta"><span class="lib-count">0 patterns</span>' + syncLineHtml() + '</div>';
+      html += '<div class="empty-state">' +
+        '<div class="glyph">&#9679;&#9675;&#9679;</div>' +
+        '<h2>No patterns yet</h2>' +
+        '<p>Add your own, or load the 39 built-in ones.</p>' +
+        '<button class="secondary" data-action="load-sample-patterns">Load sample patterns</button>' +
+        '</div>' + backupHtml;
+      return html;
+    }
+
+    html += '<div class="search-bar">' +
+      '<span class="search-icon">' + ICONS.search + '</span>' +
+      '<input id="decl-search-input" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Search patterns and sentences" value="' + escapeHtml(state.declSearch) + '" />' +
+      (state.declSearch ? '<button class="search-clear" data-action="clear-decl-search" aria-label="Clear search">✕</button>' : '') +
+      '</div>';
+
+    var dirDesc = state.declSortDir === 'desc';
+    var nF = declFilterCount();
+    html += '<div class="sort-bar">' +
+      '<span class="sort-icon">' + ICONS.sort + '</span>' +
+      '<select id="decl-sort-select" aria-label="Sort by">';
+    DSORT_FIELDS.forEach(function(o){
+      html += '<option value="' + o[0] + '"' + (state.declSortBy === o[0] ? ' selected' : '') + '>' + o[1] + '</option>';
+    });
+    html += '</select>';
+    html += '<button class="sort-dir" data-action="toggle-dsort-dir" aria-label="' +
+      (dirDesc ? 'Descending — tap for ascending' : 'Ascending — tap for descending') + '">' +
+      (dirDesc ? ICONS.arrowDown : ICONS.arrowUp) + '</button>';
+    html += '<button class="filter-btn' + (nF ? ' has-filters' : '') + (state.declFilterOpen ? ' open' : '') +
+      '" data-action="toggle-dfilter-panel" aria-expanded="' + (state.declFilterOpen ? 'true' : 'false') +
+      '" aria-label="Filters' + (nF ? ' (' + nF + ' active)' : '') + '">' + ICONS.filter +
+      (nF ? '<span class="filter-badge">' + nF + '</span>' : '') + '</button>';
+    html += '</div>';
+    html += state.declFilterOpen ? declFilterPanelHtml() : declFilterChipsHtml();
+
+    var total = state.patterns.length;
+    var shelved = state.patterns.filter(function(p){ return p.shelved; }).length;
+    var list = sortPatterns(state.patterns.filter(function(p){ return patMatchesFilters(p, null); }));
+
+    html += '<div class="lib-meta"><span class="lib-count">' +
+      (list.length === total ? total : list.length + ' of ' + total) + (total === 1 ? ' pattern' : ' patterns') +
+      (shelved ? ', ' + shelved + ' shelved' : '') + '</span>' + syncLineHtml() + '</div>';
+
+    if (!list.length){
+      html += '<div class="empty-state"><p>' +
+        (nF ? (state.declSearch ? 'No patterns match your search and filters.' : 'No patterns match these filters.')
+            : 'No patterns match your search.') + '</p>' +
+        (nF ? '<button class="secondary" data-action="dclear-filters">Clear filters</button>' : '') + '</div>';
+      return html + backupHtml;
+    }
+
+    if (state.declSortBy === 'case'){
+      // Headings follow the sort direction, so descending starts at Locative.
+      var order = state.declSortDir === 'desc' ? DECL_CASE_ORDER.slice().reverse() : DECL_CASE_ORDER;
+      order.forEach(function(c){
+        var group = list.filter(function(p){ return p.c === c; });
+        if (!group.length) return;
+        html += '<div class="case-head">' + DECL_CASES[c].en + '<span>' + DECL_CASES[c].uk + '</span></div>';
+        group.forEach(function(p){ html += patternEntryHtml(p); });
+      });
+    } else {
+      list.forEach(function(p){ html += patternEntryHtml(p); });
+    }
+    return html + backupHtml;
+  }
+
+  // Sentence list inside an open pattern. Read-only shows each sentence with
+  // its speaker; editing adds the edit and delete buttons and the add row.
+  function patternSentencesHtml(p, editing){
+    var html = '<label>Sentences (' + p.s.length + ')</label>';
+    html += '<div class="sent-list">';
+    var se = editing && state.sentEditing && state.sentEditing.pid === p.id ? state.sentEditing : null;
+    var sd = editing && state.sentConfirmDelete && state.sentConfirmDelete.pid === p.id ? state.sentConfirmDelete.idx : -2;
+    if (!p.s.length && !se && state.sentBatchPid !== p.id){
+      html += '<div class="es-note">No sentences yet. ' + (editing ? 'Add one' : 'Tap Edit to add one') +
+        ' so this pattern can come up in lessons.</div>';
+    }
+    p.s.forEach(function(s, i){
+      if (se && se.idx === i){ html += renderSentenceForm(s); return; }
+      var sent = parseSentence(s);
+      html += '<div class="pattern-sent"><div class="ps-text"><div class="ps-uk">' +
+        (sent ? sentenceHtml(sent) : escapeHtml(s.uk)) + '</div>' +
+        '<div class="ps-en">' + escapeHtml(s.en) + (s.base ? ' · <em>' + escapeHtml(s.base) + '</em>' : '') + '</div></div>' +
+        (sent ? speakBtn(sent.full, 'on-dark small') : '') +
+        (editing
+          ? '<button class="icon-btn" data-action="edit-sentence" data-id="' + p.id + '" data-idx="' + i + '" aria-label="Edit sentence">' + ICONS.edit + '</button>' +
+            '<button class="icon-btn danger" data-action="ask-delete-sentence" data-id="' + p.id + '" data-idx="' + i + '" aria-label="Delete sentence">' + ICONS.trash + '</button>'
+          : '') +
+        '</div>';
+      if (sd === i){
+        html += '<div class="delete-confirm"><span>Delete this sentence?</span>' +
+          '<div class="delete-confirm-actions">' +
+          '<button class="danger-btn" data-action="delete-sentence" data-id="' + p.id + '" data-idx="' + i + '">Delete</button>' +
+          '<button class="secondary" data-action="cancel-delete-sentence">Keep</button>' +
+          '</div></div>';
+      }
+    });
+    if (editing){
+      if (se && se.idx === -1) html += renderSentenceForm(null);
+      else if (state.sentBatchPid === p.id) html += renderSentBatch();
+      else if (!se){
+        html += '<div class="add-row">' +
+          '<button class="add-toggle" data-action="add-sentence" data-id="' + p.id + '">+ Add a sentence</button>' +
+          '<button class="add-toggle" data-action="open-sent-batch" data-id="' + p.id + '">+ Add several</button>' +
+          '</div>';
+      }
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function patternProgressHtml(p, editing){
+    var acc = accuracyOf(p);
+    var html = '<div class="edit-stats">';
+    html += '<div class="es-head">Progress</div>';
+    html += '<div class="es-grid">';
+    html += '<div><span class="n">' + p.box + '<small>/' + MAX_BOX + '</small></span><span class="l">box</span></div>';
+    html += '<div><span class="n">' + (acc === null ? '—' : acc + '%') + '</span><span class="l">accuracy</span></div>';
+    html += '<div><span class="n">' + p.nRight + '</span><span class="l">right</span></div>';
+    html += '<div><span class="n">' + p.nWrong + '</span><span class="l">wrong</span></div>';
+    html += '</div>';
+    html += '<div class="es-line">Added: ' + escapeHtml(p.created ? sinceLabel(p.created) : 'before this was tracked') + '</div>';
+    html += '<div class="es-line">Last practised: ' + escapeHtml(sinceLabel(p.last)) + '</div>';
+    if (p.shelved) html += '<div class="es-line">Shelved: ' + escapeHtml(sinceLabel(p.shelved)) + ' — not in lessons</div>';
+    else if (!p.s.length) html += '<div class="es-line">Not in lessons until it has a sentence</div>';
+    else html += '<div class="es-line">Next due: ' + escapeHtml(p.due <= todayStr() ? 'now' : p.due) + '</div>';
+    if (editing) html += '<div class="es-note">Editing the pattern or its sentences keeps all of this intact.</div>';
+    html += '</div>';
+    return html;
+  }
+
+  function patternEntryHtml(p){
+    var editing = state.patEditing === p.id;
+    var open = editing || state.declExpanded === p.id;
+    var confirming = state.patConfirmDelete === p.id;
+    var html = '<div class="word-entry' + (open ? ' is-editing' : '') + (p.shelved ? ' is-shelved' : '') + '">';
+    html += '<div class="word-row" data-action="toggle-pattern" data-id="' + p.id + '">';
+    html += '<div class="box-dots-inline">' + boxDots(p.box, 'filled', '', null) + '</div>';
+    html += '<div class="word-text"><div class="front">' + escapeHtml(patternLabel(p)) + '</div>' +
+      '<div class="back">' + escapeHtml(p.meaning) + '</div>';
+    var meta = patRowMeta(p);
+    if (p.shelved) meta = '<span class="shelf-tag">shelved</span>' + (meta ? ' ' + meta : '');
+    if (meta) html += '<div class="word-stats">' + meta + '</div>';
+    html += '</div>';
+    html += '<div class="row-actions">';
+    html += '<button class="icon-btn' + (editing ? ' active' : '') + '" data-action="edit-pattern" data-id="' + p.id + '" aria-label="Edit pattern">' + ICONS.edit + '</button>';
+    html += '<button class="icon-btn danger' + (confirming ? ' active' : '') + '" data-action="ask-delete-pattern" data-id="' + p.id + '" aria-label="Delete pattern">' + ICONS.trash + '</button>';
+    html += '</div></div>';
+
+    if (confirming){
+      html += '<div class="delete-confirm">' +
+        '<span>Delete <strong>' + escapeHtml(patternLabel(p)) + '</strong> and its ' + p.s.length +
+        (p.s.length === 1 ? ' sentence' : ' sentences') + '? Its progress goes too.</span>' +
+        '<div class="delete-confirm-actions">' +
+        '<button class="danger-btn" data-action="delete-pattern" data-id="' + p.id + '">Delete</button>' +
+        '<button class="secondary" data-action="cancel-delete-pattern">Keep</button>' +
+        '</div></div>';
+    }
+
+    if (!open) return html + '</div>';
+
+    // Same layout open or editing, like a word: the fields, the sentences,
+    // then progress. Editing swaps the fields for inputs and adds the
+    // sentence buttons; nothing moves.
+    html += '<div class="add-form inline-form">';
+    if (editing){
+      html += patternFieldsHtml(p);
+    } else {
+      html += '<label>Preposition</label><div class="ro-field"><span>' + escapeHtml(p.prep) + '</span></div>';
+      html += '<label>Case</label><div class="ro-field"><span>' + DECL_CASES[p.c].en + ' · ' + DECL_CASES[p.c].uk + '</span></div>';
+      html += '<label>Meaning</label><div class="ro-field"><span>' + (p.meaning ? escapeHtml(p.meaning) : '<em class="ro-empty">none</em>') + '</span></div>';
+      html += '<label>Accepted spellings</label><div class="ro-field"><span>' + escapeHtml(p.accept.join(', ')) + '</span></div>';
+      if (p.note) html += '<label>Note</label><div class="ro-field"><span>' + escapeHtml(p.note) + '</span></div>';
+    }
+    var wk = (editing && state.patWork && state.patWork.id === p.id) ? state.patWork : null;
+    html += patternSentencesHtml(wk ? { id: p.id, s: wk.s } : p, editing);
+    if (editing){
+      var shelfOn = wk ? wk.shelvedOn : !!p.shelved;
+      html += '<div class="pref-row shelf-row"><span>Shelve this pattern</span>' +
+        '<button type="button" class="toggle' + (shelfOn ? ' on' : '') + '" data-action="toggle-pattern-shelf" data-id="' + p.id +
+        '" aria-pressed="' + (shelfOn ? 'true' : 'false') + '"><span class="knob"></span></button></div>';
+      html += '<div class="shelf-note">Won’t come up in lessons until you unshelve it. Box, stats and due date are frozen.</div>';
+      html += '<div class="form-actions">';
+      html += '<button class="primary" data-action="save-pattern">Save changes</button>';
+      html += '<button class="secondary" data-action="cancel-pattern">Cancel</button>';
+      html += '</div>';
+    } else {
+      html += '<div class="form-actions"><button class="secondary" data-action="edit-pattern" data-id="' + p.id + '">Edit</button></div>';
+    }
+    html += patternProgressHtml(p, editing);
+    html += '</div>';
+    return html + '</div>';
+  }
+
   function renderCards(){
     if (state.importPreview) return renderImportPreview();
     if (state.batchOpen) return renderBatch();
-    var html = '';
+    if (state.libKind === 'decl') return renderDeclLibrary();
+    var html = kindSwitchHtml();
 
     // The add form still belongs at the top — there's no row to anchor it to.
     // Editing anchors to its own row further down instead.
@@ -4386,8 +6066,8 @@
     }
 
     var backupHtml = '<div class="backup-row">' +
-      '<button class="secondary" data-action="export-words">Export backup</button>' +
-      '<button class="secondary" data-action="import-words">Import backup</button>' +
+      '<button class="secondary" data-action="export-backup">Export backup</button>' +
+      '<button class="secondary" data-action="import-backup">Import backup</button>' +
       '<input type="file" id="import-file-input" accept="application/json,.json" style="display:none" />' +
       '</div>';
 
@@ -4398,8 +6078,9 @@
         '<p>Everything you add lands here, then gets scheduled into review automatically.</p>' +
         '<button class="secondary" data-action="load-samples">Load sample words</button>' +
         '</div>' + backupHtml;
-      html = '<div class="lib-meta"><span class="lib-count">0 words</span>' +
-        syncLineHtml() + '</div>' + html;
+      // The switch stays on top, above the count line.
+      html = kindSwitchHtml() + '<div class="lib-meta"><span class="lib-count">0 words</span>' +
+        syncLineHtml() + '</div>' + html.slice(kindSwitchHtml().length);
       return html;
     }
 
@@ -4498,12 +6179,13 @@
     var d = INTERVALS[n];
     var note = 'after ' + d + (d === 1 ? ' day' : ' days');
     if (n >= TYPING_FROM_BOX) note += ' \u00B7 typing only';
-    if (n === 5) note += ' \u00B7 mastered';
+    if (n === MAX_BOX) note += ' \u00B7 mastered';
     return note;
   }
 
   function renderStats(){
-    var counts = [0,0,0,0,0];
+    var counts = [];
+    for (var c = 0; c < MAX_BOX; c++) counts.push(0);
     state.words.forEach(function(w){ counts[w.box - 1]++; });
     // Bars are a share of the whole vocabulary, not of the fullest box.
     // Scaling to the largest box made every chart look the same — the biggest
@@ -4524,9 +6206,33 @@
       state.bestStreak + '</div><div class="label">Best in a row</div></div>';
     html += '</div>';
 
-    html += '<div class="box-chart"><h3>Words per box</h3>' +
-      '<p class="box-chart-sub">Each correct answer on schedule moves a word up one box, and the next review is pushed further out. A miss sends it back to box 1.</p>';
-    for (var i = 0; i < 5; i++){
+    // The streak records above are shared by both lesson types; only the
+    // box chart differs, so the switch sits right above it.
+    html += '<div style="margin-top:22px">' + kindSwitchHtml() + '</div>';
+    if (state.libKind === 'decl'){
+      var dCounts = [];
+      for (var dc = 0; dc < MAX_BOX; dc++) dCounts.push(0);
+      state.patterns.forEach(function(p){ dCounts[p.box - 1]++; });
+      html += '<div class="box-chart" style="margin-top:12px"><h3>Entries per box</h3>' +
+        '<p class="box-chart-sub">Each correct answer on schedule moves an entry up one box, and the next review is pushed further out. A miss sends it back to box 1.</p>';
+      for (var di = 0; di < MAX_BOX; di++){
+        var dShare = dCounts[di] / Math.max(state.patterns.length, 1);
+        var dPct = dCounts[di] === 0 ? 0 : Math.max(2, Math.round(dShare * 100));
+        var dNote = di === 0 ? 'new or missed · back tomorrow'
+          : 'after ' + INTERVALS[di + 1] + (INTERVALS[di + 1] === 1 ? ' day' : ' days') + (di + 1 === MAX_BOX ? ' · mastered' : '');
+        html += '<button class="bar-row" data-action="filter-decl-box" data-box="' + (di + 1) + '"' +
+          (dCounts[di] === 0 ? ' disabled' : '') + '>' +
+          '<span class="bar-top"><span class="bar-label">Box ' + (di + 1) + '</span>' +
+          '<span class="bar-track"><span class="bar-fill" style="width:' + dPct + '%"></span></span>' +
+          '<span class="bar-count">' + dCounts[di] + '</span></span>' +
+          '<span class="bar-note">' + (dCounts[di] === 0 ? '' : Math.round(dShare * 100) + '% · ') + dNote + '</span>' +
+          '</button>';
+      }
+      html += '<div class="chart-hint">Tap a box to see those entries</div></div>';
+    } else {
+    html += '<div class="box-chart" style="margin-top:12px"><h3>Entries per box</h3>' +
+      '<p class="box-chart-sub">Each correct answer on schedule moves an entry up one box, and the next review is pushed further out. A miss sends it back to box 1.</p>';
+    for (var i = 0; i < MAX_BOX; i++){
       var share = counts[i] / totalWords;
       // A non-zero box always shows a sliver, so one word out of 200 is still
       // visible rather than rounding away to an empty track.
@@ -4543,8 +6249,9 @@
           boxNote(i + 1) + '</span>' +
         '</button>';
     }
-    html += '<div class="chart-hint">Tap a box to see those words</div>';
+    html += '<div class="chart-hint">Tap a box to see those entries</div>';
     html += '</div>';
+    }
     html += '<div class="pref-row"><span>Sound effects</span>' +
       '<button class="toggle' + (state.soundOn ? ' on' : '') + '" data-action="toggle-sound">' +
       '<span class="knob"></span></button></div>';
@@ -4682,6 +6389,39 @@
       });
     }
 
+    var dSort = document.getElementById('decl-sort-select');
+    if (dSort){
+      dSort.addEventListener('change', function(e){
+        if (!isValidDSort(e.target.value)) return;
+        state.declSortBy = e.target.value;
+        state.declSortDir = DSORT_DEFAULT_DIR[state.declSortBy] || 'asc';
+        persistSettings();
+        render();
+      });
+    }
+
+    var declSearch = document.getElementById('decl-search-input');
+    if (declSearch){
+      declSearch.addEventListener('input', function(e){
+        state.declSearch = e.target.value;
+        render();
+        var el2 = document.getElementById('decl-search-input');
+        if (el2) { el2.focus(); el2.selectionStart = el2.selectionEnd = el2.value.length; }
+      });
+    }
+
+    // Live preview under the sentence form. Only the preview is redrawn, so
+    // the fields keep their text and focus.
+    var sEn = document.getElementById('f-s-en');
+    if (sEn){
+      var sUk = document.getElementById('f-s-uk'), sBase = document.getElementById('f-s-base');
+      var redraw = function(){
+        var box = document.getElementById('s-preview');
+        if (box) box.innerHTML = sentPreviewHtml(sEn.value, sUk.value, sBase.value);
+      };
+      [sEn, sUk, sBase].forEach(function(f){ f.addEventListener('input', redraw); });
+    }
+
     var typedInput = document.getElementById('typed-input');
     if (typedInput){
       typedInput.focus();
@@ -4755,7 +6495,7 @@
     if (importInput){
       importInput.addEventListener('change', function(e){
         if (e.target.files && e.target.files[0]){
-          importWordsFromFile(e.target.files[0]);
+          importBackupFromFile(e.target.files[0]);
         }
         e.target.value = '';
       });
@@ -4835,12 +6575,28 @@
     if (!el) return;
     var action = el.getAttribute('data-action');
 
+    // Unsaved pattern fields survive taps elsewhere in the open pattern
+    // (sentence buttons re-render the list); Save and Cancel decide for real.
+    if (state.patEditing && action !== 'save-pattern' && action !== 'cancel-pattern' && document.getElementById('f-p-prep')){
+      state.patDraft = {
+        id: state.patEditing,
+        prep: document.getElementById('f-p-prep').value,
+        c: document.getElementById('f-p-case').value,
+        meaning: document.getElementById('f-p-meaning').value,
+        accept: document.getElementById('f-p-accept').value,
+        note: document.getElementById('f-p-note').value
+      };
+    }
+
     if (action === 'switch-view'){
       // Filters stay while you switch tabs; only the panel closes.
       state.filterOpen = false;
+      state.declFilterOpen = false;
       state.expandedId = null;
       state.confirmDeleteId = null;
       state.view = el.getAttribute('data-view');
+      stopPatternEdit();
+      state.patBatchOpen = false;
       state.formOpen = false;
       state.batchOpen = false;
       state.editingId = null;
@@ -4849,10 +6605,300 @@
       render();
     }
     else if (action === 'start-lesson'){
-      startLesson(false);
+      startLesson(false, el.getAttribute('data-kind'));
     }
     else if (action === 'practice-anyway'){
-      startLesson(true);
+      startLesson(true, el.getAttribute('data-kind'));
+    }
+    else if (action === 'set-kind'){
+      state.libKind = el.getAttribute('data-kind') === 'decl' ? 'decl' : 'vocab';
+      stopPatternEdit();
+      state.declFilterOpen = false;
+      state.filterOpen = false;
+      state.expandedId = null;
+      state.editingId = null;
+      state.formOpen = false;
+      state.confirmDeleteId = null;
+      render();
+    }
+    else if (action === 'open-library'){
+      state.libKind = el.getAttribute('data-kind') === 'decl' ? 'decl' : 'vocab';
+      state.view = 'cards';
+      state.lessonDone = false;
+      render();
+    }
+    else if (action === 'toggle-pattern'){
+      var pid = el.getAttribute('data-id');
+      // Tapping another pattern while one is being edited closes the editor
+      // without saving, as with words.
+      if (state.patEditing && state.patEditing !== pid) stopPatternEdit();
+      state.declExpanded = (state.declExpanded === pid && state.patEditing !== pid) ? null : pid;
+      if (state.patEditing !== pid) closeDeclForms();
+      render();
+    }
+    else if (action === 'toggle-pattern-shelf'){
+      // Part of the draft: applied on Save, undone by Cancel.
+      if (state.patWork){ state.patWork.shelvedOn = !state.patWork.shelvedOn; render(); }
+    }
+    else if (action === 'open-pattern-form'){
+      stopPatternEdit();
+      state.patEditing = 'new';
+      state.declExpanded = null;
+      render();
+      var fp = document.getElementById('f-p-prep');
+      if (fp) fp.focus();
+    }
+    else if (action === 'edit-pattern'){
+      var epId = el.getAttribute('data-id');
+      var wasEditing = state.patEditing === epId;
+      stopPatternEdit();
+      if (!wasEditing) startPatternEdit(epId);
+      state.declExpanded = wasEditing ? null : epId;
+      render();
+    }
+    else if (action === 'cancel-pattern'){
+      // Discards everything since Edit: fields, sentences and the shelf.
+      stopPatternEdit();
+      render();
+    }
+    else if (action === 'save-pattern'){
+      var pPrepEl = document.getElementById('f-p-prep');
+      var pPrep = pPrepEl.value.trim();
+      if (!pPrep){ pPrepEl.focus(); return; }
+
+      // Save takes whatever is still open below, too: a half-finished
+      // sentence or pasted lines. If either has a problem, it's shown there
+      // and nothing is saved yet.
+      if (state.patWork && !absorbOpenSentenceForms()) return;
+
+      var pAccept = prepVariants(pPrep);
+      document.getElementById('f-p-accept').value.split(',').forEach(function(x){
+        x = x.trim();
+        if (x && pAccept.map(normalize).indexOf(normalize(x)) === -1) pAccept.push(x);
+      });
+      var pFields = {
+        prep: pPrep,
+        c: document.getElementById('f-p-case').value,
+        accept: pAccept,
+        meaning: document.getElementById('f-p-meaning').value.trim(),
+        note: document.getElementById('f-p-note').value.trim()
+      };
+      if (state.patEditing === 'new'){
+        var np = normalizePattern(Object.assign(pFields, { created: todayStr() }));
+        state.patterns.push(np);
+        state.declSearch = '';
+        state.declFilters = { boxes: [], cases: [], status: '' };
+        persist();
+        // Straight into editing it, ready for its first sentence.
+        stopPatternEdit();
+        startPatternEdit(np.id);
+        state.declExpanded = np.id;
+        state.sentEditing = { pid: np.id, idx: -1 };
+        render();
+        var fsEn = document.getElementById('f-s-en');
+        if (fsEn) fsEn.focus();
+        return;
+      }
+      var ep = patternById(state.patEditing);
+      var wk = state.patWork;
+      if (ep && wk){
+        ep.prep = pFields.prep; ep.c = DECL_CASES[pFields.c] ? pFields.c : ep.c;
+        ep.accept = pFields.accept; ep.meaning = pFields.meaning; ep.note = pFields.note;
+        ep.s = wk.s;
+        ep.si = wk.si;
+        setShelved(ep, wk.shelvedOn);
+      }
+      stopPatternEdit();
+      persist();
+      render();
+    }
+    else if (action === 'ask-delete-pattern'){
+      var dpId = el.getAttribute('data-id');
+      state.patConfirmDelete = state.patConfirmDelete === dpId ? null : dpId;
+      render();
+    }
+    else if (action === 'cancel-delete-pattern'){
+      state.patConfirmDelete = null;
+      render();
+    }
+    else if (action === 'delete-pattern'){
+      var delP = el.getAttribute('data-id');
+      state.patterns = state.patterns.filter(function(x){ return x.id !== delP; });
+      if (state.declExpanded === delP) state.declExpanded = null;
+      if (state.patEditing === delP) stopPatternEdit();
+      closeDeclForms();
+      persist();
+      render();
+    }
+    else if (action === 'add-sentence' || action === 'edit-sentence'){
+      closeDeclForms();
+      state.sentEditing = { pid: el.getAttribute('data-id'),
+        idx: action === 'add-sentence' ? -1 : parseInt(el.getAttribute('data-idx'), 10) };
+      render();
+      var fse = document.getElementById('f-s-en');
+      if (fse) fse.focus();
+    }
+    else if (action === 'cancel-sentence'){
+      state.sentEditing = null;
+      render();
+    }
+    else if (action === 'save-sentence'){
+      if (applySentenceForm()) render();
+    }
+    else if (action === 'ask-delete-sentence'){
+      var dsP = el.getAttribute('data-id'), dsI = parseInt(el.getAttribute('data-idx'), 10);
+      var same = state.sentConfirmDelete && state.sentConfirmDelete.pid === dsP && state.sentConfirmDelete.idx === dsI;
+      closeDeclForms();
+      state.sentConfirmDelete = same ? null : { pid: dsP, idx: dsI };
+      render();
+    }
+    else if (action === 'cancel-delete-sentence'){
+      state.sentConfirmDelete = null;
+      render();
+    }
+    else if (action === 'delete-sentence'){
+      var dsp = state.patWork;
+      var dsi = parseInt(el.getAttribute('data-idx'), 10);
+      if (dsp && dsi >= 0 && dsi < dsp.s.length){
+        dsp.s.splice(dsi, 1);
+        // Keep "shown last time" pointing at the same sentence, or nothing.
+        if (dsp.si === dsi) dsp.si = -1;
+        else if (dsp.si > dsi) dsp.si--;
+      }
+      state.sentConfirmDelete = null;
+      render();
+    }
+    else if (action === 'open-sent-batch'){
+      closeDeclForms();
+      state.sentBatchPid = el.getAttribute('data-id');
+      render();
+      var sbi = document.getElementById('sent-batch-input');
+      if (sbi) sbi.focus();
+    }
+    else if (action === 'cancel-sent-batch'){
+      state.sentBatchPid = null;
+      state.sentBatchRaw = '';
+      state.sentBatchNote = '';
+      render();
+    }
+    else if (action === 'save-sent-batch'){
+      applySentBatch();
+      render();
+    }
+    else if (action === 'copy-prompt'){
+      var pk = el.getAttribute('data-kind');
+      var ptext = pk === 'words' ? promptForWords()
+        : pk === 'patterns' ? promptForPatterns()
+        : promptForSentences(state.patWork || patternById(el.getAttribute('data-id')) || normalizePattern({}));
+      // Feedback on the button itself, without a re-render: that would
+      // throw away whatever is already typed in the box below.
+      var label = el.querySelector('span');
+      copyText(ptext).then(function(ok){
+        if (label) label.textContent = ok ? 'Copied ✓' : 'Couldn’t copy';
+        el.classList.toggle('copied', ok);
+        setTimeout(function(){
+          if (label) label.textContent = 'Copy AI prompt';
+          el.classList.remove('copied');
+        }, 2200);
+      });
+    }
+    else if (action === 'open-pat-batch'){
+      stopPatternEdit();
+      state.patBatchOpen = true;
+      state.patBatchStep = 1;
+      state.patBatchRaw = '';
+      render();
+      var pbi = document.getElementById('pat-batch-input');
+      if (pbi) pbi.focus();
+    }
+    else if (action === 'cancel-pat-batch'){
+      state.patBatchOpen = false;
+      state.patBatchRaw = '';
+      render();
+    }
+    else if (action === 'pat-batch-next'){
+      var pbt = document.getElementById('pat-batch-input');
+      state.patBatchRaw = pbt ? pbt.value : '';
+      if (!state.patBatchRaw.trim()) return;
+      state.patBatchStep = 2;
+      render();
+      window.scrollTo(0, 0);
+    }
+    else if (action === 'pat-batch-back'){
+      // The pasted text is kept, so Back is only for fixing it.
+      state.patBatchStep = 1;
+      render();
+    }
+    else if (action === 'pat-batch-save'){
+      var pbr = parsePatternBatch(state.patBatchRaw);
+      pbr.groups.forEach(function(g){
+        if (g.existing){
+          g.sentences.forEach(function(x){ g.existing.s.push(x); });
+          g.accept.forEach(function(a){
+            if (g.existing.accept.map(normalize).indexOf(normalize(a)) === -1) g.existing.accept.push(a);
+          });
+        } else {
+          state.patterns.push(normalizePattern({ prep: g.prep, c: g.c, meaning: g.meaning, accept: g.accept,
+            note: g.note, s: g.sentences, created: todayStr() }));
+        }
+      });
+      state.patBatchOpen = false;
+      state.patBatchRaw = '';
+      state.declSearch = '';
+      state.declFilters = { boxes: [], cases: [], status: '' };
+      persist();
+      render();
+    }
+    else if (action === 'toggle-dfilter-panel'){
+      state.declFilterOpen = !state.declFilterOpen;
+      render();
+    }
+    else if (action === 'dfilter-toggle'){
+      var dg = el.getAttribute('data-group'), dv = el.getAttribute('data-value');
+      var df = state.declFilters;
+      if (dg === 'boxes' || dg === 'cases'){
+        if (dg === 'boxes') dv = parseInt(dv, 10);
+        var di = df[dg].indexOf(dv);
+        if (di === -1) df[dg].push(dv); else df[dg].splice(di, 1);
+      } else if (dg === 'status'){
+        df.status = (df.status === dv) ? '' : dv;
+      }
+      render();
+    }
+    else if (action === 'dclear-filter-group'){
+      var dcg = el.getAttribute('data-group');
+      if (dcg === 'status') state.declFilters.status = '';
+      else state.declFilters[dcg] = [];
+      render();
+    }
+    else if (action === 'dclear-filters'){
+      state.declFilters = { boxes: [], cases: [], status: '' };
+      render();
+    }
+    else if (action === 'toggle-dsort-dir'){
+      state.declSortDir = state.declSortDir === 'desc' ? 'asc' : 'desc';
+      persistSettings();
+      render();
+    }
+    else if (action === 'clear-decl-search'){
+      state.declSearch = '';
+      render();
+    }
+    else if (action === 'load-sample-patterns'){
+      // Only offered when there are no patterns at all.
+      state.patterns = seedPatterns(null);
+      persist();
+      render();
+    }
+    else if (action === 'filter-decl-box'){
+      // Drill-down from the Profile chart: that box alone, nothing else.
+      state.declFilters = { boxes: [parseInt(el.getAttribute('data-box'), 10)], cases: [], status: '' };
+      state.declFilterOpen = false;
+      state.declSearch = '';
+      state.libKind = 'decl';
+      state.declExpanded = null;
+      state.view = 'cards';
+      render();
     }
     else if (action === 'end-lesson'){
       endLesson(false);
@@ -4865,6 +6911,7 @@
     else if (action === 'filter-box'){
       // Drill-down from the Profile chart: that box alone, nothing else.
       state.filters = { boxes: [parseInt(el.getAttribute('data-box'), 10)], types: [], aspect: '', status: '' };
+      state.libKind = 'vocab';
       state.filterOpen = false;
       state.view = 'cards';
       state.formOpen = false;
@@ -4949,6 +6996,7 @@
     }
     else if (action === 'goto-cards'){
       state.view = 'cards';
+      state.libKind = 'vocab';
       state.formOpen = true;
       state.lessonDone = false;
       render();
@@ -4975,9 +7023,14 @@
     else if (action === 'check-typed'){
       var input = document.getElementById('typed-input');
       var entryT = state.sessionQueue[0];
-      var wordT = state.words.find(function(x){ return x.id === entryT.id; });
       state.typedValue = input ? input.value : '';
-      state.wasCorrect = normalizeTyped(state.typedValue) === normalizeTyped(wordT.front);
+      if (state.lessonKind === 'decl'){
+        var pT = patternById(entryT.id);
+        state.wasCorrect = gradeDecl(state.typedValue, pT, parseSentence(pT.s[entryT.si]));
+      } else {
+        var wordT = state.words.find(function(x){ return x.id === entryT.id; });
+        state.wasCorrect = normalizeTyped(state.typedValue) === normalizeTyped(wordT.front);
+      }
       state.checked = true;
       scoreStreak(state.wasCorrect);
       state.typedReaction = reactionFor(state.wasCorrect);
@@ -5167,13 +7220,17 @@
       render();
     }
     else if (action === 'import-merge'){
-      state.words = state.words.concat(state.importPreview.fresh);
+      var imp = state.importPreview;
+      if (imp.w) state.words = state.words.concat(imp.w.fresh);
+      if (imp.p) state.patterns = state.patterns.concat(imp.p.fresh);
       state.importPreview = null;
       persist();
       render();
     }
     else if (action === 'import-replace'){
-      state.words = state.importPreview.all;
+      var imr = state.importPreview;
+      if (imr.w) state.words = imr.w.all;
+      if (imr.p) state.patterns = imr.p.all;
       state.importPreview = null;
       persist();
       render();
@@ -5182,10 +7239,10 @@
       state.importPreview = null;
       render();
     }
-    else if (action === 'export-words'){
-      exportWords();
+    else if (action === 'export-backup'){
+      exportBackup();
     }
-    else if (action === 'import-words'){
+    else if (action === 'import-backup'){
       var fileInput = document.getElementById('import-file-input');
       if (fileInput) fileInput.click();
     }
@@ -5194,17 +7251,118 @@
     }
   });
 
-  function exportWords(){
-    var data = JSON.stringify(state.words, null, 2);
-    var blob = new Blob([data], { type: 'application/json' });
+  // ---------- EDITING A PATTERN ----------
+  // Edit works on a copy, like a word's form: fields, sentences and the
+  // shelf switch all change the copy, Save changes writes it back in one go,
+  // and Cancel (or tapping away) throws it away.
+  function startPatternEdit(id){
+    var p = patternById(id);
+    if (!p) return;
+    state.patEditing = id;
+    state.patDraft = null;
+    state.patWork = { id: id, s: JSON.parse(JSON.stringify(p.s)), si: p.si, shelvedOn: !!p.shelved };
+  }
+
+  function stopPatternEdit(){
+    state.patEditing = null;
+    state.patDraft = null;
+    state.patWork = null;
+    closeDeclForms();
+  }
+
+  // The open sentence form into the copy. Returns false (with the problem
+  // shown in the preview) if it can't be used yet.
+  function applySentenceForm(){
+    var se = state.sentEditing, wk = state.patWork;
+    if (!se || !wk) return true;
+    var sNew = {
+      en: document.getElementById('f-s-en').value.trim(),
+      uk: document.getElementById('f-s-uk').value.trim(),
+      base: document.getElementById('f-s-base').value.trim()
+    };
+    var why = !sNew.en ? 'Add the English sentence.' : !sNew.uk ? 'Add the Ukrainian sentence.' : gapProblem(sNew.uk);
+    if (why){
+      // Shown without a re-render, which would throw away what's typed.
+      var prev = document.getElementById('s-preview');
+      if (prev) prev.innerHTML = sentPreviewHtml(sNew.en, sNew.uk, sNew.base).replace(/<div class="form-error">.*?<\/div>$/, '') +
+        '<div class="form-error">' + escapeHtml(why) + '</div>';
+      return false;
+    }
+    if (se.idx === -1) wk.s.push(sNew);
+    else wk.s[se.idx] = sNew;
+    state.sentEditing = null;
+    return true;
+  }
+
+  // Pasted lines into the copy. Lines that don't work stay in the box with
+  // the reason; returns false if any are left.
+  function applySentBatch(){
+    var wk = state.patWork;
+    var ta = document.getElementById('sent-batch-input');
+    if (!wk || !ta) return true;
+    var parsed = parseSentBatch(ta.value);
+    parsed.good.forEach(function(x){ wk.s.push(x); });
+    if (parsed.bad.length){
+      state.sentBatchRaw = parsed.bad.map(function(b){ return b.line; }).join('\n');
+      state.sentBatchNote = (parsed.good.length ? 'Added ' + parsed.good.length + '. ' : '') +
+        'Still to fix: ' + parsed.bad.map(function(b){ return b.why; }).join('; ') + '.';
+      return false;
+    }
+    state.sentBatchPid = null;
+    state.sentBatchRaw = '';
+    state.sentBatchNote = '';
+    return true;
+  }
+
+  // Before Save: anything still typed into a sentence form or the paste box
+  // goes in too, so Save really does save everything on screen. An untouched
+  // empty form is just closed.
+  function absorbOpenSentenceForms(){
+    if (state.sentEditing){
+      var en = document.getElementById('f-s-en'), uk = document.getElementById('f-s-uk');
+      var blank = en && uk && !en.value.trim() && !uk.value.trim();
+      if (blank) state.sentEditing = null;
+      else if (!applySentenceForm()) return false;
+    }
+    if (state.sentBatchPid){
+      var ta = document.getElementById('sent-batch-input');
+      if (ta && !ta.value.trim()){
+        state.sentBatchPid = null; state.sentBatchRaw = ''; state.sentBatchNote = '';
+      } else if (!applySentBatch()){
+        state.sentBatchNote += ' Fix or remove these lines, then Save changes again.';
+        render();
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // Shuts any open sentence or delete prompt inside the declension list, so
+  // only one thing is ever being edited at a time.
+  function closeDeclForms(){
+    state.sentEditing = null;
+    state.sentConfirmDelete = null;
+    state.sentBatchPid = null;
+    state.sentBatchRaw = '';
+    state.sentBatchNote = '';
+    state.patConfirmDelete = null;
+  }
+
+  function downloadJson(obj, name){
+    var blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
-    a.download = 'wordbox-words.json';
+    a.download = name;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  }
+
+  // Same pattern = same preposition and case, however it's spaced or accented.
+  function patternKey(p){
+    return p.c + '\u0000' + normalize(p.prep).replace(/\s*\/\s*/g, '/');
   }
 
   // A word is "the same word" if both sides match after normalising — so
@@ -5215,89 +7373,109 @@
     return normalize(w.front) + '\u0000' + normalize(w.back);
   }
 
-  function importWordsFromFile(file){
+  // ---------- BACKUP ----------
+  // One file for the whole library: words and declension patterns, each with
+  // their progress. Streaks and settings aren't included; they live in the
+  // synced data. Older backups (a plain list of words, or of patterns) still
+  // import, and only touch the part of the library they contain.
+  function exportBackup(){
+    downloadJson({
+      app: 'wordbox',
+      backup: 2,
+      version: APP_VERSION,
+      exported: todayStr(),
+      words: state.words,
+      patterns: state.patterns
+    }, 'wordbox-backup-' + todayStr() + '.json');
+  }
+
+  function looksLikePatterns(arr){
+    return arr.some(function(x){ return x && typeof x === 'object' && ('prep' in x) && ('c' in x); });
+  }
+
+  // Counts for one half of the preview: what's in the file, what's new,
+  // what's already in the library.
+  function importPart(list, normalizeFn, usable, keyFn, current){
+    var all = list.map(normalizeFn).filter(usable);
+    var seen = {}, deduped = [];
+    all.forEach(function(x){ var k = keyFn(x); if (!seen[k]){ seen[k] = true; deduped.push(x); } });
+    var have = {};
+    current.forEach(function(x){ have[keyFn(x)] = true; });
+    var fresh = deduped.filter(function(x){ return !have[keyFn(x)]; });
+    return {
+      all: deduped,
+      fresh: fresh,
+      alreadyHave: deduped.length - fresh.length,
+      inFileDupes: all.length - deduped.length,
+      skipped: list.length - all.length
+    };
+  }
+
+  function importBackupFromFile(file){
     var reader = new FileReader();
     reader.onload = function(){
       var parsed;
-      try {
-        parsed = JSON.parse(reader.result);
-      } catch (e){
-        alert('That file isn\u2019t valid JSON.');
-        return;
+      try { parsed = JSON.parse(reader.result); }
+      catch (e){ alert('That file isn’t valid JSON.'); return; }
+
+      var words = null, patterns = null;
+      if (Array.isArray(parsed)){
+        if (looksLikePatterns(parsed)) patterns = parsed; else words = parsed;
+      } else if (parsed && typeof parsed === 'object'){
+        if (Array.isArray(parsed.words)) words = parsed.words;
+        if (Array.isArray(parsed.patterns)) patterns = parsed.patterns;
       }
-      if (!Array.isArray(parsed)){
-        alert('Expected a JSON array of words.');
-        return;
-      }
+      if (!words && !patterns){ alert('That doesn’t look like a Wordbox backup.'); return; }
 
-      var all = parsed.map(normalizeWord).filter(function(w){ return w.front && w.back; });
-      if (!all.length){
-        alert('No usable words in that file.');
-        return;
-      }
+      var w = words ? importPart(words, normalizeWord, function(x){ return x.front && x.back; }, pairKey, state.words) : null;
+      var p = patterns ? importPart(patterns, normalizePattern, function(x){ return !!x.prep; }, patternKey, state.patterns) : null;
+      if ((!w || !w.all.length) && (!p || !p.all.length)){ alert('Nothing usable in that file.'); return; }
 
-      // Duplicates inside the file itself count too — a backup merged from
-      // two sources can easily contain the same pair twice.
-      var seenInFile = {}, deduped = [];
-      all.forEach(function(w){
-        var k = pairKey(w);
-        if (seenInFile[k]) return;
-        seenInFile[k] = true;
-        deduped.push(w);
-      });
-
-      var have = {};
-      state.words.forEach(function(w){ have[pairKey(w)] = true; });
-      var fresh = deduped.filter(function(w){ return !have[pairKey(w)]; });
-
-      state.importPreview = {
-        all: deduped,
-        fresh: fresh,
-        alreadyHave: deduped.length - fresh.length,
-        inFileDupes: all.length - deduped.length,
-        skipped: parsed.length - all.length
-      };
+      state.importPreview = { w: w, p: p };
       render();
     };
     reader.readAsText(file);
   }
 
   function renderImportPreview(){
-    var p = state.importPreview;
+    var ip = state.importPreview;
     var html = '<div class="batch-panel">';
     html += '<div class="batch-step">Import backup</div>';
 
-    html += '<div class="import-summary">';
-    html += '<div><span class="n">' + p.all.length + '</span><span class="l">in file</span></div>';
-    html += '<div><span class="n">' + p.fresh.length + '</span><span class="l">new</span></div>';
-    html += '<div><span class="n">' + p.alreadyHave + '</span><span class="l">already have</span></div>';
-    html += '</div>';
-
-    var notes = [];
-    if (p.inFileDupes) notes.push(p.inFileDupes + ' repeated inside the file');
-    if (p.skipped) notes.push(p.skipped + ' entry' + (p.skipped === 1 ? '' : 'ies') + ' missing a word or meaning');
-    if (notes.length) html += '<div class="batch-note">Ignored: ' + notes.join('; ') + '.</div>';
-
-    if (state.words.length === 0){
-      html += '<p class="batch-hint">Your library is empty, so everything in the file will be added.</p>';
-      html += '<div class="form-actions">';
-      html += '<button class="primary" data-action="import-replace">Import ' + p.all.length + ' words</button>';
-      html += '<button class="secondary" data-action="import-cancel">Cancel</button>';
-      html += '</div></div>';
-      return html;
+    function part(title, x, unit, skippedWhy){
+      var h = '<div class="import-part-head">' + title + '</div>';
+      if (!x){
+        return h + '<p class="batch-hint">Not in this file, so your ' + unit + ' stay as they are.</p>';
+      }
+      h += '<div class="import-summary">';
+      h += '<div><span class="n">' + x.all.length + '</span><span class="l">in file</span></div>';
+      h += '<div><span class="n">' + x.fresh.length + '</span><span class="l">new</span></div>';
+      h += '<div><span class="n">' + x.alreadyHave + '</span><span class="l">already have</span></div>';
+      h += '</div>';
+      var notes = [];
+      if (x.inFileDupes) notes.push(x.inFileDupes + ' repeated inside the file');
+      if (x.skipped) notes.push(x.skipped + ' ' + skippedWhy);
+      if (notes.length) h += '<div class="batch-note">Ignored: ' + notes.join('; ') + '.</div>';
+      return h;
     }
+    html += part('Words', ip.w, 'words', 'missing a word or meaning');
+    html += part('Declension patterns', ip.p, 'patterns', 'without a preposition');
 
-    html += '<p class="batch-hint"><strong>Add new only</strong> keeps your ' + state.words.length +
-      ' existing words untouched, along with their boxes and statistics, and brings in just the ' +
-      p.fresh.length + ' the file has that you don\u2019t.<br><br>' +
-      '<strong>Replace everything</strong> discards your current library and restores the file exactly \u2014 ' +
-      'use this when recovering a backup.</p>';
+    var nFresh = (ip.w ? ip.w.fresh.length : 0) + (ip.p ? ip.p.fresh.length : 0);
+    var replaced = [];
+    if (ip.w) replaced.push('words');
+    if (ip.p) replaced.push('patterns');
+
+    html += '<p class="batch-hint"><strong>Add new only</strong> keeps everything you have, with its boxes and statistics, ' +
+      'and brings in just what the file has that you don’t. A pattern you already have (same preposition and case) is left as it is.<br><br>' +
+      '<strong>Replace</strong> discards your current ' + replaced.join(' and ') +
+      ' and restores the file exactly — use this when recovering a backup.' +
+      (replaced.length === 1 ? ' Your ' + (ip.w ? 'patterns' : 'words') + ' aren’t touched.' : '') + '</p>';
 
     html += '<div class="form-actions form-actions-stack">';
-    html += '<button class="primary" data-action="import-merge"' + (p.fresh.length ? '' : ' disabled') + '>' +
-      (p.fresh.length ? 'Add ' + p.fresh.length + ' new word' + (p.fresh.length === 1 ? '' : 's') : 'Nothing new to add') +
-      '</button>';
-    html += '<button class="secondary" data-action="import-replace">Replace everything (' + p.all.length + ')</button>';
+    html += '<button class="primary" data-action="import-merge"' + (nFresh ? '' : ' disabled') + '>' +
+      (nFresh ? 'Add new only (' + nFresh + ')' : 'Nothing new to add') + '</button>';
+    html += '<button class="secondary" data-action="import-replace">Replace ' + replaced.join(' and ') + '</button>';
     html += '<button class="secondary" data-action="import-cancel">Cancel</button>';
     html += '</div></div>';
     return html;
