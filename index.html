@@ -2021,6 +2021,15 @@
     font-size: 14px;
     color: var(--ink-soft);
   }
+  /* Tapping the dictionary forms on a lesson card switches italics off and
+     on again, for when the Cyrillic italics are hard to read. */
+  .decl-base[data-action="toggle-base-italic"] {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .decl-base.upright { font-style: normal; }
 
   /* ---- Declension library ---- */
   .case-head {
@@ -2237,9 +2246,16 @@
   // When releasing: bump APP_VERSION and add an entry at the TOP of
   // CHANGELOG with the same version. The same lines can be pasted into the
   // GitHub commit description. Shown under "What's new" on the Profile tab.
-  var APP_VERSION = '2026-10-29i';
+  var APP_VERSION = '2026-11-10b';
 
   var CHANGELOG = [
+    { v: '2026-11-10b', changes: [
+      'Declension: tap the adjective and noun under the sentence to switch the italics off; tap again to switch them back on. Each new card starts in italics'
+    ]},
+    { v: '2026-11-10a', changes: [
+      'Declension: a card you get wrong comes back later in the lesson with exactly the same sentence',
+      'Declension: after a wrong answer, the card also shows the adjective and noun in their dictionary forms'
+    ]},
     { v: '2026-10-29i', changes: [
       'Lessons are less predictable: among entries that are equally due, the pick is random, and the cards in a lesson come up in random order. Most overdue entries still get picked first'
     ]},
@@ -2897,6 +2913,9 @@
     state.chosenOption = null;
     state.hintShown = false;
     state.optionsRevealed = false;
+    // Each new card starts in italics again; the upright view is a crutch
+    // for one card, not a setting.
+    state.baseUpright = false;
   }
 
   // Correct answers move on by themselves once the celebration has played.
@@ -2960,10 +2979,10 @@
       // already reset to box 1 and due tomorrow.
       state.lessonMisses[word.id] = (state.lessonMisses[word.id] || 0) + 1;
       if (state.lessonMisses[word.id] < 3){
-        // A missed pattern comes back with a different sentence, so the
-        // retry tests the rule rather than the sentence you just saw.
+        // A missed pattern comes back with the same sentence, so the retry
+        // is exactly the card you got wrong.
         state.sessionQueue.push(state.lessonKind === 'decl'
-          ? { id: word.id, si: pickSentence(patternById(word.id), entry.si) }
+          ? { id: word.id, si: entry.si }
           : { id: word.id, dir: pickMode(word) });
       } else {
         state.parkedThisLesson = true;
@@ -4385,8 +4404,8 @@
   }
 
   function renderDeclLessonReview(){
-    // Every sentence that came up, in order, once each (a missed pattern
-    // comes back with a different sentence, so both are listed).
+    // Every sentence that came up, in order, once each (a missed card comes
+    // back with the same sentence, so it is listed only once).
     var seen = {}, shown = [];
     state.lessonDeclShown.forEach(function(e){
       var k = e.id + ':' + e.si;
@@ -4719,8 +4738,14 @@
         : '<span class="decl-gap">&nbsp;</span>') +
       escapeHtml(sent.post) + '</div>';
 
+    // The dictionary forms sit under the gap on a new card, and stay there
+    // after a wrong answer so you can see what the correct form was built from.
+    if (!state.checked || !state.wasCorrect){
+      html += '<div class="decl-base' + (state.baseUpright ? ' upright' : '') +
+        '" data-action="toggle-base-italic">' + escapeHtml(sent.base) + '</div>';
+    }
+
     if (!state.checked){
-      html += '<div class="decl-base">' + escapeHtml(sent.base) + '</div>';
       html += '<input id="typed-input" class="type-input" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Preposition + adjective + noun…" value="' + escapeHtml(state.typedValue) + '" />';
       if (state.hintShown){
         html += '<div class="hint-text">' + escapeHtml(patternLabel(p)) + '</div>';
@@ -7007,6 +7032,12 @@
       if (hintInput) state.typedValue = hintInput.value;
       state.hintShown = true;
       render();
+    }
+    else if (action === 'toggle-base-italic'){
+      // Flips the class in place instead of re-rendering, so whatever is
+      // typed in the answer field stays put.
+      state.baseUpright = !state.baseUpright;
+      el.classList.toggle('upright', state.baseUpright);
     }
     else if (action === 'open-lesson-review'){
       state.lessonReviewOpen = true;
