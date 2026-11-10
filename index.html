@@ -2246,9 +2246,15 @@
   // When releasing: bump APP_VERSION and add an entry at the TOP of
   // CHANGELOG with the same version. The same lines can be pasted into the
   // GitHub commit description. Shown under "What's new" on the Profile tab.
-  var APP_VERSION = '2026-11-10b';
+  var APP_VERSION = '2026-11-10c';
 
   var CHANGELOG = [
+    { v: '2026-11-10c', changes: [
+      'Words AI prompt: also takes English words to translate, a Ukrainian text or screenshot, or a topic',
+      'Words AI prompt: perfective verbs switch to their imperfective partner, reflexive verbs keep -ся, adverbs become adjectives where one exists, close meanings share a line (швидкий = fast, quick)',
+      'Words AI prompt: casual everyday Ukrainian, no Russian words or surzhyk, natural English, spelling checked in both languages',
+      'All AI prompts: corrections listed as original → corrected, and no silent guessing'
+    ]},
     { v: '2026-11-10b', changes: [
       'Declension: tap the adjective and noun under the sentence to switch the italics off; tap again to switch them back on. Each new card starts in italics'
     ]},
@@ -5403,7 +5409,7 @@
   var PROMPT_CLOSE = [
     '',
     'Output:',
-    '- Before the code block, list briefly anything you corrected in my input or weren’t sure about (or say “No corrections”).',
+    '- Before the code block, list briefly anything you corrected or changed in my input (original → corrected) and anything you weren’t sure about or couldn’t translate reliably (or say “No corrections”). If you’re not sure, say so: never guess silently.',
     '- Then put the finished lines in ONE plain code block, with nothing else inside it: no numbering, no bullets, no headings, no comments.'
   ];
 
@@ -5427,25 +5433,37 @@
 
   function promptForWords(){
     return [
-      'You are helping me add Ukrainian vocabulary to my flashcard app. I’ll give you words or phrases, with or without English meanings. Return them ready to paste into the app’s “Add several” box.',
+      'You are helping me add Ukrainian vocabulary to my flashcard app (my reference language is English). Return the entries ready to paste into the app’s “Add several” box.',
+      '',
+      'I may give you:',
+      '- Ukrainian words or phrases, with or without English meanings (possibly misspelled or in inflected forms)',
+      '- English words I want translated into Ukrainian',
+      '- a Ukrainian text or screenshot to pull vocabulary from',
+      '- a topic (“15 words about cooking”)',
       '',
       'Check and correct each entry:',
-      '- Fix any spelling mistakes in the Ukrainian.',
-      '- If I gave a meaning, check that it is right and fix it if not. If I didn’t, add a short, common English meaning.',
-      '- Verbs: the infinitive (читати, not читаю). Mark the aspect at the end of the line with (impf.) or (pf.). English verb meanings start with “to”.',
-      '- Nouns: the nominative singular (nouns that only exist in the plural, like двері, stay plural).',
+      '- Fix any spelling and grammar mistakes, in the Ukrainian and in the English.',
+      '- If I gave a meaning, check that it is right and fix it if not. If I didn’t, add a short, common English meaning. The English should sound natural, not like a literal translation.',
+      '- Verbs: the infinitive (читати, not читаю). Prefer the imperfective: if I give a perfective verb, switch to its imperfective partner, unless the meanings differ or there isn’t one. Keep reflexive verbs with -ся (вчитися). Every verb line ends with (impf.) or (pf.). English verb meanings start with “to”.',
+      '- Nouns: the nominative singular (nouns that only exist in the plural, like двері or гроші, stay plural).',
       '- Adjectives: the masculine nominative singular (зелений, not зелена).',
-      '- Phrases and whole sentences are learned as they are, so the rules above don’t apply to them. Each phrase must end with ? or ! (! for anything that isn’t a question): that is how the app recognises a phrase. If an entry works better as a phrase than as a single word, suggest that.',
-      '- Use natural, modern standard Ukrainian. No stress marks. Use the Ukrainian apostrophe ’ (ім’я).',
-      '- One meaning per line. If a word has two very different meanings, give the more common one and mention the other above the code block.',
+      '- Adverbs: turn them into the adjective when one exists (швидко → швидкий). Keep the adverb only if there is no matching adjective (завжди, тут).',
+      '- Phrases and whole sentences are learned as they are, so the rules above don’t apply to them: just correct them. Each phrase must end with ? or ! (! for anything that isn’t a question): that is how the app recognises a phrase. If an entry works better as a phrase than as a single word, suggest that.',
+      '- Use natural, modern standard Ukrainian, and prefer casual, everyday words over formal or bookish ones. No Russian words, no surzhyk. No stress marks. Use the Ukrainian apostrophe ’ (ім’я).',
+      '- Several close English meanings can share a line, separated by commas (швидкий = fast, quick). If a word has two very different meanings, give the more common one and mention the other above the code block.',
       '',
       'Line format: ukrainian = english',
-      'Examples:',
-      'зелений = green',
-      'читати = to read (impf.)',
-      'прочитати = to read (pf.)',
-      'Як справи? = How are you?',
-      'До побачення! = Goodbye!'
+      '- Ukrainian always comes first, even when I give you English words. The divider is always “ = ” (space, equals sign, space).',
+      '',
+      'Example. My input: говорю, сказати, швидко, гарна, квартири, вчусь, як справи',
+      'Your lines:',
+      'говорити = to speak, to talk (impf.)',
+      'казати = to say, to tell (impf.)',
+      'швидкий = fast, quick',
+      'гарний = beautiful, pretty, nice',
+      'квартира = apartment, flat',
+      'вчитися = to study, to learn (impf.)',
+      'Як справи? = How are you?'
     ].concat(PROMPT_CLOSE, ['', 'Here is my list:', '']).join('\n');
   }
 
@@ -5457,7 +5475,7 @@
     ];
     if (p.accept.length > 1) lines.push('Accepted spellings of the preposition: ' + p.accept.join(', ') + '.');
     if (p.note) lines.push('Note: ' + p.note);
-    lines.push('', 'Write 4 new sentences for this pattern unless I ask for a different number, or check and reformat the sentences I give you. First check that ' +
+    lines.push('', 'Write 4 new sentences for this pattern unless I ask for a different number, or check and reformat the sentences I give you (in Ukrainian, or in English for you to translate). First check that ' +
       (p.prep || 'the preposition') + ' really takes the ' + DECL_CASES[p.c].en + ' in this meaning, and tell me if not.', '');
     lines = lines.concat(SENTENCE_RULES);
     var ex = p.s.length ? p.s[0] : null;
