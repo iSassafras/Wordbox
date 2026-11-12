@@ -1701,6 +1701,8 @@
     color: var(--cream-dim);
     margin-bottom: 12px;
   }
+  /* After a mixed lesson: words first, then sentences. */
+  .review-list-head ~ .review-list-head { margin-top: 14px; }
   .word-detail {
     width: 100%;
     background: var(--bg-elevated);
@@ -1987,6 +1989,16 @@
     padding: 15px 8px;
     font-size: 16px;
   }
+  /* The mixed Start lesson button leads; one-type lessons sit below it,
+     smaller and quieter. */
+  .start-row.minor { margin-bottom: 14px; }
+  .start-row.minor .start-btn {
+    padding: 10px 6px;
+    font-size: 14px;
+    border-radius: 12px;
+    gap: 2px;
+  }
+  .start-row.minor .start-sub { font-size: 10px; }
 
   /* Vocab | Declension switch at the top of Library and Profile. */
   .kind-switch { margin: 4px 0 8px; }
@@ -2157,7 +2169,9 @@
     lessonCorrect: 0,
     lessonAnswered: 0,
     lessonDone: false,
-    lessonWordIds: [],
+    // Every card answered this lesson, in order: { kind, id, si }. Feeds
+    // the review list on the summary screen.
+    lessonShown: [],
     answeredThisLesson: {},
     lessonMisses: {},
     wordsSnapshot: null,
@@ -2204,9 +2218,11 @@
     bestDayStreak: 0,
     lastLessonDay: null,
     changelogOpen: false,
-    // Which kind of lesson is running: 'vocab' (words) or 'decl'
-    // (preposition + declension sentences).
-    lessonKind: 'vocab',
+    // Which kind of lesson is running: 'mixed' (every lesson type at once),
+    // or one type from lessonTypes(): 'vocab' (words) or 'decl'
+    // (preposition + declension sentences). Each card in the queue also
+    // carries its own kind, which is what decides how it is shown and graded.
+    lessonKind: 'mixed',
     // Which side Library and Profile show. One setting for both tabs, so
     // switching in one carries over to the other.
     libKind: 'vocab',
@@ -2214,7 +2230,6 @@
     // like the words: added, edited and deleted in the Library.
     patterns: [],
     patternsSnapshot: null,
-    lessonDeclShown: [],
     declExpanded: null,
     // Pattern library sort and filters, mirroring the word list.
     declSortBy: 'case',
@@ -2246,9 +2261,24 @@
   // When releasing: bump APP_VERSION and add an entry at the TOP of
   // CHANGELOG with the same version. The same lines can be pasted into the
   // GitHub commit description. Shown under "What's new" on the Profile tab.
-  var APP_VERSION = '2026-11-10c';
+  var APP_VERSION = '2026-11-12c';
 
   var CHANGELOG = [
+    { v: '2026-11-12c', changes: [
+      'Start lesson: each type gets at least 3 cards, so 3:7 is the steepest split. Steeper only when a type has fewer than 3 cards due'
+    ]},
+    { v: '2026-11-12b', changes: [
+      'Start lesson: the split between words and sentences follows what is due exactly instead of being random. 20 words and 80 patterns due gives 2 words and 8 sentences',
+      'A type with anything due always gets at least one place, so a single due word isn\u2019t crowded out by a big pile of patterns',
+      'Practice anyway with Start lesson splits the same way, by how many entries each type has'
+    ]},
+    { v: '2026-11-12a', changes: [
+      'Home: new Start lesson button mixes vocab and declension cards in one lesson, in random order',
+      'Start lesson picks the most overdue cards of each type, sharing the 10 places by how many of each are due; when one type has nothing due, the rest come from the other',
+      'When nothing is due, Start lesson offers practice anyway across both types',
+      'Vocab and Declension stay below as smaller buttons for practising just one type',
+      'After a mixed lesson: Another lesson starts another mixed one, and Review lists the words and the sentences separately'
+    ]},
     { v: '2026-11-10c', changes: [
       'Words AI prompt: also takes English words to translate, a Ukrainian text or screenshot, or a topic',
       'Words AI prompt: perfective verbs switch to their imperfective partner, reflexive verbs keep -ся, adverbs become adjectives where one exists, close meanings share a line (швидкий = fast, quick)',
@@ -2939,11 +2969,11 @@
     if (!entry) { render(); return; }
     // A word, or a declension pattern's progress record: both carry the same
     // box / due / counts fields, so everything below applies to either.
-    var word = lessonItem(entry.id);
-    if (state.lessonKind === 'decl'){
-      state.lessonDeclShown.push({ id: entry.id, si: entry.si });
-      word.si = entry.si;
-    }
+    var type = lessonType(entry.kind);
+    var word = lessonItem(entry);
+    var key = entryKey(entry);
+    state.lessonShown.push({ kind: entry.kind, id: entry.id, si: entry.si });
+    if (type.onAnswered) type.onAnswered(entry, word);
 
     // Two guards keep the boxes meaningful. Spaced repetition only tests
     // anything if the interval has actually elapsed, so:
@@ -2957,8 +2987,8 @@
     //
     // Demotion is deliberately not conditional on either. Getting a word
     // wrong is real evidence you don't know it, whenever it happens.
-    var firstAnswerThisLesson = !state.answeredThisLesson[entry.id];
-    state.answeredThisLesson[entry.id] = true;
+    var firstAnswerThisLesson = !state.answeredThisLesson[key];
+    state.answeredThisLesson[key] = true;
     var wasDue = word.due <= todayStr();
 
     state.lessonAnswered++;
@@ -2983,13 +3013,12 @@
       // Three misses in one lesson means it isn't going in today. Cycling it
       // round a fourth time just pads the lesson and sours the session; it's
       // already reset to box 1 and due tomorrow.
-      state.lessonMisses[word.id] = (state.lessonMisses[word.id] || 0) + 1;
-      if (state.lessonMisses[word.id] < 3){
-        // A missed pattern comes back with the same sentence, so the retry
-        // is exactly the card you got wrong.
-        state.sessionQueue.push(state.lessonKind === 'decl'
-          ? { id: word.id, si: entry.si }
-          : { id: word.id, dir: pickMode(word) });
+      state.lessonMisses[key] = (state.lessonMisses[key] || 0) + 1;
+      if (state.lessonMisses[key] < 3){
+        // Each type decides what its retry looks like: a missed pattern
+        // comes back with the same sentence, so the retry is exactly the
+        // card you got wrong; a word may come back in another direction.
+        state.sessionQueue.push(type.retryEntry(entry, word));
       } else {
         state.parkedThisLesson = true;
       }
@@ -3050,7 +3079,7 @@
   }
 
   function startLesson(practice, kind){
-    state.lessonKind = (kind === 'decl') ? 'decl' : 'vocab';
+    state.lessonKind = lessonTypeOrNull(kind) ? kind : 'mixed';
     // Called straight from a tap, and the only point where audio is about to
     // be needed. iOS requires that first unlock to happen inside a gesture —
     // and the context too, which is why it is opened here rather than at the
@@ -3590,11 +3619,6 @@
     return state.patterns.filter(function(p){ return !p.shelved && p.s.length > 0; });
   }
 
-  function declDueCount(){
-    var t = todayStr();
-    return activePatterns().filter(function(p){ return p.due <= t; }).length;
-  }
-
   // What's wrong with a Ukrainian sentence, or '' if it's usable: exactly
   // one [gap], with something in it.
   function gapProblem(uk){
@@ -3655,10 +3679,13 @@
 
   // The thing a lesson card is about: a word or a pattern. Both carry the
   // same box / due / counts fields.
-  function lessonItem(id){
-    if (state.lessonKind === 'decl') return patternById(id);
-    return state.words.find(function(x){ return x.id === id; });
+  function lessonItem(entry){
+    return lessonType(entry.kind).item(entry.id);
   }
+
+  // Words and patterns have separate id spaces, so anything tracked per
+  // card during a lesson is keyed by kind as well as id.
+  function entryKey(e){ return e.kind + ':' + e.id; }
 
   // ---------- STORAGE (auto-detects environment) ----------
   // Inside Claude, window.storage persists per-user across sessions.
@@ -4213,74 +4240,197 @@
     }
   }
 
+  // ---------- LESSON TYPES ----------
+  // Every kind of card the app can teach, in one list. The home screen, the
+  // mixed lesson, the lesson card, grading and the review list all go
+  // through this, so a new lesson type is one more entry here (plus its own
+  // card renderer and library data). It then shows up on the home screen
+  // with its own count and button, and joins the mixed lesson by itself.
+  //
+  // Each type provides:
+  //   kind, label             id ('vocab') and button text ('Vocab')
+  //   one / many              the home-screen count label ('word ready')
+  //   active()                items that can be in a lesson right now
+  //   item(id)                look one up by id
+  //   makeEntry(item)         a fresh queue entry for it
+  //   retryEntry(entry, item) the entry that comes back after a miss
+  //   onAnswered(entry, item) optional; runs when a card is answered
+  //   renderCard(entry)       the card's HTML
+  //   gradeTyped(entry, txt)  true if a typed answer is right
+  //   reviewHead, reviewLabel, reviewItemHtml(shownEntry)
+  //                           the summary screen's "Review" list
+  //   reviewKey(shownEntry)   optional; what counts as the same card in it
+  //   empty()                 { sub, action } for the button when active()
+  //                           is empty
+  //
+  // Lesson progress is applied to the live data and only written at the end
+  // (see endLesson). A type that keeps its items somewhere other than
+  // state.words / state.patterns needs adding to the snapshot in startLesson,
+  // the rollback in endLesson and the write in persist.
+  var LESSON_TYPES_CACHE = null;
+  function lessonTypes(){
+    if (LESSON_TYPES_CACHE) return LESSON_TYPES_CACHE;
+    LESSON_TYPES_CACHE = [
+      {
+        kind: 'vocab', label: 'Vocab', one: 'word ready', many: 'words ready',
+        active: activeWords,
+        item: function(id){ return state.words.find(function(w){ return w.id === id; }); },
+        makeEntry: function(w){ return { kind: 'vocab', id: w.id, dir: pickMode(w) }; },
+        // A missed word may come back in a different direction.
+        retryEntry: function(entry, w){ return { kind: 'vocab', id: w.id, dir: pickMode(w) }; },
+        renderCard: renderVocabCard,
+        gradeTyped: function(entry, typed){
+          var w = this.item(entry.id);
+          return normalizeTyped(typed) === normalizeTyped(w.front);
+        },
+        reviewHead: 'Words from this lesson',
+        reviewLabel: 'Review these words',
+        reviewItemHtml: vocabReviewItemHtml,
+        empty: function(){
+          return state.words.length === 0
+            ? { sub: 'add words', action: 'goto-cards' }
+            : { sub: 'all shelved', action: 'open-library' };
+        }
+      },
+      {
+        kind: 'decl', label: 'Declension', one: 'pattern ready', many: 'patterns ready',
+        active: activePatterns,
+        item: patternById,
+        makeEntry: function(p){ return { kind: 'decl', id: p.id, si: pickSentence(p, p.si) }; },
+        // Same sentence again, so the retry is exactly the card you missed.
+        retryEntry: function(entry){ return { kind: 'decl', id: entry.id, si: entry.si }; },
+        // Remembered so the next lesson picks a different sentence.
+        onAnswered: function(entry, p){ p.si = entry.si; },
+        renderCard: renderDeclCard,
+        gradeTyped: function(entry, typed){
+          var p = patternById(entry.id);
+          return gradeDecl(typed, p, parseSentence(p.s[entry.si]));
+        },
+        reviewHead: 'Sentences from this lesson',
+        reviewLabel: 'Review these sentences',
+        reviewItemHtml: declReviewItemHtml,
+        // Each sentence of a pattern that came up gets its own line.
+        reviewKey: function(e){ return entryKey(e) + ':' + e.si; },
+        empty: function(){
+          return { sub: state.patterns.length === 0 ? 'add patterns' : 'none active', action: 'open-library' };
+        }
+      }
+    ];
+    return LESSON_TYPES_CACHE;
+  }
+  function lessonTypeOrNull(kind){
+    return lessonTypes().find(function(t){ return t.kind === kind; }) || null;
+  }
+  function lessonType(kind){
+    return lessonTypeOrNull(kind) || lessonTypes()[0];
+  }
+  // The types a lesson of this kind draws from: all of them for 'mixed'.
+  function typesFor(kind){
+    var one = lessonTypeOrNull(kind);
+    return one ? [one] : lessonTypes();
+  }
+
+  function dueItems(type){
+    var t = todayStr();
+    return type.active().filter(function(x){ return x.due <= t; });
+  }
+  // How many cards are due for a lesson of this kind ('mixed' = all types).
+  function dueFor(kind){
+    return typesFor(kind).reduce(function(n, type){ return n + dueItems(type).length; }, 0);
+  }
+  function activeFor(kind){
+    return typesFor(kind).reduce(function(n, type){ return n + type.active().length; }, 0);
+  }
+
   // A lesson is a bounded slice of what's due — capped so a large backlog
   // doesn't turn into an endless session. `practice` ignores due dates so
   // there's still something to do when nothing is scheduled.
   //
-  // Ordering is by how overdue a word is (oldest due date first), with box as
-  // the tiebreaker. Sorting by box instead would starve mastered words: with a
-  // standing backlog of box-1 words, a top-box word could stay overdue forever
-  // and never be checked. It also means a word you just missed (due = today)
-  // sorts last, so it waits its turn rather than crowding out the backlog.
-  function buildQueue(practice){
-    if (state.lessonKind === 'decl') return buildDeclQueue(practice);
-    var t = todayStr();
-    var pool;
-
-    if (practice){
-      // Extra practice draws at random from the whole library. Ordering by
-      // due date here would serve the same ten words every time, since
-      // nothing you do in practice mode changes the schedule.
-      pool = activeWords();
-      for (var i = pool.length - 1; i > 0; i--){
-        var j = Math.floor(Math.random() * (i + 1));
-        var tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
-      }
-    } else {
-      // Shuffled first, so that among words equally due (same day, same box)
-      // the pick is random. The sort is stable, so without this they came up
-      // in the order they were added to the library.
-      pool = shuffle(activeWords().filter(function(w){ return w.due <= t; }));
-      pool.sort(function(a, b){
-        if (a.due !== b.due) return a.due < b.due ? -1 : 1;
-        return a.box - b.box;
-      });
-    }
-
-    // The sort only decides WHICH words make it into the lesson. The order
-    // they come up in is shuffled again, so the lesson doesn't run oldest
-    // due date first, box 1 before box 2, and so on.
-    state.sessionQueue = shuffle(pool.slice(0, LESSON_SIZE))
-      .map(function(w){ return { id: w.id, dir: pickMode(w) }; });
-    state.lessonWordIds = state.sessionQueue.map(function(e){ return e.id; });
-    state.answeredThisLesson = {};
-    state.lessonMisses = {};
-    state.parkedThisLesson = false;
-    state.lessonTotal = state.sessionQueue.length;
-    state.lessonCorrect = 0;
-    state.lessonAnswered = 0;
+  // Within each type, ordering is by how overdue an item is (oldest due date
+  // first), with box as the tiebreaker. Sorting by box instead would starve
+  // mastered items: with a standing backlog of box-1 words, a top-box word
+  // could stay overdue forever and never be checked. It also means a card
+  // you just missed (due = today) sorts last, so it waits its turn rather
+  // than crowding out the backlog. Shuffled before the sort, so that among
+  // items equally due (same day, same box) the pick is random — the sort is
+  // stable, so without this they came up in the order they were added.
+  function dueSorted(type){
+    var pool = shuffle(dueItems(type).slice());
+    pool.sort(function(a, b){
+      if (a.due !== b.due) return a.due < b.due ? -1 : 1;
+      return a.box - b.box;
+    });
+    return pool;
   }
 
-  // Same rules as the word queue: most overdue first, then lowest box.
-  // Patterns are shuffled first so ties (e.g. all the brand-new ones) come up
-  // in a mixed order instead of always starting with the Genitive.
-  function buildDeclQueue(practice){
-    var t = todayStr();
-    var pool = shuffle(activePatterns().slice());
-    if (!practice){
-      pool = pool.filter(function(p){ return p.due <= t; });
-      pool.sort(function(a, b){
-        var pa = a, pb = b;
-        if (pa.due !== pb.due) return pa.due < pb.due ? -1 : 1;
-        return pa.box - pb.box;
-      });
-    }
-    // As with words: the sort picks which patterns, the shuffle sets the order.
-    state.sessionQueue = shuffle(pool.slice(0, LESSON_SIZE)).map(function(p){
-      return { id: p.id, si: pickSentence(p, p.si) };
+  // How many of a lesson's `n` places each type gets, in proportion to
+  // `counts` (cards due, or for practice, cards active). 20 words and 80
+  // patterns due gives 2 words and 8 patterns. Fractions are settled by
+  // whoever is closest to the next whole card (largest remainder), so the
+  // total is always exactly n.
+  //
+  // One exception: every type gets at least MIN_PER_TYPE places (or all of
+  // its cards, if it has fewer), taken from the biggest share. So 3:7 is the
+  // steepest a mixed lesson normally gets, and a handful of due words next
+  // to 99 patterns don't sit there lesson after lesson until the patterns
+  // are done. Steeper only when a type simply has fewer than 3 cards.
+  var MIN_PER_TYPE = 3;
+  function splitSlots(counts, n){
+    var total = counts.reduce(function(a, b){ return a + b; }, 0);
+    if (!total) return counts.map(function(){ return 0; });
+    n = Math.min(n, total);
+    var exact = counts.map(function(c){ return n * c / total; });
+    var slots = exact.map(Math.floor);
+    var left = n - slots.reduce(function(a, b){ return a + b; }, 0);
+    // Shuffled before sorting so equal remainders (say 5:5 split over 3
+    // types) don't always favour the first type in the list.
+    shuffle(counts.map(function(c, i){ return i; }))
+      .sort(function(a, b){ return (exact[b] - slots[b]) - (exact[a] - slots[a]); })
+      .slice(0, left)
+      .forEach(function(i){ slots[i]++; });
+    var floor = counts.map(function(c){ return Math.min(c, MIN_PER_TYPE); });
+    counts.forEach(function(c, i){
+      while (slots[i] < floor[i]){
+        // The biggest share that can spare a place without dropping below
+        // its own minimum. None left (many types, few places): stop there.
+        var donor = -1;
+        slots.forEach(function(sl, j){
+          if (sl > floor[j] && (donor < 0 || sl > slots[donor])) donor = j;
+        });
+        if (donor < 0) break;
+        slots[donor]--;
+        slots[i]++;
+      }
     });
-    state.lessonWordIds = state.sessionQueue.map(function(e){ return e.id; });
-    state.lessonDeclShown = [];
+    return slots;
+  }
+
+  function buildQueue(practice){
+    var types = typesFor(state.lessonKind);
+    var picked = [];
+
+    // Each type's candidates, best first. Practice ignores due dates and
+    // takes everything active in random order: ordering by due date there
+    // would serve the same ten cards every time, since nothing you do in
+    // practice mode changes the schedule. Otherwise it's the due cards, most
+    // overdue first (see dueSorted).
+    var lists = types.map(function(type){
+      return practice ? shuffle(type.active().slice()) : dueSorted(type);
+    });
+    // The lesson's places are shared out in proportion to how many each
+    // type has, and each type fills its share from the top of its list.
+    // With a single type this is simply its ten best.
+    var slots = splitSlots(lists.map(function(l){ return l.length; }), LESSON_SIZE);
+    types.forEach(function(type, i){
+      lists[i].slice(0, slots[i]).forEach(function(x){ picked.push({ type: type, item: x }); });
+    });
+
+    // The above only decides WHICH cards make it into the lesson. The order
+    // they come up in is shuffled again, so there's no telling whether the
+    // next card is a word or a sentence, and the lesson doesn't run oldest
+    // due date first, box 1 before box 2, and so on.
+    state.sessionQueue = shuffle(picked).map(function(p){ return p.type.makeEntry(p.item); });
+    state.lessonShown = [];
     state.answeredThisLesson = {};
     state.lessonMisses = {};
     state.parkedThisLesson = false;
@@ -4325,78 +4475,86 @@
     return 'Good evening \u2014 ready for a lesson?';
   }
 
-  function dueCount(){
-    var t = todayStr();
-    return activeWords().filter(function(w){ return w.due <= t; }).length;
-  }
-
   function renderHome(){
     if (state.lessonReviewOpen) return renderLessonReview();
     if (state.lessonDone) return renderLessonSummary();
 
-    // Two lesson types side by side, each count directly above its button.
-    var due = dueCount();
-    var dDue = declDueCount();
-    var nActive = activeWords().length;
-    var nPatterns = activePatterns().length;
+    // One count per lesson type in the panel, a big Start lesson button that
+    // mixes all of them, and a smaller button per type below it for drilling
+    // just that one.
+    var types = lessonTypes();
+    var totalDue = dueFor('mixed');
+    var totalActive = activeFor('mixed');
 
     function earliest(items){
       return items.slice().sort(function(a, b){ return a.due < b.due ? -1 : 1; })[0];
     }
-    function half(n, one, many, nextItem){
+    function half(type){
+      var n = dueItems(type).length;
+      var nextItem = earliest(type.active());
       var h = '<div class="due-half">';
       h += '<div class="due-num' + (n === 0 ? ' zero' : '') + '">' + n + '</div>';
-      h += '<div class="due-label">' + (n === 1 ? one : many) + '</div>';
+      h += '<div class="due-label">' + (n === 1 ? type.one : type.many) + '</div>';
       if (n === 0 && nextItem) h += '<div class="due-next">next ' + untilLabel(nextItem.due) + '</div>';
       return h + '</div>';
     }
-    // Primary when there is something due; otherwise a quieter button that
-    // offers practice anyway (or points at the Library when there's nothing
-    // to practise at all).
-    function startBtn(kind, label, n, nAvail, emptySub, emptyAction){
-      if (nAvail === 0){
-        return '<button class="secondary start-btn" data-action="' + emptyAction + '" data-kind="' + kind + '">' +
-          label + '<span class="start-sub">' + emptySub + '</span></button>';
-      }
-      if (n > 0){
-        var size = Math.min(n, LESSON_SIZE);
-        var sub = n > LESSON_SIZE ? size + ' of ' + n : size + ' card' + (size === 1 ? '' : 's');
-        return '<button class="primary start-btn" data-action="start-lesson" data-kind="' + kind + '">' +
-          label + '<span class="start-sub">' + sub + '</span></button>';
-      }
-      return '<button class="secondary start-btn" data-action="practice-anyway" data-kind="' + kind + '">' +
-        label + '<span class="start-sub">practice anyway</span></button>';
+    function cardsSub(n){
+      var size = Math.min(n, LESSON_SIZE);
+      return n > LESSON_SIZE ? size + ' of ' + n + ' cards' : size + ' card' + (size === 1 ? '' : 's');
     }
 
     var html = '<div class="home">';
 
-    html += '<div class="due-hero split' + (due === 0 && dDue === 0 ? ' is-clear' : '') + '">';
-    html += half(due, 'word ready', 'words ready', earliest(activeWords()));
-    html += '<div class="due-divider"></div>';
-    html += half(dDue, 'pattern ready', 'patterns ready',
-      earliest(activePatterns()));
+    html += '<div class="due-hero split' + (totalDue === 0 ? ' is-clear' : '') + '">';
+    html += types.map(half).join('<div class="due-divider"></div>');
     html += '</div>';
 
-    html += '<div class="start-row">';
-    html += startBtn('vocab', 'Vocab', due, nActive,
-      state.words.length === 0 ? 'add words' : 'all shelved',
-      state.words.length === 0 ? 'goto-cards' : 'open-library');
-    html += startBtn('decl', 'Declension', dDue, nPatterns,
-      state.patterns.length === 0 ? 'add patterns' : 'none active', 'open-library');
+    // Start lesson: gold when something is due; otherwise a quieter button
+    // that offers practice anyway, or points at the Library when there is
+    // nothing to practise at all.
+    if (totalActive === 0){
+      var noneAtAll = state.words.length === 0 && state.patterns.length === 0;
+      html += '<button class="secondary start-btn" data-action="' + (noneAtAll ? 'goto-cards' : 'open-library') + '">' +
+        'Start lesson<span class="start-sub">' + (noneAtAll ? 'add words' : 'all shelved') + '</span></button>';
+    } else if (totalDue > 0){
+      html += '<button class="primary start-btn start-main" data-action="start-lesson" data-kind="mixed">' +
+        'Start lesson<span class="start-sub">' + cardsSub(totalDue) + '</span></button>';
+    } else {
+      html += '<button class="secondary start-btn start-main" data-action="practice-anyway" data-kind="mixed">' +
+        'Start lesson<span class="start-sub">practice anyway</span></button>';
+    }
+
+    // One type only. Always the quiet style, so the gold button above stays
+    // the obvious one.
+    html += '<div class="start-row minor">';
+    types.forEach(function(type){
+      var n = dueItems(type).length;
+      if (type.active().length === 0){
+        var e = type.empty();
+        html += '<button class="secondary start-btn" data-action="' + e.action + '" data-kind="' + type.kind + '">' +
+          type.label + '<span class="start-sub">' + e.sub + '</span></button>';
+      } else if (n > 0){
+        html += '<button class="secondary start-btn" data-action="start-lesson" data-kind="' + type.kind + '">' +
+          type.label + '<span class="start-sub">' + cardsSub(n) + '</span></button>';
+      } else {
+        html += '<button class="secondary start-btn" data-action="practice-anyway" data-kind="' + type.kind + '">' +
+          type.label + '<span class="start-sub">practice anyway</span></button>';
+      }
+    });
     html += '</div>';
 
     html += '<div class="home-stats">';
     html += '<div class="home-stat"><span class="n">' +
-      '<span class="stat-icon' + (doneToday() ? '' : ' cold') + '">\uD83D\uDD25</span>' +
+      '<span class="stat-icon' + (doneToday() ? '' : ' cold') + '">🔥</span>' +
       liveDayStreak() + '</span><span class="l">day streak</span></div>';
     var mastered = state.words.filter(function(w){ return w.box === MAX_BOX; }).length;
     html += '<div class="home-stat"><span class="n">' +
-      '<span class="stat-icon' + (mastered > 0 ? '' : ' cold') + '">\uD83C\uDFC6</span>' +
+      '<span class="stat-icon' + (mastered > 0 ? '' : ' cold') + '">🏆</span>' +
       mastered + '</span><span class="l">mastered</span></div>';
     // Greyed at zero, like the flame — the icon reflects whether the thing
     // it stands for is actually alive.
     html += '<div class="home-stat"><span class="n">' +
-      '<span class="stat-icon' + (state.streak > 0 ? '' : ' cold') + '">\uD83C\uDFAF</span>' +
+      '<span class="stat-icon' + (state.streak > 0 ? '' : ' cold') + '">🎯</span>' +
       state.streak + '</span><span class="l">correct in a row</span></div>';
     html += '</div>';
 
@@ -4409,56 +4567,64 @@
     return escapeHtml(sent.pre) + '<strong>' + escapeHtml(sent.answers[0]) + '</strong>' + escapeHtml(sent.post);
   }
 
-  function renderDeclLessonReview(){
-    // Every sentence that came up, in order, once each (a missed card comes
-    // back with the same sentence, so it is listed only once).
-    var seen = {}, shown = [];
-    state.lessonDeclShown.forEach(function(e){
-      var k = e.id + ':' + e.si;
-      if (!seen[k]){ seen[k] = true; shown.push(e); }
-    });
-    var html = '<div class="home">';
-    html += '<div class="review-list-head">Sentences from this lesson</div>';
-    shown.forEach(function(e){
-      var p = patternById(e.id);
-      var sent = p && parseSentence(p.s[e.si]);
-      if (!sent) return;
-      html += '<div class="word-detail">';
-      html += '<div class="wd-top">';
-      html += '<div class="wd-front">' + escapeHtml(patternLabel(p)) + '</div>';
-      html += '<div class="wd-dots">' + boxDots(p.box, 'filled', '', null) + '</div>';
-      html += '</div>';
-      html += '<div class="pattern-sent"><div class="ps-text"><div class="ps-uk">' + sentenceHtml(sent) +
-        '</div><div class="ps-en">' + escapeHtml(sent.en) + '</div></div>' + speakBtn(sent.full, 'on-dark small') + '</div>';
-      html += '<div class="wd-line"><span>Means</span>' + escapeHtml(p.meaning) + '</div>';
-      if (p.note) html += '<div class="wd-line"><span>Note</span>' + escapeHtml(p.note) + '</div>';
-      html += '</div>';
-    });
-    html += '<button class="secondary start-btn" data-action="close-lesson-review">Back</button>';
+  function declReviewItemHtml(e){
+    var p = patternById(e.id);
+    var sent = p && parseSentence(p.s[e.si]);
+    if (!sent) return '';
+    var html = '<div class="word-detail">';
+    html += '<div class="wd-top">';
+    html += '<div class="wd-front">' + escapeHtml(patternLabel(p)) + '</div>';
+    html += '<div class="wd-dots">' + boxDots(p.box, 'filled', '', null) + '</div>';
+    html += '</div>';
+    html += '<div class="pattern-sent"><div class="ps-text"><div class="ps-uk">' + sentenceHtml(sent) +
+      '</div><div class="ps-en">' + escapeHtml(sent.en) + '</div></div>' + speakBtn(sent.full, 'on-dark small') + '</div>';
+    html += '<div class="wd-line"><span>Means</span>' + escapeHtml(p.meaning) + '</div>';
+    if (p.note) html += '<div class="wd-line"><span>Note</span>' + escapeHtml(p.note) + '</div>';
     html += '</div>';
     return html;
   }
 
-  function renderLessonReview(){
-    if (state.lessonKind === 'decl') return renderDeclLessonReview();
-    var words = state.lessonWordIds
-      .map(function(id){ return state.words.find(function(w){ return w.id === id; }); })
-      .filter(Boolean);
+  function vocabReviewItemHtml(e){
+    var w = state.words.find(function(x){ return x.id === e.id; });
+    if (!w) return '';
+    var html = '<div class="word-detail">';
+    html += '<div class="wd-top">';
+    html += '<div class="wd-front">' + escapeHtml(w.front) +
+      speakBtn(w.front, 'on-dark small') + '</div>';
+    html += '<div class="wd-dots">' + boxDots(w.box, 'filled', '', null) + '</div>';
+    html += '</div>';
+    html += '<div class="wd-back">' + escapeHtml(w.back) +
+      (aspectOf(w) ? ' <em class="wd-aspect">' + aspectName(aspectOf(w)) + '</em>' : '') + '</div>';
+    if (w.hint)  html += '<div class="wd-line"><span>Hint</span>' + escapeHtml(w.hint) + '</div>';
+    if (w.notes) html += '<div class="wd-line"><span>Notes</span>' + escapeHtml(w.notes) + '</div>';
+    html += '</div>';
+    return html;
+  }
 
+  // What came up this lesson, grouped by type in the registry's order, each
+  // card once in the order it first appeared. A missed card comes back (a
+  // missed sentence with the same sentence), so it is listed only once.
+  function lessonShownByType(){
+    var seen = {}, groups = [];
+    lessonTypes().forEach(function(type){
+      var items = [];
+      state.lessonShown.forEach(function(e){
+        if (e.kind !== type.kind) return;
+        var k = type.reviewKey ? type.reviewKey(e) : entryKey(e);
+        if (seen[k]) return;
+        seen[k] = true;
+        items.push(e);
+      });
+      if (items.length) groups.push({ type: type, items: items });
+    });
+    return groups;
+  }
+
+  function renderLessonReview(){
     var html = '<div class="home">';
-    html += '<div class="review-list-head">Words from this lesson</div>';
-    words.forEach(function(w){
-      html += '<div class="word-detail">';
-      html += '<div class="wd-top">';
-      html += '<div class="wd-front">' + escapeHtml(w.front) +
-        speakBtn(w.front, 'on-dark small') + '</div>';
-      html += '<div class="wd-dots">' + boxDots(w.box, 'filled', '', null) + '</div>';
-      html += '</div>';
-      html += '<div class="wd-back">' + escapeHtml(w.back) +
-        (aspectOf(w) ? ' <em class="wd-aspect">' + aspectName(aspectOf(w)) + '</em>' : '') + '</div>';
-      if (w.hint)  html += '<div class="wd-line"><span>Hint</span>' + escapeHtml(w.hint) + '</div>';
-      if (w.notes) html += '<div class="wd-line"><span>Notes</span>' + escapeHtml(w.notes) + '</div>';
-      html += '</div>';
+    lessonShownByType().forEach(function(g){
+      html += '<div class="review-list-head">' + g.type.reviewHead + '</div>';
+      g.items.forEach(function(e){ html += g.type.reviewItemHtml(e); });
     });
     html += '<button class="secondary start-btn" data-action="close-lesson-review">Back</button>';
     html += '</div>';
@@ -4482,14 +4648,15 @@
     html += '<div><span class="n">' + state.streak + '</span><span class="l">correct in a row</span></div>';
     html += '</div></div>';
 
-    var isDecl = state.lessonKind === 'decl';
-    var left = isDecl ? declDueCount() : dueCount();
+    // Same kind of lesson again: mixed stays mixed.
+    var left = dueFor(state.lessonKind);
     if (left > 0){
       html += '<button class="primary start-btn" data-action="start-lesson" data-kind="' + state.lessonKind + '">Another lesson' +
         '<span class="start-sub">' + Math.min(left, LESSON_SIZE) + ' cards left</span></button>';
     }
-    html += '<button class="secondary start-btn" data-action="open-lesson-review">' +
-      (isDecl ? 'Review these sentences' : 'Review these words') + '</button>';
+    var groups = lessonShownByType();
+    var reviewLabel = groups.length === 1 ? groups[0].type.reviewLabel : 'Review this lesson';
+    html += '<button class="secondary start-btn" data-action="open-lesson-review">' + reviewLabel + '</button>';
     html += '<button class="secondary start-btn" data-action="dismiss-summary">Done</button>';
     html += '</div>';
     return html;
@@ -4506,7 +4673,7 @@
 
   function uniqueRemaining(){
     var seen = {};
-    state.sessionQueue.forEach(function(e){ seen[e.id] = true; });
+    state.sessionQueue.forEach(function(e){ seen[entryKey(e)] = true; });
     return Object.keys(seen).length;
   }
 
@@ -4517,7 +4684,10 @@
     }
 
     var entry = state.sessionQueue[0];
-    if (state.lessonKind === 'decl') return renderDeclCard(entry);
+    return lessonType(entry.kind).renderCard(entry);
+  }
+
+  function renderVocabCard(entry){
     var w = state.words.find(function(x){ return x.id === entry.id; });
 
     if (entry.dir === 'choice-en' || entry.dir === 'choice-uk'){
@@ -7073,13 +7243,7 @@
       var input = document.getElementById('typed-input');
       var entryT = state.sessionQueue[0];
       state.typedValue = input ? input.value : '';
-      if (state.lessonKind === 'decl'){
-        var pT = patternById(entryT.id);
-        state.wasCorrect = gradeDecl(state.typedValue, pT, parseSentence(pT.s[entryT.si]));
-      } else {
-        var wordT = state.words.find(function(x){ return x.id === entryT.id; });
-        state.wasCorrect = normalizeTyped(state.typedValue) === normalizeTyped(wordT.front);
-      }
+      state.wasCorrect = lessonType(entryT.kind).gradeTyped(entryT, state.typedValue);
       state.checked = true;
       scoreStreak(state.wasCorrect);
       state.typedReaction = reactionFor(state.wasCorrect);
